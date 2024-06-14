@@ -4,8 +4,8 @@ import 'package:chatview/chatview.dart';
 abstract interface class StorageService {
   const StorageService._();
 
-  /// Uploads an image or voice document from a [Message] to a specified directory path
-  /// with an file name in Cloud Storage and returns doc's URL.
+  /// Uploads an image or voice document from a [Message] to a specified
+  /// directory path with an file name in Cloud Storage and returns doc's URL.
   ///
   /// (optional): [uploadPath] specify how file will be stored in database.
   /// {@macro flutter_chatview_db_connection.StorageService.getDirectoryPath}
@@ -18,6 +18,7 @@ abstract interface class StorageService {
     String? fileName,
   });
 
-  /// Delete document from the Cloud Storage and returns a [bool] value true if its deleted.
+  /// Delete document from the Cloud Storage and returns a [bool] value
+  /// true if its deleted.
   Future<bool> deleteDoc(Message message);
 }

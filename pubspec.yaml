@@ -8,15 +8,16 @@ environment:
   sdk: '>=3.2.0 <4.0.0'
 
 dependencies:
+  # TODO(YASH): Remove this once centralised repository is created for using same models and enums
+  chatview: ^2.4.0
+  cloud_firestore: ^5.6.0
+  firebase_storage: ^12.3.7
+
   flutter:
     sdk: flutter
 
-  firebase_storage: ^12.3.7
-  cloud_firestore: ^5.6.0
   path: ^1.9.0
   intl: ^0.20.0
-  # TODO(YASH): Remove this once centralised repository is created for using same models and enums
-  chatview: ^2.4.0
 
 dev_dependencies:
   flutter_test:

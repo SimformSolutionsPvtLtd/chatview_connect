@@ -83,7 +83,8 @@ final class ChatViewFirebaseStorage implements StorageService {
     final fileExtension = path.extension(message.message);
     final fileName = path.basenameWithoutExtension(message.message);
     final timestamp = message.createdAt.microsecondsSinceEpoch;
-    return '${message.id}_${message.sentBy}_${timestamp}_$fileName$fileExtension';
+    final messageIdWithSendBy = '${message.id}_${message.sentBy}';
+    return '${messageIdWithSendBy}_${timestamp}_$fileName$fileExtension';
   }
 
   /// {@template flutter_chatview_db_connection.StorageService.getDirectoryPath}

@@ -2,6 +2,7 @@ import 'package:chatview/chatview.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../../../flutter_chatview_db_connection.dart';
+import '../../enum.dart';
 import '../../extensions.dart';
 import '../../models/config/add_message_config.dart';
 import '../../typedefs.dart';
@@ -109,7 +110,7 @@ final class ChatViewFireStoreDatabase implements DatabaseService {
           final messageDoc = changedDoc.doc;
           final message = messageDoc.data()?.copyWith(id: messageDoc.id);
           if (message == null) continue;
-          messages[message] = DocumentType.firebaseType(changedDoc.type);
+          messages[message] = changedDoc.type.toDocumentType();
         }
         return messages;
       },

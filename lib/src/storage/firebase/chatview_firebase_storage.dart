@@ -125,7 +125,7 @@ final class ChatViewFirebaseStorage implements StorageService {
     final name = fileName ?? _getFileName(message);
     final fileRef = ref.child('$directoryPath/$name');
     await fileRef.putFile(file);
-    return ref.getDownloadURL();
+    return fileRef.getDownloadURL();
   }
 
   Future<bool> _deleteFile({

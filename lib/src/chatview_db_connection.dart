@@ -1,20 +1,18 @@
-import 'database/database_service.dart';
-import 'database/firebase/chatview_firestore_database.dart';
 import 'enum.dart';
-import 'storage/firebase/chatview_firebase_storage.dart';
-import 'storage/storage_service.dart';
-import 'typedefs.dart';
+import 'manager/chatview_connection_manager.dart';
 
-/// A singleton class provides different type of database's clouds services
+/// A singleton class that provides various cloud database services
 /// for chat views.
 ///
-/// provides methods to initialize and access the clouds service
-/// Example: [storage].
+/// It offers methods to initialize and interact with cloud services,
+/// such as `database` and `storage` services.
 final class ChatViewDbConnection {
-  /// Factory constructor to create a singleton instance of
-  /// [ChatViewDbConnection].
+  /// Factory constructor to create and retrieve the singleton instance
+  /// of [ChatViewDbConnection].
   ///
-  /// * required: [databaseType] to use particular that cloud's services.
+  /// **Parameters:**
+  /// - (required): [databaseType] specifies the type of cloud database service
+  /// to be used.
   factory ChatViewDbConnection(ChatViewDatabaseType databaseType) {
     _instance ??= ChatViewDbConnection._(databaseType);
     return _instance!;
@@ -22,26 +20,43 @@ final class ChatViewDbConnection {
 
   const ChatViewDbConnection._(this._databaseType);
 
+  static String? _currentUserId;
   static ChatViewDbConnection? _instance;
-  static DatabaseService? _database;
-  static StorageService? _storage;
-
   final ChatViewDatabaseType _databaseType;
 
   /// The type of database that is being used.
   ChatViewDatabaseType get databaseType => _databaseType;
 
-  /// to Initialize the clouds services.
-  /// Example: [storage] service
-  void initialize() {
-    final DatabaseTypeServicesRecord typeWiseService = switch (_databaseType) {
-      ChatViewDatabaseType.firebase => (
-          database: ChatViewFireStoreDatabase(),
-          storage: ChatViewFirebaseStorage(),
-        ),
-    };
-    _database ??= typeWiseService.database;
-    _storage ??= typeWiseService.storage;
+  /// Returns current user's ID
+  String? get currentUserId => _currentUserId;
+
+  /// Retrieves the instance of the [ChatViewConnectionManager] for accessing
+  /// chat related operations.
+  ///
+  /// **Important:** Before accessing the connection manager,
+  /// you must set the current user ID.
+  ///
+  /// The getter will throw an assertion error if the user ID is not set,
+  /// ensuring that operations relying on the user context are executed
+  /// properly.
+  ///
+  /// Example: initialize ChatViewDbConnection for firebase backend
+  /// ```dart
+  /// ChatViewDbConnection(ChatViewDatabaseType.firebase);
+  /// // Set the current user ID before accessing the connection manager
+  /// ChatViewDbConnection.instance.setCurrentUserId(userId: '1');
+  /// ```
+  static ChatViewConnectionManager get connectionManager {
+    assert(
+      _currentUserId != null,
+      '''
+      Current User ID must be set. 
+      Example: set Current User ID database operations
+      ///```dart
+      /// ChatViewDbConnection.instance.setCurrentUserId(userId: '1');
+      /// ```''',
+    );
+    return ChatViewConnectionManager.instance;
   }
 
   /// Gets the singleton instance of [ChatViewDbConnection].
@@ -49,58 +64,21 @@ final class ChatViewDbConnection {
   /// *Note: Ensures the instance is initialized before accessing it.
   /// Example:
   /// ``` dart
-  /// ChatViewDbConnection(ChatViewDatabaseType.firebase).initialize();
+  /// ChatViewDbConnection(ChatViewDatabaseType.firebase);
   /// ```
   static ChatViewDbConnection get instance {
     assert(
       _instance != null,
       '''
-ChatViewDbConnection must be initialized. 
+      ChatViewDbConnection must be initialized. 
       Example: initialize ChatViewDbConnection for firebase backend
       ///```dart
-      /// ChatViewDbConnection(ChatViewDatabaseType.firebase).initialize();
+      /// ChatViewDbConnection(ChatViewDatabaseType.firebase);
       /// ```''',
     );
     return _instance!;
   }
 
-  /// Gets the database service associated with the current database connection.
-  ///
-  /// *Note: Ensures the storage service is initialized before accessing it.
-  /// Example:
-  /// ``` dart
-  /// ChatViewDbConnection(ChatViewDatabaseType.firebase).initialize();
-  /// ```
-  static DatabaseService get database {
-    assert(
-      _database != null,
-      '''
-ChatViewDbConnection must be initialized. 
-      Example: initialize ChatViewDbConnection for firebase backend
-      ///```dart
-      /// ChatViewDbConnection(ChatViewDatabaseType.firebase).initialize();
-      /// ```''',
-    );
-    return _database!;
-  }
-
-  /// Gets the storage service associated with the current database connection.
-  ///
-  /// *Note: Ensures the storage service is initialized before accessing it.
-  /// Example:
-  /// ``` dart
-  /// ChatViewDbConnection(ChatViewDatabaseType.firebase).initialize();
-  /// ```
-  static StorageService get storage {
-    assert(
-      _storage != null,
-      '''
-      ChatViewDbConnection must be initialized. 
-      Example: initialize ChatViewDbConnection for firebase backend
-      ///```dart
-      /// ChatViewDbConnection(ChatViewDatabaseType.firebase).initialize();
-      /// ```''',
-    );
-    return _storage!;
-  }
+  /// To set current user's ID
+  void setCurrentUserId({required String userId}) => _currentUserId = userId;
 }

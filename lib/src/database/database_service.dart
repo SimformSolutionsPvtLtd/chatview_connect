@@ -50,6 +50,8 @@ abstract interface class DatabaseService {
   });
 
   /// Retrieves a stream of message batches from database.
+  /// This method listens for real-time updates to the chat room message's
+  /// data in the database.
   ///
   /// **Parameters:**
   /// - (required): [sortBy] specifies the sorting order of messages

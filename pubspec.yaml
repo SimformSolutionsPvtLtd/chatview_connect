@@ -18,6 +18,7 @@ dependencies:
 
   intl: ^0.20.0
   path: ^1.9.0
+  uuid: ^4.4.0
 
 dev_dependencies:
   flutter_test:

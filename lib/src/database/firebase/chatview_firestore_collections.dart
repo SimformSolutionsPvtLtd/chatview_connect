@@ -10,20 +10,44 @@ abstract final class ChatViewFireStoreCollections {
   static final _firestoreInstance = FirebaseFirestore.instance;
 
   /// Collection reference for messages.
-  static final CollectionReference<Message?> messageCollection =
-      _firestoreInstance
-          .collection(ChatViewFireStorePath.messages)
-          .withConverter(
-            fromFirestore: _messageFromFirestore,
-            toFirestore: _messageToFirestore,
-          );
+  ///
+  /// **Parameters:**
+  /// - (optional): [documentPath] specifies the database path to use
+  /// message collection from that.
+  ///
+  /// {@template flutter_chatview_db_connection.StorageService.messageCollection}
+  ///
+  /// if path specified the message collection will be created at
+  /// '[documentPath]/messages' and same path used to retrieve the messages.
+  ///
+  /// Example: 'chat/room123/messages'
+  ///
+  /// {@endtemplate}
+  static CollectionReference<Message?> messageCollection([
+    String? documentPath,
+  ]) {
+    const messagesCollection = ChatViewFireStorePath.messages;
+    final collectionRef = documentPath == null
+        ? _firestoreInstance.collection(messagesCollection)
+        : _firestoreInstance.doc(documentPath).collection(messagesCollection);
+
+    return collectionRef.withConverter(
+      fromFirestore: _messageFromFirestore,
+      toFirestore: _messageToFirestore,
+    );
+  }
 
   static Message? _messageFromFirestore(
     DocumentSnapshot<Map<String, dynamic>> snapshot,
     SnapshotOptions? options,
   ) {
     final data = snapshot.data();
-    return data == null ? null : Message.fromJson(data);
+    if (data == null) return null;
+    try {
+      return Message.fromJson(data).copyWith(id: snapshot.id);
+    } catch (_) {
+      return null;
+    }
   }
 
   static Map<String, dynamic> _messageToFirestore(

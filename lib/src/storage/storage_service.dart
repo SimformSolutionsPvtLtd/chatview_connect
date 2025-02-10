@@ -4,21 +4,49 @@ import 'package:flutter_chatview_models/flutter_chatview_models.dart';
 abstract interface class StorageService {
   const StorageService._();
 
-  /// Uploads an image or voice document from a [Message] to a specified
-  /// directory path with an file name in Cloud Storage and returns doc's URL.
+  /// Uploads an image or voice document from a [Message] to Cloud Storage.
   ///
-  /// (optional): [uploadPath] specify how file will be stored in database.
-  /// {@macro flutter_chatview_db_connection.StorageService.getDirectoryPath}
+  /// The file is stored in the specified directory path with a generated
+  /// or provided file name.
   ///
-  /// (optional): [fileName] specify document name.
+  /// Once the upload is successful, the method returns the document's URL.
+  ///
+  /// **Parameters:**
+  /// - (required): [message] Containing the document to upload.
+  /// - (required): [chatId] The unique identifier of the chat where the
+  /// document belongs.
+  /// - (optional): [uploadPath] Specifies the directory path in Cloud Storage
+  /// where the file will be stored.
+  /// - (optional): [fileName] Specifies the name of the document file.
+  /// (including the file's extension)
+  ///
+  /// **Returns:** A [Future] that resolves to the download URL of the uploaded
+  /// document, or `null` if the upload fails.
+  ///
   /// {@macro flutter_chatview_db_connection.StorageService.getFileName}
-  Future<String?> uploadDoc(
-    Message message, {
+  Future<String?> uploadDoc({
+    required Message message,
+    required String chatId,
     String? uploadPath,
     String? fileName,
   });
 
-  /// Delete document from the Cloud Storage and returns a [bool] value
-  /// true if its deleted.
+  /// Deletes a document from Cloud Storage.
+  ///
+  /// **Parameters:**
+  /// - (required): The [Message] containing the document to be deleted.
+  ///
+  /// **Returns:** A [Future] that resolves to `true`
+  /// if the document is successfully deleted, otherwise `false`.
   Future<bool> deleteDoc(Message message);
+
+  /// Deletes all documents related to the specified chat, including any images
+  /// or voice messages shared within the chat.
+  ///
+  /// **Parameters:**
+  /// - (required): [chatId] The unique identifier of the chat whose documents
+  /// will be deleted.
+  ///
+  /// Returns a true/false indicating whether the deletion was successful.
+  Future<bool> deleteChatDocs(String chatId);
 }

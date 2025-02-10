@@ -164,6 +164,9 @@ final class ChatViewConnectionManager {
   ) async {
     if (!_isInitialized) return null;
 
+    final chatRoomId = _database.chatRoomId;
+    if (chatRoomId == null) throw Exception("ChatRoom ID Can't be null");
+
     final sentByUserId = ChatViewDbConnection.instance.currentUserId;
     if (sentByUserId == null) throw Exception("Sender ID Can't be null");
     final messageDm = Message(
@@ -183,7 +186,13 @@ final class ChatViewConnectionManager {
         // TODO(Yash): Update this once the chatview supports
         //  the network voice message URL on UI.
         uploadVoiceToStorage: false,
-        uploadDocumentCallback: _storage.uploadDoc,
+        uploadDocumentCallback: (message, {fileName, uploadPath}) =>
+            _storage.uploadDoc(
+          message: message,
+          chatId: chatRoomId,
+          fileName: fileName,
+          uploadPath: uploadPath,
+        ),
       ),
     );
   }
@@ -271,6 +280,19 @@ final class ChatViewConnectionManager {
       },
     );
   }
+
+  /// Deletes the entire chat and removes it from all users involved in
+  /// the chat.
+  ///
+  /// **Parameters:**
+  /// - (required): [chatId] The unique identifier of the chat to be deleted.
+  ///
+  /// Additionally, it will delete all associated media
+  /// (such as images and voice messages) from storage.
+  Future<bool> deleteChat(String chatId) => _database.deleteChat(
+    chatId: chatId,
+    deleteChatDocsFromStorageCallback: _storage.deleteChatDocs,
+  );
 
   void _listenChatRoomUsersActivities(
     Map<String, ChatRoomUserDm> users,

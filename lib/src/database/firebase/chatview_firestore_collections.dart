@@ -59,6 +59,32 @@ abstract final class ChatViewFireStoreCollections {
     return message?.toJson() ?? {};
   }
 
+  /// Collection reference for chat rooms.
+  ///
+  /// **Parameters:**
+  /// - (optional): [documentPath] specifies the database path where the
+  /// chat collection should be accessed.
+  ///
+  /// {@template flutter_chatview_db_connection.StorageService.chatCollection}
+  ///
+  /// If a path is specified, the chat collection will be created at '[documentPath]/chats' and
+  /// the same path will be used to retrieve chat rooms.
+  ///
+  /// Example: 'organizations/simform/chats'
+  ///
+  /// {@endtemplate}
+  static CollectionReference<dynamic> chatCollection([
+    String? documentPath,
+  ]) {
+    const chatCollection = ChatViewFireStorePath.chats;
+
+    final collectionRef = documentPath == null
+        ? _firestoreInstance.collection(chatCollection)
+        : _firestoreInstance.doc(documentPath).collection(chatCollection);
+
+    return collectionRef;
+  }
+
   /// Collection reference for user.
   ///
   /// **Parameters:**

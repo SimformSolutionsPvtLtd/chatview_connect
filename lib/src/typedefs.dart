@@ -28,6 +28,12 @@ typedef UploadDocumentCallback = Future<String?> Function(
 /// Callback function for deleting document from storage.
 typedef DeleteDocumentCallback = Future<bool> Function(Message message);
 
+/// Callback function for deleting all documents of specific [chatId] from
+/// storage.
+typedef DeleteChatDocsFromStorageCallback = Future<bool> Function(
+  String chatId,
+);
+
 /// A callback type used for handling changes in chat room user data.
 typedef ChatRoomUserStreamCallback = void Function(
   ChatRoomUserDm? chatRoomUser,

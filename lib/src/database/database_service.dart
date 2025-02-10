@@ -14,6 +14,13 @@ import '../typedefs.dart';
 abstract interface class DatabaseService {
   const DatabaseService._();
 
+  /// The unique identifier for the chat room.
+  ///
+  /// This ID is used to distinguish between different chat rooms.
+  /// It can be `null` if the chat room has not been initialized
+  /// or assigned yet.
+  String? get chatRoomId;
+
   /// Sets the chat room configuration with the specified [chatRoomId].
   ///
   /// **Parameters:**
@@ -258,4 +265,22 @@ abstract interface class DatabaseService {
   /// Returns `null` if the chat creation fails.
   /// {@endtemplate}
   Future<String?> createOneToOneUserChat(String userId);
+
+  /// Deletes the entire chat from the chat collection and removes it
+  /// from all users involved in the chat.
+  ///
+  /// Additionally, this method triggers the [deleteChatDocsFromStorageCallback]
+  /// to delete all associated media (such as images and voice messages)
+  /// from storage.
+  ///
+  /// **Parameters:**
+  /// - (required): [chatId] The unique identifier of the chat to be deleted.
+  /// - (optional): [deleteChatDocsFromStorageCallback] A callback function
+  /// responsible for deleting the chat's media from storage.
+  ///
+  /// Returns a true/false indicating whether the deletion was successful.
+  Future<bool> deleteChat({
+    required String chatId,
+    DeleteChatDocsFromStorageCallback? deleteChatDocsFromStorageCallback,
+  });
 }

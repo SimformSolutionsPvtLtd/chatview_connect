@@ -58,7 +58,6 @@ class AddMessageConfig {
   /// {@template flutter_chatview_db_connection.AddMessageConfig.uploadPath}
   /// The path to store image at that directory on the storage.
   /// {@endtemplate}
-  /// {@macro flutter_chatview_db_connection.StorageService.getDirectoryPath}
   final String? uploadPath;
 
   /// {@template flutter_chatview_db_connection.AddMessageConfig.imageName}

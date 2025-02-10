@@ -14,17 +14,16 @@ import 'chatview_firebase_storage_refs.dart';
 final class ChatViewFirebaseStorage implements StorageService {
   static final _firebaseStorage = FirebaseStorage.instance.ref();
 
-  static final _imageRef = _firebaseStorage.child(
-    ChatViewFirebaseStorageRefs.images,
-  );
+  Reference _imageRef(String chatId) =>
+      _firebaseStorage.child(ChatViewFirebaseStorageRefs.getImageRef(chatId));
 
-  static final _voiceRef = _firebaseStorage.child(
-    ChatViewFirebaseStorageRefs.voices,
-  );
+  Reference _voiceRef(String chatId) =>
+      _firebaseStorage.child(ChatViewFirebaseStorageRefs.getVoiceRef(chatId));
 
   @override
-  Future<String?> uploadDoc(
-    Message message, {
+  Future<String?> uploadDoc({
+    required Message message,
+    required String chatId,
     String? uploadPath,
     String? fileName,
   }) async {
@@ -32,14 +31,14 @@ final class ChatViewFirebaseStorage implements StorageService {
       case MessageType.image:
         return _uploadFile(
           message: message,
-          ref: _imageRef,
+          ref: _imageRef(chatId),
           uploadPath: uploadPath,
           fileName: fileName,
         );
       case MessageType.voice:
         return _uploadFile(
           message: message,
-          ref: _voiceRef,
+          ref: _voiceRef(chatId),
           uploadPath: uploadPath,
           fileName: fileName,
         );
@@ -52,15 +51,9 @@ final class ChatViewFirebaseStorage implements StorageService {
   Future<bool> deleteDoc(Message message) async {
     switch (message.messageType) {
       case MessageType.image:
-        return _deleteFile(
-          message: message,
-          filePath: message.message.fullPath,
-        );
+        return _deleteFile(message.message.fullPath);
       case MessageType.voice:
-        return _deleteFile(
-          message: message,
-          filePath: message.message.fullPath,
-        );
+        return _deleteFile(message.message.fullPath);
       case MessageType.text || MessageType.custom:
         return false;
     }
@@ -89,30 +82,6 @@ final class ChatViewFirebaseStorage implements StorageService {
     return '${messageIdWithSendBy}_${timestamp}_$fileName$fileExtension';
   }
 
-  /// {@template flutter_chatview_db_connection.StorageService.getDirectoryPath}
-  /// by default it will use following path pattern: year/month/day/message_id
-  /// Example:
-  /// ```dart
-  /// Message(
-  ///   id: '1',
-  ///   message: "Hi!",
-  ///   createdAt: DateTime(2024, 6, 25),
-  ///   sendBy: '1',
-  ///   status: MessageStatus.read,
-  /// );
-  /// Pattern: year/month/date/id
-  /// Output: 2024/6/25/1
-  /// ```
-  /// {@endtemplate}
-  String _getDirectoryPath(Message message) {
-    final messageId = message.id;
-    final day = message.createdAt.day;
-    final month = message.createdAt.month;
-    final year = message.createdAt.year;
-    final directoryPath = '$year/$month/$day/$messageId';
-    return directoryPath;
-  }
-
   Future<String?> _uploadFile({
     required Message message,
     required Reference ref,
@@ -120,9 +89,9 @@ final class ChatViewFirebaseStorage implements StorageService {
     String? uploadPath,
     String? fileName,
   }) async {
-    final directoryPath = uploadPath ?? _getDirectoryPath(message);
     final name = fileName ?? _getFileName(message);
-    final fileRef = ref.child('$directoryPath/$name');
+    final directoryPath = uploadPath == null ? name : '$uploadPath/$name';
+    final fileRef = ref.child(directoryPath);
     if (message.messageType.isImage && kIsWeb) {
       final bytes = await http.readBytes(Uri.parse(message.message));
       await fileRef.putData(bytes);
@@ -136,15 +105,37 @@ final class ChatViewFirebaseStorage implements StorageService {
     }
   }
 
-  Future<bool> _deleteFile({
-    required Message message,
-    required String? filePath,
-  }) async {
+  Future<bool> _deleteFile(String? filePath) async {
     if (filePath == null) {
       throw Exception('chatview: Unable to get path from message');
     }
     final imageRef = _firebaseStorage.child(filePath);
     await imageRef.delete();
+    return true;
+  }
+
+  @override
+  Future<bool> deleteChatDocs(String chatId) async {
+    final values = await Future.wait([
+      _imageRef(chatId)
+          .listAll()
+          .then((value) => _deleteReferences(value.items)),
+      _voiceRef(chatId)
+          .listAll()
+          .then((value) => _deleteReferences(value.items)),
+    ]);
+
+    final isImagesDeleted = values.firstOrNull ?? true;
+    final isVoicesDeleted = values.lastOrNull ?? true;
+    return isImagesDeleted && isVoicesDeleted;
+  }
+
+  Future<bool> _deleteReferences(List<Reference> references) async {
+    if (references.isEmpty) return true;
+    final messagesLength = references.length;
+    await Future.wait([
+      for (var i = 0; i < messagesLength; i++) references[i].delete(),
+    ]);
     return true;
   }
 }

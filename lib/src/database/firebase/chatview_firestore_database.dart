@@ -51,6 +51,9 @@ final class ChatViewFireStoreDatabase implements DatabaseService {
       );
 
   @override
+  String? get chatRoomId => _chatRoomId;
+
+  @override
   void setChatRoom({required String chatRoomId}) => _chatRoomId = chatRoomId;
 
   @override
@@ -627,5 +630,82 @@ final class ChatViewFireStoreDatabase implements DatabaseService {
     final result =
         await ChatViewFireStoreCollections.usersCollection().doc(userId).get();
     return result.exists;
+  }
+
+  @override
+  Future<bool> deleteChat({
+    required String chatId,
+    DeleteChatDocsFromStorageCallback? deleteChatDocsFromStorageCallback,
+  }) async {
+    final chatRoomCollectionPath = _chatRoomCollectionPath(chatId: chatId);
+
+    final userCollection = ChatViewFireStoreCollections.chatUsersCollection(
+      chatRoomCollectionPath,
+    );
+
+    final usersSnapshot = await userCollection.get();
+    final usersSnapshotDocs = usersSnapshot.docs;
+    final usersSnapshotDocsLength = usersSnapshotDocs.length;
+
+    // List of asynchronous tasks for removing the chat room from each user's
+    // chat list.
+    final deletingChatRoomFromUsers = <Future<void>>[];
+
+    // List of asynchronous tasks for removing users from the chat room.
+    final deletingUsersFromChatRoom = <Future<void>>[];
+
+    for (var i = 0; i < usersSnapshotDocsLength; i++) {
+      final userId = usersSnapshotDocs[i].id;
+      deletingChatRoomFromUsers.add(
+        ChatViewFireStoreCollections.userChatsConversationCollection(
+          userId: userId,
+        ).doc(chatId).delete(),
+      );
+      deletingUsersFromChatRoom.add(
+        ChatViewFireStoreCollections.chatUsersCollection(chatRoomCollectionPath)
+            .doc(userId)
+            .delete(),
+      );
+    }
+
+    // Removes the chat room from each user's chat list
+    // and users from the chat room.
+    await Future.wait([
+      ...deletingChatRoomFromUsers,
+      ...deletingUsersFromChatRoom,
+    ]);
+
+    await _deleteNestedChatCollections(chatId);
+
+    /// for deleting chat medias
+    await deleteChatDocsFromStorageCallback?.call(chatId);
+    return true;
+  }
+
+  Future<bool> _deleteNestedChatCollections(String chatId) async {
+    try {
+      final chatRoomCollectionPath = _chatRoomCollectionPath(chatId: chatId);
+
+      final messagesSnapshot =
+          await ChatViewFireStoreCollections.messageCollection(
+        chatRoomCollectionPath,
+      ).get();
+
+      final messagesSnapshotDocs = messagesSnapshot.docs;
+      final messagesSnapshotDocsLength = messagesSnapshotDocs.length;
+
+      await Future.wait([
+        for (var i = 0; i < messagesSnapshotDocsLength; i++)
+          ChatViewFireStoreCollections.messageCollection(chatRoomCollectionPath)
+              .doc(messagesSnapshotDocs[i].id)
+              .delete(),
+      ]);
+
+      await ChatViewFireStoreCollections.chatCollection().doc(chatId).delete();
+
+      return true;
+    } catch (_) {
+      return false;
+    }
   }
 }

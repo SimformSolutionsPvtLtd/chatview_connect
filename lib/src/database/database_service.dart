@@ -79,6 +79,13 @@ abstract interface class DatabaseService {
   /// by defaults it will retrieve the all users if not specified.
   Stream<List<ChatUser>> getUsersStream({int? limit});
 
+  /// Retrieves a list of users batches from database.
+  ///
+  /// **Parameters:**
+  /// - (optional): [limit] specifies the limit of the users to be retrieved.
+  /// by defaults it will retrieve the all users if not specified.
+  Future<List<ChatUser>> getUsers({int? limit});
+
   /// Retrieves a stream of a particular user based on the provided user ID.
   /// This method listens for real-time updates to the user's data in
   /// the database.

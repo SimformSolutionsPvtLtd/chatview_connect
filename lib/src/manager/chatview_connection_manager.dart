@@ -259,7 +259,7 @@ final class ChatViewConnectionManager {
   /// Retrieves a list of users as a map, where the key is the user ID,
   /// and the value is their information.
   Future<Map<String, ChatUser>> getUsers() {
-    return _database.getUsersStream().first.then(
+    return _database.getUsers().then(
       (value) {
         final users = <String, ChatUser>{};
         final valuesLength = value.length;

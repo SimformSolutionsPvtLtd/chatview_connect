@@ -262,6 +262,19 @@ final class ChatViewFireStoreDatabase implements DatabaseService {
   }
 
   @override
+  Future<List<ChatUser>> getUsers({int? limit}) async {
+    final userCollection =
+        ChatViewFireStoreCollections.usersCollection().toQuery(limit: limit);
+    final userSnapshot = await userCollection.get();
+    final docs = userSnapshot.docs;
+    final docsLength = docs.length;
+    return <ChatUser>[
+      for (var i = 0; i < docsLength; i++)
+        if (docs[i].data() case final chatUser?) chatUser,
+    ];
+  }
+
+  @override
   Stream<ChatUser?> getUserStreamById({required String userId}) {
     final userCollection =
         ChatViewFireStoreCollections.usersCollection(_userCollection)
@@ -343,26 +356,38 @@ final class ChatViewFireStoreDatabase implements DatabaseService {
   }
 
   Future<List<ChatRoomUserDm>> _getChatRoomUsersWithDetails({
-    int? limit,
-    DocumentSnapshot<ChatRoomUserDm?>? startAfterDocument,
+    bool includeCurrentUser = true,
   }) async {
-    final userCollection = ChatViewFireStoreCollections.chatUsersCollection(
-      _chatRoomCollectionPath(),
-    ).toQuery(limit: limit, startAfterDocument: startAfterDocument);
+    final collectionPath = _chatRoomCollectionPath();
 
-    final userSnapshot = await userCollection.get();
+    final currentChatID = collectionPath?.chatId ?? '';
 
-    final docs = userSnapshot.docs;
+    if (currentChatID.isEmpty) {
+      return throw Exception('Chat ID not found from path: $collectionPath');
+    }
+
+    final userCollectionSnapshot =
+        await ChatViewFireStoreCollections.chatUsersCollection(collectionPath)
+            .get();
+
+    final docs = userCollectionSnapshot.docs;
+    if (docs.isEmpty) {
+      throw Exception('No users found in chat ID: $currentChatID');
+    }
+
     final docsLength = docs.length;
     final chatRoomUsers = <String, ChatRoomUserDm>{};
-
     final chatRoomUsersInfoFutures = <Future<void>>[];
+    final currentUserId = ChatViewDbConnection.instance.currentUserId;
 
     for (var i = 0; i < docsLength; i++) {
       final doc = docs[i];
+      final userId = doc.id;
+      if (!includeCurrentUser && userId == currentUserId) {
+        continue;
+      }
       final chatRoomUser = doc.data();
       if (chatRoomUser == null) continue;
-      final userId = doc.id;
       chatRoomUsers[userId] = chatRoomUser;
       chatRoomUsersInfoFutures.add(
         ChatViewFireStoreCollections.usersCollection(_userCollection)
@@ -370,7 +395,8 @@ final class ChatViewFireStoreDatabase implements DatabaseService {
             .get()
             .then(
           (chatUserDoc) {
-            final userData = chatUserDoc.data();
+            final userData = chatUserDoc.data() ??
+                ChatUser(id: userId, name: 'Unknown User');
             final chatRoomUser = chatRoomUsers[userId];
             if (chatRoomUser != null) {
               chatRoomUsers[userId] = chatRoomUser.copyWith(chatUser: userData);

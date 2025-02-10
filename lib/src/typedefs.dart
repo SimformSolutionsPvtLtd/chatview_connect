@@ -1,4 +1,4 @@
-import 'package:chatview/chatview.dart';
+import 'package:flutter_chatview_models/flutter_chatview_models.dart';
 
 import 'database/database_service.dart';
 import 'models/chat_room_user_dm.dart';

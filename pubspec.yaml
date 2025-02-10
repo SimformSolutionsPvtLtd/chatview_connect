@@ -8,14 +8,18 @@ environment:
   sdk: '>=3.2.0 <4.0.0'
 
 dependencies:
-  # TODO(YASH): Remove this once centralised repository is created for using same models and enums
-  chatview: ^2.4.0
   cloud_firestore: ^5.6.0
   firebase_storage: ^12.3.7
 
   flutter:
     sdk: flutter
 
+  # Using this branch to implement custom tab close status
+  flutter_chatview_models:
+    git:
+      url: https://github.com/SimformSolutionsPvtLtd/flutter_chatview_models
+
+  http: ^1.3.0
   intl: ^0.20.0
   path: ^1.9.0
   rxdart: ^0.28.0

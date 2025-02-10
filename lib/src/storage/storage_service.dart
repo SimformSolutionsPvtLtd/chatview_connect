@@ -1,4 +1,4 @@
-import 'package:chatview/chatview.dart';
+import 'package:flutter_chatview_models/flutter_chatview_models.dart';
 
 /// Defined different methods to interact with a cloud storage service.
 abstract interface class StorageService {

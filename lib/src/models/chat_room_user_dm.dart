@@ -1,4 +1,4 @@
-import 'package:chatview/chatview.dart';
+import 'package:flutter_chatview_models/flutter_chatview_models.dart';
 
 import '../enum.dart';
 
@@ -14,6 +14,7 @@ class ChatRoomUserDm {
   /// - (optional): [typingStatus] indicates the typing status of the user,
   /// with a default value of [TypeWriterStatus.typed].
   const ChatRoomUserDm({
+    required this.chatId,
     required this.userId,
     required this.chatUser,
     required this.userStatus,
@@ -34,6 +35,7 @@ class ChatRoomUserDm {
           ? ChatUser.fromJson(chatUserData)
           : null,
       userId: json['user_id']?.toString() ?? '',
+      chatId: json['chat_id']?.toString() ?? '',
       userStatus: UserStatusExtension.parse(json['user_status'].toString()),
       typingStatus: TypeWriterStatusExtension.parse(
         json['typing_status'].toString(),
@@ -48,6 +50,9 @@ class ChatRoomUserDm {
 
   /// The unique identifier of the user.
   final String userId;
+
+  /// The unique identifier of the chat.
+  final String chatId;
 
   /// The online/offline status of the user.
   ///
@@ -82,6 +87,7 @@ class ChatRoomUserDm {
   ///
   /// Returns a new [ChatRoomUserDm] instance with the specified updates.
   ChatRoomUserDm copyWith({
+    String? chatId,
     String? userId,
     ChatUser? chatUser,
     UserStatus? userStatus,
@@ -89,6 +95,7 @@ class ChatRoomUserDm {
     bool forceNullValue = false,
   }) {
     return ChatRoomUserDm(
+      chatId: chatId ?? this.chatId,
       userId: userId ?? this.userId,
       chatUser: forceNullValue ? chatUser : chatUser ?? this.chatUser,
       userStatus: userStatus ?? this.userStatus,

@@ -1,7 +1,9 @@
 import 'dart:io';
 
-import 'package:chatview/chatview.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter_chatview_models/flutter_chatview_models.dart';
+import 'package:http/http.dart' as http;
 import 'package:path/path.dart' as path;
 
 import '../../extensions.dart';
@@ -118,14 +120,20 @@ final class ChatViewFirebaseStorage implements StorageService {
     String? uploadPath,
     String? fileName,
   }) async {
-    final file = File(filePath ?? message.message);
-    final isFileExist = file.existsSync();
-    if (!isFileExist) throw Exception('File Not Exist!');
     final directoryPath = uploadPath ?? _getDirectoryPath(message);
     final name = fileName ?? _getFileName(message);
     final fileRef = ref.child('$directoryPath/$name');
-    await fileRef.putFile(file);
-    return fileRef.getDownloadURL();
+    if (message.messageType.isImage && kIsWeb) {
+      final bytes = await http.readBytes(Uri.parse(message.message));
+      await fileRef.putData(bytes);
+      return fileRef.getDownloadURL();
+    } else {
+      final file = File(filePath ?? message.message);
+      final isFileExist = file.existsSync();
+      if (!isFileExist) throw Exception('File Not Exist!');
+      await fileRef.putFile(file);
+      return fileRef.getDownloadURL();
+    }
   }
 
   Future<bool> _deleteFile({

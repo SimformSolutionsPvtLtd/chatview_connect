@@ -1,20 +1,43 @@
 import 'enum.dart';
 import 'manager/chatview_connection_manager.dart';
+import 'models/chat_database_path_config.dart';
 
-/// A singleton class that provides various cloud database services
-/// for chat views.
+/// A singleton class provides different type of database's clouds services for
+/// chat views.
 ///
-/// It offers methods to initialize and interact with cloud services,
-/// such as `database` and `storage` services.
+/// provides methods to initialize and access the clouds service
+/// Example: [connectionManager].
 final class ChatViewDbConnection {
-  /// Factory constructor to create and retrieve the singleton instance
-  /// of [ChatViewDbConnection].
+  /// The main entry point for using the chat database connection in
+  /// this package.
   ///
-  /// **Parameters:**
+  /// This class must be instantiated to access chat-related functionality.
+  /// It serves as the core connection layer for handling chat related
+  /// operations across different cloud providers.
+  ///
   /// - (required): [databaseType] specifies the type of cloud database service
-  /// to be used.
-  factory ChatViewDbConnection(ChatViewDatabaseType databaseType) {
+  /// to be used. (e.g., Firebase) to be used for chat.
+  ///
+  /// - (optional): [databasePathConfig] Defines the Firestore database paths
+  /// for retrieving users data.
+  ///   - If omitted, the default top-level `users` collection will be used.
+  ///
+  /// **Example Usage in `main.dart`:**
+  /// ```dart
+  /// ChatViewDbConnection(
+  ///     ChatViewDatabaseType.firebase,
+  ///     databasePathConfig: ChatDatabasePathConfig(
+  ///       userCollectionPath: 'organizations/org123',
+  ///     ),
+  /// );
+  /// ```
+  factory ChatViewDbConnection(
+    ChatViewDatabaseType databaseType, {
+    ChatDatabasePathConfig? databasePathConfig,
+  }) {
     _instance ??= ChatViewDbConnection._(databaseType);
+    ChatViewConnectionManager(databaseType);
+    _chatDatabasePathConfig = databasePathConfig ?? ChatDatabasePathConfig();
     return _instance!;
   }
 
@@ -23,6 +46,16 @@ final class ChatViewDbConnection {
   static String? _currentUserId;
   static ChatViewDbConnection? _instance;
   final ChatViewDatabaseType _databaseType;
+
+  static ChatDatabasePathConfig _chatDatabasePathConfig =
+      ChatDatabasePathConfig();
+
+  /// Retrieves the current database path configuration for chat operations.
+  ///
+  /// Returns a [ChatDatabasePathConfig] object containing the paths for
+  /// user chats, chat collections, and optionally, user collections.
+  ChatDatabasePathConfig get getChatDatabasePathConfig =>
+      _chatDatabasePathConfig;
 
   /// The type of database that is being used.
   ChatViewDatabaseType get databaseType => _databaseType;

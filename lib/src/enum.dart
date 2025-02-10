@@ -1,5 +1,5 @@
-import 'package:chatview/chatview.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter_chatview_models/flutter_chatview_models.dart';
 
 /// An enumeration of databases types.
 enum ChatViewDatabaseType {
@@ -164,6 +164,39 @@ extension TypeWriterStatusExtension on TypeWriterStatus {
       return TypeWriterStatus.typing;
     } else {
       return TypeWriterStatus.typed;
+    }
+  }
+}
+
+/// An enumeration representing different types of chat rooms.
+enum ChatRoomType {
+  /// A one-on-one private chat between two users.
+  oneToOne,
+
+  /// A group chat involving multiple users.
+  group;
+
+  /// Returns `true` if the chat room type is [oneToOne].
+  bool get isOneToOne => this == oneToOne;
+
+  /// Returns `true` if the chat room type is [group].
+  bool get isGroup => this == group;
+}
+
+/// Provides utility methods for [ChatRoomTypeExtension].
+extension ChatRoomTypeExtension on ChatRoomType {
+  /// Parses a string value and returns the corresponding [ChatRoomType].
+  ///
+  /// Returns the corresponding [ChatRoomType] if the value matches,
+  /// or `null` if it doesn't.
+  static ChatRoomType? tryParse(String? value) {
+    final safeValue = value?.trim().toLowerCase() ?? '';
+    if (safeValue == ChatRoomType.oneToOne.name.toLowerCase()) {
+      return ChatRoomType.oneToOne;
+    } else if (safeValue == ChatRoomType.group.name.toLowerCase()) {
+      return ChatRoomType.group;
+    } else {
+      return null;
     }
   }
 }

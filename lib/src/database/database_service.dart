@@ -1,13 +1,12 @@
 import 'dart:async';
 
-import 'package:chatview/chatview.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter_chatview_models/flutter_chatview_models.dart';
 
 import '../enum.dart';
 import '../models/chat_room_user_dm.dart';
 import '../models/chat_view_participants_dm.dart';
 import '../models/config/add_message_config.dart';
-import '../models/database_path_config.dart';
 import '../models/message_dm.dart';
 import '../typedefs.dart';
 
@@ -15,20 +14,17 @@ import '../typedefs.dart';
 abstract interface class DatabaseService {
   const DatabaseService._();
 
-  /// Sets the database configuration for the chat system.
+  /// Sets the chat room configuration with the specified [chatRoomId].
   ///
-  /// This method allows you to specify the configuration details
-  /// required to access the chat database, such as chat room
-  /// and user collection paths.
+  /// **Parameters:**
   ///
-  /// - (required): [config] is required and should be an instance of
-  /// [ChatDatabasePathConfig] containing the necessary database paths.
-  ///
-  /// {@macro flutter_chatview_db_connection.ChatDatabasePathConfig}
-  void setConfiguration({required ChatDatabasePathConfig config});
+  /// - (required): [chatRoomId] is required and represents the
+  /// unique identifier for the chat room.
+  void setChatRoom({required String chatRoomId});
 
-  /// Reset the database configuration
-  void resetConfiguration();
+  /// Resets the chat room configuration to its default state.
+  /// This method clears any previously set chat room data or configurations.
+  void resetChatRoom();
 
   /// Asynchronously fetches messages and returns [List] of [MessageDm].
   ///
@@ -223,4 +219,36 @@ abstract interface class DatabaseService {
     TypeWriterStatus? typingStatus,
     UserStatus? userStatus,
   });
+
+  /// Returns a stream of chat rooms, each containing a list of users
+  /// (excluding the current user).
+  ///
+  /// **Parameters:**
+  ///
+  /// - (optional): [limit] specifies the maximum number of chat rooms to
+  /// retrieve. By default, it will retrieve all users if not specified.
+  ///
+  /// Each event in the stream emits a list of chats, where:
+  /// - Each chat (e.g., `chat1`, `chat2`) is represented as
+  /// a list of [ChatRoomUserDm] instances.
+  /// - The list of users in each chat **does not** include the current user.
+  ///
+  /// The stream dynamically updates to reflect changes in chat room users,
+  /// such as their online/offline status and typing activity.
+  Stream<List<List<ChatRoomUserDm>>> getChats({int? limit});
+
+  /// {@template flutter_chatview_db_connection.DatabaseService.createOneToOneUserChat}
+  /// Creates a one-to-one chat with the specified user.
+  ///
+  /// **Parameters:**
+  /// - (required): [userId] The unique identifier of the user to
+  /// create a chat with.
+  ///
+  /// If a chat with the given [userId] already exists, the existing chat ID
+  /// is returned.
+  /// Otherwise, a new chat is created, and its ID is returned upon success.
+  ///
+  /// Returns `null` if the chat creation fails.
+  /// {@endtemplate}
+  Future<String?> createOneToOneUserChat(String userId);
 }

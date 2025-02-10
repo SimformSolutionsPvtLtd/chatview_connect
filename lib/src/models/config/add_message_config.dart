@@ -1,4 +1,4 @@
-import 'package:chatview/chatview.dart';
+import 'package:flutter_chatview_models/flutter_chatview_models.dart';
 
 import '../../typedefs.dart';
 

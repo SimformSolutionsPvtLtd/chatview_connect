@@ -1,6 +1,7 @@
 import 'dart:async';
 
-import 'package:chatview/chatview.dart';
+import 'package:flutter/widgets.dart';
+import 'package:flutter_chatview_models/flutter_chatview_models.dart';
 import 'package:uuid/uuid.dart';
 
 import '../chatview_db_connection.dart';
@@ -9,7 +10,6 @@ import '../database/firebase/chatview_firestore_database.dart';
 import '../enum.dart';
 import '../models/chat_room_user_dm.dart';
 import '../models/config/add_message_config.dart';
-import '../models/database_path_config.dart';
 import '../models/message_dm.dart';
 import '../storage/firebase/chatview_firebase_storage.dart';
 import '../storage/storage_service.dart';
@@ -62,6 +62,7 @@ final class ChatViewConnectionManager {
   static ChatViewConnectionManager? _instance;
   static StreamSubscription<List<MessageDm>>? _messagesStream;
   static StreamSubscription<Map<String, ChatRoomUserDm>>? _chatRoomUserStream;
+  static ChatController? _controller;
 
   bool get _isInitialized =>
       _chatRoomUserStream != null || _messagesStream != null;
@@ -88,58 +89,60 @@ final class ChatViewConnectionManager {
     return _instance!;
   }
 
-  /// Initializes the [ChatViewConnectionManager] with the given configuration
-  /// and listeners.
+  /// Initializes the chat controller for the specified chat room.
   ///
-  /// This method sets up the database, fetches users, and sets up listeners for
-  /// chat messages and user data changes.
+  /// From the given chat room, it retrieves the chat room participants
+  /// (current user and other users) and sets up listeners for messages,
+  /// user activity.
   ///
   /// **Parameters:**
+  /// - (required) [chatRoomId]: The unique identifier of the chat room
+  /// to be initialized.
+  /// - (optional) [initialMessageList]: An list of initial messages to
+  /// display in the chat.
+  /// - (optional) [scrollController]: An custom [ScrollController] for managing
+  /// scroll behavior.
   ///
-  /// - (required): [config] The configuration for the chat database path.
-  /// - (optional): [onChatRoomUserDataChange] Optional callback triggered
-  /// when chat room user data changes.
-  /// - (required): [onChatMessagesChange] Callback triggered when chat messages
-  /// change.
-  /// - (required): [onChatRoomInitialized] Callback triggered when the
-  /// chat room is initialized with users.
+  /// **Returns:**
+  /// A [Future] that resolves to an initialized [ChatController].
   ///
-  /// Example:
-  /// ```dart
-  /// await chatView.initialize(
-  ///   config: config,
-  ///   onChatRoomInitialized: (users) { /* Handle users */ },
-  ///   onChatMessagesChange: (messages) { /* Handle messages */ },
-  /// );
-  /// ```
-  Future<void> initialize({
-    required ChatDatabasePathConfig config,
-    required ChatMessagesChangeCallback onChatMessagesChange,
-    required ChatRoomInitializedCallback onChatRoomInitialized,
-    ChatRoomUserStreamCallback? onChatRoomUserDataChange,
+  /// **Throws:**
+  /// An [Exception] if no chat room participants are found.
+  Future<ChatController> getChatControllerByChatRoomId({
+    required String chatRoomId,
+    List<Message>? initialMessageList,
+    ScrollController? scrollController,
   }) async {
-    _database.setConfiguration(config: config);
-
     if (_isInitialized) dispose();
 
-    final users = await _database.getChatRoomParticipants();
-    if (users == null) throw Exception('No Users Found!');
+    _database.setChatRoom(chatRoomId: chatRoomId);
 
-    onChatRoomInitialized(users);
+    final chatRoomParticipants = await _database.getChatRoomParticipants();
+    if (chatRoomParticipants == null) throw Exception('No Users Found!');
 
-    // TODO(Yash): Handled listening of message stream in the next PR.
-    if (onChatRoomUserDataChange != null) {
-      _chatRoomUserStream = _database.getChatRoomUsersMetadataStream().listen(
-            (users) => onChatRoomUserDataChange.call(users.values.firstOrNull),
-          );
-    }
+    final controller = ChatController(
+      initialMessageList: initialMessageList ?? [],
+      scrollController: scrollController ?? ScrollController(),
+      currentUser: chatRoomParticipants.currentUser,
+      otherUsers: chatRoomParticipants.otherUsers,
+    );
+
+    _controller = controller;
+
+    _chatRoomUserStream = _database.getChatRoomUsersMetadataStream().listen(
+          // TODO(Yash): Change this once [userActivityChangeCallback]
+          //  is provided to user
+          (users) => _listenChatRoomUsersActivities(users, null),
+        );
 
     _messagesStream = _database
         .getMessagesStream(
           sortBy: MessageSortBy.dateTime,
           sortOrder: MessageSortOrder.asc,
         )
-        .listen(onChatMessagesChange);
+        .listen(_listenMessages);
+
+    return controller;
   }
 
   /// Sends a message and optionally attaches a reply message and message type.
@@ -245,6 +248,48 @@ final class ChatViewConnectionManager {
     );
   }
 
+  /// Returns a stream of chat rooms, each containing a list of users
+  /// (excluding the current user).
+  Stream<List<List<ChatRoomUserDm>>> getChats() => _database.getChats();
+
+  /// {@macro flutter_chatview_db_connection.DatabaseService.createOneToOneUserChat}
+  Future<String?> createOneToOneChat(String userId) =>
+      _database.createOneToOneUserChat(userId);
+
+  /// Retrieves a list of users as a map, where the key is the user ID,
+  /// and the value is their information.
+  Future<Map<String, ChatUser>> getUsers() {
+    return _database.getUsersStream().first.then(
+      (value) {
+        final users = <String, ChatUser>{};
+        final valuesLength = value.length;
+        for (var i = 0; i < valuesLength; i++) {
+          final user = value[i];
+          users[user.id] = user;
+        }
+        return users;
+      },
+    );
+  }
+
+  void _listenChatRoomUsersActivities(
+    Map<String, ChatRoomUserDm> users,
+    ValueSetter<Map<String, ChatRoomUserDm>>? userActivityChangeCallback,
+  ) {
+    final isOneToOneChat = users.length == 1;
+    if (isOneToOneChat) {
+      _controller?.setTypingIndicator =
+          users.values.first.typingStatus.isTyping;
+    }
+    if (userActivityChangeCallback case final callback?) callback(users);
+  }
+
+  void _listenMessages(List<MessageDm> messages) {
+    _controller
+      ?..initialMessageList.clear()
+      ..loadMoreData(messages.map((e) => e.message).toList());
+  }
+
   /// Disposes of resources related to chat room and message streams.
   ///
   /// This method is called to release any resources when the chat view is
@@ -253,6 +298,8 @@ final class ChatViewConnectionManager {
   /// It cancels any active streams and resets the database configuration.
   void dispose() {
     if (!_isInitialized) return;
+    _controller = null;
+    _database.resetChatRoom();
     _chatRoomUserStream?.cancel();
     _chatRoomUserStream = null;
     _messagesStream?.cancel();

@@ -1,7 +1,8 @@
-import 'package:chatview/chatview.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../../models/chat_room_user_dm.dart';
+import 'package:flutter_chatview_models/flutter_chatview_models.dart';
 
+import '../../models/chat_room_user_dm.dart';
+import '../../models/user_chats_conversation_dm.dart';
 import 'chatview_firestore_path.dart';
 
 /// Provides Firestore collections.
@@ -151,5 +152,54 @@ abstract final class ChatViewFireStoreCollections {
     SetOptions? options,
   ) {
     return user?.toJson() ?? {};
+  }
+
+  /// Collection reference for chats in user chats collection.
+  ///
+  /// **Parameters:**
+  /// - (optional): [documentPath] specifies the database path to
+  /// use user collection in chat room.
+  ///
+  /// {@template flutter_chatview_db_connection.StorageService.userChatsConversationCollection}
+  ///
+  /// if path specified the user chats collection will be created at '[documentPath]/user_chats/{userId}/chats'
+  /// and same path used to retrieve the user chats.
+  ///
+  /// Example: 'user_chats/user1/chats/chat1'
+  ///
+  /// {@endtemplate}
+  static CollectionReference<UserChatsConversationDm?>
+      userChatsConversationCollection({
+    required String userId,
+    String? documentPath,
+  }) {
+    const userChatsCollection = ChatViewFireStorePath.userChats;
+    final collection = documentPath == null
+        ? _firestoreInstance.collection(userChatsCollection)
+        : _firestoreInstance.doc(documentPath).collection(userChatsCollection);
+    return collection
+        .doc(userId)
+        .collection(ChatViewFireStorePath.chats)
+        .withConverter(
+          fromFirestore: _userChatsConvFromFirestore,
+          toFirestore: _userChatsConvToFirestore,
+        );
+  }
+
+  static UserChatsConversationDm? _userChatsConvFromFirestore(
+    DocumentSnapshot<Map<String, dynamic>> snapshot,
+    SnapshotOptions? options,
+  ) {
+    final data = snapshot.data();
+    return data?.isEmpty ?? true
+        ? null
+        : UserChatsConversationDm.fromJson(data!);
+  }
+
+  static Map<String, dynamic> _userChatsConvToFirestore(
+    UserChatsConversationDm? userChatsConv,
+    SetOptions? options,
+  ) {
+    return userChatsConv?.toJson() ?? {};
   }
 }

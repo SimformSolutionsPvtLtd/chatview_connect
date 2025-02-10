@@ -1,5 +1,5 @@
-import 'package:chatview/chatview.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter_chatview_models/flutter_chatview_models.dart';
 
 /// encapsulates information about message,
 /// including content of [Message] Data model and

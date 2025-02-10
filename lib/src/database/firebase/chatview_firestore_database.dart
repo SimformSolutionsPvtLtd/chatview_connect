@@ -1,15 +1,17 @@
-import 'package:chatview/chatview.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter_chatview_models/flutter_chatview_models.dart';
 import 'package:rxdart/rxdart.dart';
+import 'package:uuid/uuid.dart';
 
 import '../../chatview_db_connection.dart';
 import '../../enum.dart';
 import '../../extensions.dart';
+import '../../models/chat_database_path_config.dart';
 import '../../models/chat_room_user_dm.dart';
 import '../../models/chat_view_participants_dm.dart';
 import '../../models/config/add_message_config.dart';
-import '../../models/database_path_config.dart';
 import '../../models/message_dm.dart';
+import '../../models/user_chats_conversation_dm.dart';
 import '../../typedefs.dart';
 import '../database_service.dart';
 import 'chatview_firestore_collections.dart';
@@ -22,14 +24,20 @@ final class ChatViewFireStoreDatabase implements DatabaseService {
   static const String _status = 'status';
   static const String _reaction = 'reaction';
 
-  static ChatDatabasePathConfig? _chatDatabaseConfig;
+  String? _chatRoomId;
 
-  String? get _userCollection => _chatDatabaseConfig?.userCollectionPath;
+  ChatDatabasePathConfig get _chatDatabaseConfig =>
+      ChatViewDbConnection.instance.getChatDatabasePathConfig;
+
+  String? get _userCollection => _chatDatabaseConfig.userCollectionPath;
+
+  String? get _userChatsCollection =>
+      _chatDatabaseConfig.userChatsCollectionPath;
 
   String? _chatRoomCollectionPath({String? chatId}) {
-    final newChatId = chatId ?? _chatDatabaseConfig?.chatRoomId;
+    final newChatId = chatId ?? _chatRoomId;
     final collectionPath =
-        '${_chatDatabaseConfig?.chatRoomCollectionPath}/$newChatId';
+        '${_chatDatabaseConfig.chatCollectionPath}/$newChatId';
     assert(
       collectionPath.isValidFirestoreDocument,
       'invalid Firestore document path provided',
@@ -43,11 +51,10 @@ final class ChatViewFireStoreDatabase implements DatabaseService {
       );
 
   @override
-  void setConfiguration({required ChatDatabasePathConfig config}) =>
-      _chatDatabaseConfig = config;
+  void setChatRoom({required String chatRoomId}) => _chatRoomId = chatRoomId;
 
   @override
-  void resetConfiguration() => _chatDatabaseConfig = null;
+  void resetChatRoom() => _chatRoomId = null;
 
   @override
   Future<Message?> addMessage(
@@ -194,6 +201,12 @@ final class ChatViewFireStoreDatabase implements DatabaseService {
   }) {
     final collectionPath = _chatRoomCollectionPath(chatId: chatId);
 
+    final currentChatID = collectionPath?.chatId ?? '';
+
+    if (currentChatID.isEmpty) {
+      return Stream.error('Chat ID not found from path: $collectionPath');
+    }
+
     final userCollection =
         ChatViewFireStoreCollections.chatUsersCollection(collectionPath)
             .toQuery(limit: limit);
@@ -201,6 +214,9 @@ final class ChatViewFireStoreDatabase implements DatabaseService {
     return userCollection.snapshots().switchMap(
       (userSnapshot) {
         final docs = userSnapshot.docs;
+        if (docs.isEmpty) {
+          return Stream.error('No users found in chat ID: $chatId');
+        }
         final docsLength = docs.length;
         final listOfChatUserStream = <Stream<ChatRoomUserDm>>[];
         final currentUserId = ChatViewDbConnection.instance.currentUserId;
@@ -214,11 +230,16 @@ final class ChatViewFireStoreDatabase implements DatabaseService {
           if (chatRoomUser == null) continue;
           listOfChatUserStream.add(
             getUserStreamById(userId: userId).map(
-              (chatUser) => chatRoomUser.copyWith(chatUser: chatUser),
+              (chatUser) => chatRoomUser.copyWith(
+                chatUser: chatUser,
+                chatId: currentChatID,
+              ),
             ),
           );
         }
-        return Rx.combineLatestList(listOfChatUserStream);
+        return listOfChatUserStream.isEmpty
+            ? Stream.value([])
+            : Rx.combineLatestList(listOfChatUserStream);
       },
     );
   }
@@ -361,5 +382,224 @@ final class ChatViewFireStoreDatabase implements DatabaseService {
 
     await Future.wait(chatRoomUsersInfoFutures);
     return chatRoomUsers.values.toList();
+  }
+
+  @override
+  Stream<List<List<ChatRoomUserDm>>> getChats({int? limit}) {
+    final currentUserId = ChatViewDbConnection.instance.currentUserId;
+    if (currentUserId == null) {
+      return Stream.error('Current User with ID $currentUserId not found!');
+    }
+
+    final chatRoomCollection =
+        ChatViewFireStoreCollections.userChatsConversationCollection(
+      userId: currentUserId,
+    ).toQuery(limit: limit);
+
+    return chatRoomCollection.snapshots().switchMap(
+      (userChatsSnapshot) {
+        final docs = userChatsSnapshot.docs;
+        if (docs.isEmpty) return Stream.value([]);
+        final docsLength = docs.length;
+        final chatStreams = <Stream<List<ChatRoomUserDm>>>[
+          for (var i = 0; i < docsLength; i++)
+            getChatRoomParticipantsStream(
+              includeCurrentUser: false,
+              chatId: docs[i].id,
+            ),
+        ];
+        return Rx.combineLatestList(chatStreams);
+      },
+    );
+  }
+
+  @override
+  Future<String?> createOneToOneUserChat(String otherUserId) async {
+    final currentUserId = ChatViewDbConnection.instance.currentUserId;
+    if (currentUserId == null) {
+      throw Exception("Current user ID can't be null!");
+    }
+
+    if (otherUserId == currentUserId) {
+      throw Exception("otherUserId can't be same!");
+    }
+
+    final isUsersExists = await Future.wait([
+      _isUserExists(currentUserId),
+      _isUserExists(otherUserId),
+    ]);
+
+    final isBothUserExists = (isUsersExists.firstOrNull ?? false) &&
+        (isUsersExists.lastOrNull ?? false);
+
+    if (!isBothUserExists) {
+      throw Exception('User ID ($otherUserId) or ($currentUserId)  not exists');
+    }
+
+    final chatId = await _isChatExists(otherUserId);
+    if (chatId != null) return chatId;
+
+    final newChatId = await _createChatForOneToOne(otherUserId);
+    if (newChatId?.isEmpty ?? true) throw Exception('Unable to create a chat');
+
+    final result = await Future.wait([
+      _createChatInUserChats(
+        chatId: newChatId!,
+        currentUserId: currentUserId,
+        otherUserId: otherUserId,
+      ),
+      _createChatInUserChats(
+        chatId: newChatId,
+        currentUserId: otherUserId,
+        otherUserId: currentUserId,
+      ),
+    ]);
+
+    final isCurrentUserChatRoomCreated = result.firstOrNull ?? false;
+    final isOtherUserChatRoomCreated = result.lastOrNull ?? false;
+
+    if (isCurrentUserChatRoomCreated && isOtherUserChatRoomCreated) {
+      return newChatId;
+    } else if (isCurrentUserChatRoomCreated && !isOtherUserChatRoomCreated) {
+      await _deleteChatFromUserChats(
+        currentUserId: otherUserId,
+        chatId: newChatId,
+      );
+      return null;
+    } else if (isOtherUserChatRoomCreated && !isCurrentUserChatRoomCreated) {
+      await _deleteChatFromUserChats(
+        currentUserId: currentUserId,
+        chatId: newChatId,
+      );
+      return null;
+    } else {
+      return null;
+    }
+  }
+
+  /// To create one to one chat document at path of 'user_chats/[currentUserId]/chats/[chatId]' .
+  Future<bool> _createChatInUserChats({
+    required String chatId,
+    required String currentUserId,
+    required String otherUserId,
+  }) async {
+    try {
+      await ChatViewFireStoreCollections.userChatsConversationCollection(
+        userId: currentUserId,
+      ).doc(chatId).set(
+            UserChatsConversationDm(
+              userId: otherUserId,
+              chatType: ChatRoomType.oneToOne,
+            ),
+          );
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  Future<bool> _deleteChatFromUserChats({
+    required String chatId,
+    required String currentUserId,
+  }) async {
+    try {
+      await ChatViewFireStoreCollections.userChatsConversationCollection(
+        userId: currentUserId,
+      ).doc(chatId).delete();
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  Future<String?> _createChatForOneToOne(String otherUserId) async {
+    final currentUserId = ChatViewDbConnection.instance.currentUserId;
+    if (currentUserId == null) {
+      throw Exception("Current User ID can't be null");
+    }
+
+    final chatId = const Uuid().v8();
+
+    final result = await Future.wait(
+      [
+        _createChat(chatId: chatId, userId: currentUserId),
+        _createChat(chatId: chatId, userId: otherUserId),
+      ],
+    );
+
+    final isCurrentUserCreated = result.firstOrNull ?? false;
+    final isOtherUserCreated = result.lastOrNull ?? false;
+
+    if (!isCurrentUserCreated && !isOtherUserCreated) {
+      return null;
+    } else if (isCurrentUserCreated && !isOtherUserCreated) {
+      await _deleteChat(chatId: chatId);
+      return null;
+    } else if (isOtherUserCreated && !isCurrentUserCreated) {
+      await _deleteChat(chatId: chatId);
+      return null;
+    } else {
+      return chatId;
+    }
+  }
+
+  Future<bool> _createChat({
+    required String userId,
+    required String chatId,
+  }) async {
+    try {
+      await ChatViewFireStoreCollections.chatUsersCollection(
+        _chatRoomCollectionPath(chatId: chatId),
+      ).doc(userId).set(
+            ChatRoomUserDm(
+              chatUser: null,
+              userId: userId,
+              chatId: chatId,
+              userStatus: UserStatus.offline,
+            ),
+          );
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  Future<bool> _deleteChat({required String chatId}) async {
+    try {
+      await FirebaseFirestore.instance
+          .doc('${_chatDatabaseConfig.chatCollectionPath}/$chatId')
+          .delete();
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  Future<String?> _isChatExists(String otherUserId) async {
+    final currentUserId = ChatViewDbConnection.instance.currentUserId;
+    if (currentUserId == null) {
+      throw Exception("Current User ID can't be null");
+    }
+
+    final chatsSnapshot =
+        await ChatViewFireStoreCollections.userChatsConversationCollection(
+      documentPath: _userChatsCollection,
+      userId: currentUserId,
+    ).get();
+
+    final docs = chatsSnapshot.docs;
+    final docsLength = docs.length;
+    for (var i = 0; i < docsLength; i++) {
+      final doc = docs[i];
+      final userId = doc.data()?.userId;
+      if (userId == otherUserId) return doc.id;
+    }
+    return null;
+  }
+
+  Future<bool> _isUserExists(String userId) async {
+    final result =
+        await ChatViewFireStoreCollections.usersCollection().doc(userId).get();
+    return result.exists;
   }
 }

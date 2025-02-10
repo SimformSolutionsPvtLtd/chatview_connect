@@ -1,5 +1,5 @@
-import 'package:chatview/chatview.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter_chatview_models/flutter_chatview_models.dart';
 
 import 'enum.dart';
 
@@ -37,6 +37,12 @@ extension StringExtension on String {
       numberOfValues++;
     }
     return numberOfValues.isEven;
+  }
+
+  /// To get chat id from firestore collection path
+  String? get chatId {
+    final values = split('/');
+    return values.length >= 2 ? values[1] : null;
   }
 }
 

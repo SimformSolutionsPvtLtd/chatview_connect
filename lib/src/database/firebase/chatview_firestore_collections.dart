@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_chatview_models/flutter_chatview_models.dart';
 
+import '../../chatview_db_connection.dart';
 import '../../models/chat_room_user_dm.dart';
 import '../../models/user_chats_conversation_dm.dart';
 import 'chatview_firestore_path.dart';
@@ -121,7 +122,10 @@ abstract final class ChatViewFireStoreCollections {
     final data = snapshot.data() ?? {};
     if (data.isEmpty) return null;
     try {
-      return ChatUser.fromJson(data);
+      return ChatUser.fromJson(
+        data,
+        config: ChatViewDbConnection.instance.getChatUserModelConfig,
+      );
     } catch (_) {
       return null;
     }
@@ -131,7 +135,10 @@ abstract final class ChatViewFireStoreCollections {
     ChatUser? user,
     SetOptions? options,
   ) {
-    return user?.toJson() ?? {};
+    return user?.toJson(
+          config: ChatViewDbConnection.instance.getChatUserModelConfig,
+        ) ??
+        {};
   }
 
   /// Collection reference for user in chat room collection.

@@ -157,7 +157,7 @@ final class ChatViewConnectionManager {
   ///
   /// Returns a [Future] that completes with the newly sent [Message] object,
   /// or null if the message could not be sent.
-  Future<Message?> sendMessage(
+  Future<Message?> onSendTap(
     String message,
     ReplyMessage replyMessage,
     MessageType messageType,
@@ -232,7 +232,7 @@ final class ChatViewConnectionManager {
   ///
   /// **Parameters:**
   /// - (required): [message] The message that is being unsent.
-  Future<void> unsendMessage(Message message) async {
+  Future<void> onUnsendTap(Message message) async {
     if (!_isInitialized) return;
     await _database.deleteMessage(
       message,

@@ -1,6 +1,7 @@
 import 'enum.dart';
 import 'manager/chatview_connection_manager.dart';
 import 'models/chat_database_path_config.dart';
+import 'models/config/chat_user_model_config.dart';
 
 /// A singleton class provides different type of database's clouds services for
 /// chat views.
@@ -18,6 +19,13 @@ final class ChatViewDbConnection {
   /// - (required): [databaseType] specifies the type of cloud database service
   /// to be used. (e.g., Firebase) to be used for chat.
   ///
+  /// - **[chatUserModelConfig] (optional):** Customizes the serialization
+  /// and deserialization of user data.
+  ///   - By default, user data is stored and retrieved using standard keys
+  ///   like `id`, `name`, and `profilePhoto`.
+  ///   - Supports dynamic key mappings for different data sources
+  ///   (e.g., mapping `username` instead of `name`).
+  ///
   /// - (optional): [databasePathConfig] Defines the Firestore database paths
   /// for retrieving users data.
   ///   - If omitted, the default top-level `users` collection will be used.
@@ -26,6 +34,11 @@ final class ChatViewDbConnection {
   /// ```dart
   /// ChatViewDbConnection(
   ///     ChatViewDatabaseType.firebase,
+  ///     chatUserModelConfig: const ChatUserModelConfig(
+  ///       idKey: 'user_id',
+  ///       nameKey: 'first_name',
+  ///       profilePhotoKey: 'avatar',
+  ///     ),
   ///     databasePathConfig: ChatDatabasePathConfig(
   ///       userCollectionPath: 'organizations/org123',
   ///     ),
@@ -33,11 +46,13 @@ final class ChatViewDbConnection {
   /// ```
   factory ChatViewDbConnection(
     ChatViewDatabaseType databaseType, {
+    ChatUserModelConfig? chatUserModelConfig,
     ChatDatabasePathConfig? databasePathConfig,
   }) {
     _instance ??= ChatViewDbConnection._(databaseType);
     ChatViewConnectionManager(databaseType);
     _chatDatabasePathConfig = databasePathConfig ?? ChatDatabasePathConfig();
+    _chatUserModelConfig = chatUserModelConfig;
     return _instance!;
   }
 
@@ -56,6 +71,17 @@ final class ChatViewDbConnection {
   /// user chats, chat collections, and optionally, user collections.
   ChatDatabasePathConfig get getChatDatabasePathConfig =>
       _chatDatabasePathConfig;
+
+  static ChatUserModelConfig? _chatUserModelConfig;
+
+  /// Retrieves the current chat user model configuration.
+  ///
+  /// This configuration defines the mapping of JSON keys to user properties
+  /// (e.g., mapping `"username"` instead of `"name"`).
+  ///
+  /// If no configuration has been set, this will return `null`,
+  /// meaning default keys (`id`, `name`, `profilePhoto`) will be used.
+  ChatUserModelConfig? get getChatUserModelConfig => _chatUserModelConfig;
 
   /// The type of database that is being used.
   ChatViewDatabaseType get databaseType => _databaseType;

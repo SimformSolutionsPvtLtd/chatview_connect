@@ -14,7 +14,7 @@ dependencies:
   flutter:
     sdk: flutter
 
-  # Using this branch to implement custom tab close status
+  # TODO(YASH): Use pub.dev version once this repo is published.
   flutter_chatview_models:
     git:
       url: https://github.com/SimformSolutionsPvtLtd/flutter_chatview_models

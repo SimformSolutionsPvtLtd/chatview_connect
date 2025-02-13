@@ -1,5 +1,6 @@
 import 'package:flutter_chatview_models/flutter_chatview_models.dart';
 
+import '../chatview_db_connection.dart';
 import '../enum.dart';
 
 /// A data model representing a user in a chat room.
@@ -32,7 +33,10 @@ class ChatRoomUserDm {
     final chatUserData = json['chat_user'];
     return ChatRoomUserDm(
       chatUser: chatUserData is Map<String, dynamic>
-          ? ChatUser.fromJson(chatUserData)
+          ? ChatUser.fromJson(
+              chatUserData,
+              config: ChatViewDbConnection.instance.getChatUserModelConfig,
+            )
           : null,
       userId: json['user_id']?.toString() ?? '',
       chatId: json['chat_id']?.toString() ?? '',

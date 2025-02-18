@@ -3,6 +3,7 @@ import 'package:flutter_chatview_models/flutter_chatview_models.dart';
 
 import '../../chatview_db_connection.dart';
 import '../../models/chat_room_user_dm.dart';
+import '../../models/config/chat_view_firestore_path_config.dart';
 import '../../models/user_chats_conversation_dm.dart';
 import 'chatview_firestore_path.dart';
 
@@ -11,6 +12,10 @@ abstract final class ChatViewFireStoreCollections {
   const ChatViewFireStoreCollections._();
 
   static final _firestoreInstance = FirebaseFirestore.instance;
+
+  static ChatViewFireStoreCollectionNameConfig
+      get _chatViewFireStorePathConfig =>
+          ChatViewDbConnection.instance.getChatViewFireStorePathConfig;
 
   /// Collection reference for messages.
   ///
@@ -29,7 +34,7 @@ abstract final class ChatViewFireStoreCollections {
   static CollectionReference<Message?> messageCollection([
     String? documentPath,
   ]) {
-    const messagesCollection = ChatViewFireStorePath.messages;
+    final messagesCollection = _chatViewFireStorePathConfig.messages;
     final collectionRef = documentPath == null
         ? _firestoreInstance.collection(messagesCollection)
         : _firestoreInstance.doc(documentPath).collection(messagesCollection);
@@ -103,7 +108,7 @@ abstract final class ChatViewFireStoreCollections {
   static CollectionReference<ChatUser?> usersCollection([
     String? documentPath,
   ]) {
-    const usersCollection = ChatViewFireStorePath.users;
+    final usersCollection = _chatViewFireStorePathConfig.users;
 
     final collectionRef = documentPath == null
         ? _firestoreInstance.collection(usersCollection)
@@ -206,7 +211,7 @@ abstract final class ChatViewFireStoreCollections {
     required String userId,
     String? documentPath,
   }) {
-    const userChatsCollection = ChatViewFireStorePath.userChats;
+    final userChatsCollection = _chatViewFireStorePathConfig.userChats;
     final collection = documentPath == null
         ? _firestoreInstance.collection(userChatsCollection)
         : _firestoreInstance.doc(documentPath).collection(userChatsCollection);

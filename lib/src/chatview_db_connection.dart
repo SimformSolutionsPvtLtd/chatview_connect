@@ -2,6 +2,7 @@ import 'enum.dart';
 import 'manager/chatview_connection_manager.dart';
 import 'models/chat_database_path_config.dart';
 import 'models/config/chat_user_model_config.dart';
+import 'models/config/chat_view_firestore_path_config.dart';
 
 /// A singleton class provides different type of database's clouds services for
 /// chat views.
@@ -30,6 +31,10 @@ final class ChatViewDbConnection {
   /// for retrieving users data.
   ///   - If omitted, the default top-level `users` collection will be used.
   ///
+  /// - (optional): [firestoreCollectionNameConfig] Allows customization of
+  /// Firestore collection names.
+  ///   - If a value is `null`, the default collection name will be used.
+  ///
   /// **Example Usage in `main.dart`:**
   /// ```dart
   /// ChatViewDbConnection(
@@ -38,6 +43,9 @@ final class ChatViewDbConnection {
   ///       idKey: 'user_id',
   ///       nameKey: 'first_name',
   ///       profilePhotoKey: 'avatar',
+  ///     ),
+  ///     firestoreCollectionNameConfig: ChatViewFireStoreCollectionNameConfig(
+  ///       users: 'app_users',
   ///     ),
   ///     databasePathConfig: ChatDatabasePathConfig(
   ///       userCollectionPath: 'organizations/org123',
@@ -48,11 +56,15 @@ final class ChatViewDbConnection {
     ChatViewDatabaseType databaseType, {
     ChatUserModelConfig? chatUserModelConfig,
     ChatDatabasePathConfig? databasePathConfig,
+    ChatViewFireStoreCollectionNameConfig? firestoreCollectionNameConfig,
   }) {
     _instance ??= ChatViewDbConnection._(databaseType);
     ChatViewConnectionManager(databaseType);
     _chatDatabasePathConfig = databasePathConfig ?? ChatDatabasePathConfig();
     _chatUserModelConfig = chatUserModelConfig;
+    if (firestoreCollectionNameConfig != null) {
+      _chatViewFireStorePathConfig = firestoreCollectionNameConfig;
+    }
     return _instance!;
   }
 
@@ -82,6 +94,19 @@ final class ChatViewDbConnection {
   /// If no configuration has been set, this will return `null`,
   /// meaning default keys (`id`, `name`, `profilePhoto`) will be used.
   ChatUserModelConfig? get getChatUserModelConfig => _chatUserModelConfig;
+
+  static ChatViewFireStoreCollectionNameConfig _chatViewFireStorePathConfig =
+      ChatViewFireStoreCollectionNameConfig();
+
+  /// Retrieves the Firestore collection name configuration.
+  ///
+  /// Returns an instance of [ChatViewFireStoreCollectionNameConfig] containing
+  /// the configured collection names, allowing customization of
+  /// Firestore collection names.
+  ///
+  /// Users can override default collection names by providing custom values.
+  ChatViewFireStoreCollectionNameConfig get getChatViewFireStorePathConfig =>
+      _chatViewFireStorePathConfig;
 
   /// The type of database that is being used.
   ChatViewDatabaseType get databaseType => _databaseType;

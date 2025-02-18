@@ -10,6 +10,7 @@ import '../../models/chat_database_path_config.dart';
 import '../../models/chat_room_user_dm.dart';
 import '../../models/chat_view_participants_dm.dart';
 import '../../models/config/add_message_config.dart';
+import '../../models/config/chat_view_firestore_path_config.dart';
 import '../../models/message_dm.dart';
 import '../../models/user_chats_conversation_dm.dart';
 import '../../typedefs.dart';
@@ -31,13 +32,12 @@ final class ChatViewFireStoreDatabase implements DatabaseService {
 
   String? get _userCollection => _chatDatabaseConfig.userCollectionPath;
 
-  String? get _userChatsCollection =>
-      _chatDatabaseConfig.userChatsCollectionPath;
+  ChatViewFireStoreCollectionNameConfig get _firestorePathConfig =>
+      ChatViewDbConnection.instance.getChatViewFireStorePathConfig;
 
-  String? _chatRoomCollectionPath({String? chatId}) {
+  String _chatRoomCollectionPath({String? chatId}) {
     final newChatId = chatId ?? _chatRoomId;
-    final collectionPath =
-        '${_chatDatabaseConfig.chatCollectionPath}/$newChatId';
+    final collectionPath = '${_firestorePathConfig.chats}/$newChatId';
     assert(
       collectionPath.isValidFirestoreDocument,
       'invalid Firestore document path provided',
@@ -204,7 +204,7 @@ final class ChatViewFireStoreDatabase implements DatabaseService {
   }) {
     final collectionPath = _chatRoomCollectionPath(chatId: chatId);
 
-    final currentChatID = collectionPath?.chatId ?? '';
+    final currentChatID = collectionPath.chatId ?? '';
 
     if (currentChatID.isEmpty) {
       return Stream.error('Chat ID not found from path: $collectionPath');
@@ -363,7 +363,7 @@ final class ChatViewFireStoreDatabase implements DatabaseService {
   }) async {
     final collectionPath = _chatRoomCollectionPath();
 
-    final currentChatID = collectionPath?.chatId ?? '';
+    final currentChatID = collectionPath.chatId ?? '';
 
     if (currentChatID.isEmpty) {
       return throw Exception('Chat ID not found from path: $collectionPath');
@@ -522,7 +522,7 @@ final class ChatViewFireStoreDatabase implements DatabaseService {
             ),
           );
       return true;
-    } catch (e) {
+    } catch (_) {
       return false;
     }
   }
@@ -536,7 +536,7 @@ final class ChatViewFireStoreDatabase implements DatabaseService {
         userId: currentUserId,
       ).doc(chatId).delete();
       return true;
-    } catch (e) {
+    } catch (_) {
       return false;
     }
   }
@@ -588,7 +588,7 @@ final class ChatViewFireStoreDatabase implements DatabaseService {
             ),
           );
       return true;
-    } catch (e) {
+    } catch (_) {
       return false;
     }
   }
@@ -596,7 +596,7 @@ final class ChatViewFireStoreDatabase implements DatabaseService {
   Future<bool> _deleteChat({required String chatId}) async {
     try {
       await FirebaseFirestore.instance
-          .doc('${_chatDatabaseConfig.chatCollectionPath}/$chatId')
+          .doc(_chatRoomCollectionPath(chatId: chatId))
           .delete();
       return true;
     } catch (e) {
@@ -612,7 +612,6 @@ final class ChatViewFireStoreDatabase implements DatabaseService {
 
     final chatsSnapshot =
         await ChatViewFireStoreCollections.userChatsConversationCollection(
-      documentPath: _userChatsCollection,
       userId: currentUserId,
     ).get();
 

@@ -14,6 +14,16 @@ extension StringExtension on String {
         ?.replaceAll('%2F', '/');
   }
 
+  /// Validates whether the given Firestore collection name is valid.
+  ///
+  /// A collection name is considered valid if:
+  /// - It is not empty.
+  /// - It does not contain a forward slash (`/`) or double slashes (`//`).
+  ///
+  /// Returns `true` if the collection name is valid, otherwise `false`.
+  bool get isValidFirestoreCollectionName =>
+      isNotEmpty && !contains('/') && !contains('//');
+
   /// Determines whether this string represents a valid Firestore document path.
   ///
   /// A valid Firestore document path:

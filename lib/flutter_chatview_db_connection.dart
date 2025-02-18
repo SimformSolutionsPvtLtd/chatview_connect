@@ -7,7 +7,4 @@ export 'src/enum.dart'
         DocumentChangeTypeExtension,
         TypeWriterStatusExtension,
         UserStatusExtension;
-export 'src/models/chat_database_path_config.dart';
-export 'src/models/chat_room_user_dm.dart';
-export 'src/models/config/chat_user_model_config.dart';
-export 'src/models/message_dm.dart';
+export 'src/models/models.dart';

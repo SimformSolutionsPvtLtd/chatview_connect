@@ -55,29 +55,53 @@ extension MessageCollectionReferenceExtension on CollectionReference<Message?> {
   /// document for pagination.
   ///
   /// Returns a [Query] with the applied filters.
-  Query<Message?> toQuery({
+  Query<Message?> toMessageQuery({
     required MessageSortBy sortBy,
     required MessageSortOrder sortOrder,
     int? limit,
     DocumentSnapshot<Message?>? startAfterDocument,
   }) {
-    final messageCollectionRef = this;
+    return toQuery(
+      limit: limit,
+      descending: sortOrder.isDesc,
+      startAfterDocument: startAfterDocument,
+      orderByFieldName: sortBy.isNone ? null : sortBy.key,
+    );
+  }
+}
 
-    var messageCollection = switch (sortBy) {
-      MessageSortBy.dateTime => messageCollectionRef.orderBy(
-          sortBy.key,
-          descending: sortOrder.isDesc,
-        ),
-      MessageSortBy.none => messageCollectionRef,
-    };
+/// An extension on [CollectionReference] that provides a method
+/// to create a query with sorting and optional pagination.
+extension CollectionReferenceExtension<T> on CollectionReference<T> {
+  /// Creates a query with sorting and optional pagination for fetching
+  /// messages.
+  ///
+  /// **Parameters:**
+  /// - (optional): [orderByFieldName] The field name to sort by. If `null`
+  /// or empty, no sorting is applied.
+  /// - (optional) [descending] Determines whether the sorting is in
+  /// descending order. Defaults to `false` (ascending order).
+  /// - (optional): [limit] Limits the number of messages retrieved.
+  /// - (optional): [startAfterDocument] Starts fetching after the given
+  /// document for pagination.
+  ///
+  /// Returns a [Query] with the applied filters.
+  Query<T> toQuery({
+    String? orderByFieldName,
+    bool descending = false,
+    int? limit,
+    DocumentSnapshot<T>? startAfterDocument,
+  }) {
+    var collection = orderByFieldName == null || orderByFieldName.isEmpty
+        ? this
+        : orderBy(orderByFieldName, descending: descending);
 
-    if (limit != null) messageCollection = messageCollection.limit(limit);
+    if (limit != null) collection = collection.limit(limit);
 
     if (startAfterDocument case final startAfterDocument?) {
-      messageCollection =
-          messageCollection.startAfterDocument(startAfterDocument);
+      collection = collection.startAfterDocument(startAfterDocument);
     }
 
-    return messageCollection;
+    return collection;
   }
 }

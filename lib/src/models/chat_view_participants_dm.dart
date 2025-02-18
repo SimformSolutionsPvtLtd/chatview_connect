@@ -1,7 +1,7 @@
 import 'package:chatview/chatview.dart';
 
 /// A data model representing the participants in a chat.
-class ChatViewParticipantsDm {
+final class ChatViewParticipantsDm {
   /// Constructs a [ChatViewParticipantsDm] instance.
   ///
   /// **Parameters:**

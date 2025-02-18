@@ -23,6 +23,12 @@ enum MessageSortBy {
   /// An internal key associated with the sort type.
   /// It defines for the server by which field it will be sorted.
   final String key;
+
+  /// Returns `true` if sorting is based on date and time.
+  bool get isDateTime => this == dateTime;
+
+  /// Returns `true` if no sorting is applied.
+  bool get isNone => this == none;
 }
 
 /// An enumeration of messages sorting types.
@@ -57,11 +63,14 @@ enum DocumentType {
 }
 
 /// Extension on [DocumentChangeType] to provide a utility method for
-/// converting Firebase [DocumentChangeType] values to corresponding [DocumentType] values.
+/// converting Firebase [DocumentChangeType] values to
+/// corresponding [DocumentType] values.
 extension DocumentChangeTypeExtension on DocumentChangeType {
-  /// Converts a [DocumentChangeType] from Firebase to the corresponding [DocumentType].
+  /// Converts a [DocumentChangeType] from Firebase to
+  /// the corresponding [DocumentType].
   ///
-  /// This method maps Firebase document change types to application-specific document types.
+  /// This method maps Firebase document change types to application-specific
+  /// document types.
   ///
   /// - [DocumentChangeType.added] → [DocumentType.added]
   /// - [DocumentChangeType.modified] → [DocumentType.modified]

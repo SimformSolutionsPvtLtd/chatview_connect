@@ -4,6 +4,8 @@ import 'package:chatview/chatview.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../enum.dart';
+import '../models/chat_room_user_dm.dart';
+import '../models/chat_view_participants_dm.dart';
 import '../models/config/add_message_config.dart';
 import '../models/database_path_config.dart';
 import '../models/message_dm.dart';
@@ -71,6 +73,63 @@ abstract interface class DatabaseService {
     int? limit,
     DocumentSnapshot<Message?>? startAfterDocument,
   });
+
+  /// Retrieves a stream of users batches from database.
+  /// This method listens for real-time updates to the user's data in
+  /// the database.
+  ///
+  /// **Parameters:**
+  /// - (optional): [limit] specifies the limit of the users to be retrieved.
+  /// by defaults it will retrieve the all users if not specified.
+  Stream<List<ChatUser>> getUsersStream({int? limit});
+
+  /// Retrieves a stream of a particular user based on the provided user ID.
+  /// This method listens for real-time updates to the user's data in
+  /// the database.
+  ///
+  /// **Parameters:**
+  /// - (required): [userId] The ID of the user whose data is being retrieved.
+  Stream<ChatUser?> getUserStreamById({required String userId});
+
+  /// Retrieves a stream of chat room users batches from the database.
+  ///
+  /// In this it will listens for real-time updates to the chat room users'
+  /// data such as **userStatus** and **typingStatus**, along with
+  /// user information like **profile details**.
+  ///
+  /// **Parameters:**
+  /// - (optional): [limit] Specifies the maximum number of users to retrieve.
+  ///   If not provided, all users will be retrieved.
+  ///
+  /// **Returns:** A [Stream] that emits a [List] of [ChatRoomUserDm] instances.
+  Stream<List<ChatRoomUserDm>> getChatRoomParticipantsStream({int? limit});
+
+  /// Returns a stream of chat room users from the database.
+  ///
+  /// This method listens for real-time updates to chat room users' data but
+  /// does **not** fetch detailed user information.
+  ///
+  /// Each user is represented by [ChatRoomUserDm], which includes their
+  /// **userStatus** and **typingStatus**.
+  ///
+  /// **Parameters:**
+  /// - (optional): [limit] Specifies the maximum number of chat room users
+  /// to retrieve. If not provided, all users will be retrieved.
+  ///
+  /// **Returns:** A [Stream] that emits a [Map] of user IDs
+  /// to [ChatRoomUserDm] instances.
+  Stream<Map<String, ChatRoomUserDm>> getChatRoomUsersMetadataStream({
+    int? limit,
+  });
+
+  /// Retrieves the current user and a list of users in the chat room from the
+  /// database.
+  /// This method fetches the participants of the chat room, including the
+  /// current user.
+  ///
+  /// Returns [ChatViewParticipantsDm] object containing the chat room
+  /// participants.
+  Future<ChatViewParticipantsDm?> getChatRoomParticipants();
 
   /// Retrieves a stream of messages along with their associated operation
   /// types.
@@ -146,5 +205,22 @@ abstract interface class DatabaseService {
     Message message, {
     MessageStatus? messageStatus,
     UserReactionCallback? userReaction,
+  });
+
+  /// Updates the chat room user with the provided typing and/or user status.
+  /// This method is used to update the status of a user in the chat room, such
+  /// as their typing status or overall user status.
+  ///
+  /// **Parameters:**
+  /// - (optional): [typingStatus] The current typing status of the user
+  /// (e.g., typing, typed).
+  /// - (optional): [userStatus] The overall status of the user
+  /// (e.g., online, offline).
+  ///
+  /// Returns a [Future] that completes when the user's status is updated in
+  /// the database.
+  Future<void> updateChatRoomUserMetadata({
+    TypeWriterStatus? typingStatus,
+    UserStatus? userStatus,
   });
 }

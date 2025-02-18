@@ -1,7 +1,5 @@
 /// Contains Firebase storage path references.
-final class ChatViewFirebaseStorageRefs {
-  const ChatViewFirebaseStorageRefs._();
-
+abstract final class ChatViewFirebaseStorageRefs {
   /// Path for storing images in Firebase storage.
   static const String images = 'images';
 

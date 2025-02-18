@@ -8,7 +8,9 @@ import '../chatview_db_connection.dart';
 import '../database/database_service.dart';
 import '../database/firebase/chatview_firestore_database.dart';
 import '../enum.dart';
+import '../models/chat_room_dm.dart';
 import '../models/chat_room_user_dm.dart';
+import '../models/chat_view_participants_dm.dart';
 import '../models/config/add_message_config.dart';
 import '../models/message_dm.dart';
 import '../storage/firebase/chatview_firebase_storage.dart';
@@ -112,6 +114,8 @@ final class ChatViewConnectionManager {
     required String chatRoomId,
     List<Message>? initialMessageList,
     ScrollController? scrollController,
+    ValueSetter<ChatViewParticipantsDm>? chatRoomInfo,
+    ValueSetter<Map<String, ChatRoomUserDm>>? onUsersActivityChanges,
   }) async {
     if (_isInitialized) dispose();
 
@@ -127,12 +131,15 @@ final class ChatViewConnectionManager {
       otherUsers: chatRoomParticipants.otherUsers,
     );
 
+    chatRoomInfo?.call(chatRoomParticipants);
+
     _controller = controller;
 
     _chatRoomUserStream = _database.getChatRoomUsersMetadataStream().listen(
-          // TODO(Yash): Change this once [userActivityChangeCallback]
-          //  is provided to user
-          (users) => _listenChatRoomUsersActivities(users, null),
+          (users) => _listenChatRoomUsersActivities(
+            users: users,
+            userActivityChangeCallback: onUsersActivityChanges,
+          ),
         );
 
     _messagesStream = _database
@@ -279,13 +286,46 @@ final class ChatViewConnectionManager {
     );
   }
 
-  /// Returns a stream of chat rooms, each containing a list of users
-  /// (excluding the current user).
-  Stream<List<List<ChatRoomUserDm>>> getChats() => _database.getChats();
+  /// Returns a stream of chat rooms, each chat room containing
+  /// a list of users (excluding the current user).
+  /// {@macro flutter_chatview_db_connection.DatabaseService.getChats}
+  Stream<List<ChatRoomDm>> getChats({
+    ChatSortBy sortBy = ChatSortBy.newestFirst,
+  }) =>
+      _database.getChats(sortBy: sortBy);
 
   /// {@macro flutter_chatview_db_connection.DatabaseService.createOneToOneUserChat}
   Future<String?> createOneToOneChat(String userId) =>
       _database.createOneToOneUserChat(userId);
+
+  /// {@macro flutter_chatview_db_connection.DatabaseService.createGroupChat}
+  Future<String?> createGroupChat({
+    required String groupName,
+    required List<String> userIds,
+    String? groupProfilePic,
+  }) {
+    return _database.createGroupChat(
+      groupName: groupName,
+      userIds: userIds,
+      groupProfilePic: groupProfilePic,
+    );
+  }
+
+  /// {@macro flutter_chatview_db_connection.DatabaseService.updateGroupChat}
+  ///
+  /// **Note:**
+  /// - This method does **not** restrict updates based on whether the chat room is
+  ///   one-to-one or a group. If called for a one-to-one chat, it will still attempt
+  ///   to update the group name without validation.
+  Future<bool> updateGroupChat({
+    String? groupName,
+    String? groupProfilePic,
+  }) {
+    return _database.updateGroupChat(
+      groupName: groupName,
+      groupProfilePic: groupProfilePic,
+    );
+  }
 
   /// Retrieves a list of users as a map, where the key is the user ID,
   /// and the value is their information.
@@ -316,10 +356,10 @@ final class ChatViewConnectionManager {
         deleteChatDocsFromStorageCallback: _storage.deleteChatDocs,
       );
 
-  void _listenChatRoomUsersActivities(
-    Map<String, ChatRoomUserDm> users,
+  void _listenChatRoomUsersActivities({
+    required Map<String, ChatRoomUserDm> users,
     ValueSetter<Map<String, ChatRoomUserDm>>? userActivityChangeCallback,
-  ) {
+  }) {
     final isOneToOneChat = users.length == 1;
     if (isOneToOneChat) {
       _controller?.setTypingIndicator =

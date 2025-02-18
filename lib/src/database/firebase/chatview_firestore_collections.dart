@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_chatview_models/flutter_chatview_models.dart';
 
 import '../../chatview_db_connection.dart';
+import '../../models/chat_room_dm.dart';
 import '../../models/chat_room_user_dm.dart';
 import '../../models/config/chat_view_firestore_path_config.dart';
 import '../../models/user_chats_conversation_dm.dart';
@@ -79,16 +80,39 @@ abstract final class ChatViewFireStoreCollections {
   /// Example: 'organizations/simform/chats'
   ///
   /// {@endtemplate}
-  static CollectionReference<dynamic> chatCollection([
+  static CollectionReference<ChatRoomDm?> chatCollection([
     String? documentPath,
   ]) {
-    const chatCollection = ChatViewFireStorePath.chats;
+    final chatCollection = _chatViewFireStorePathConfig.chats;
 
     final collectionRef = documentPath == null
         ? _firestoreInstance.collection(chatCollection)
         : _firestoreInstance.doc(documentPath).collection(chatCollection);
 
-    return collectionRef;
+    return collectionRef.withConverter(
+      fromFirestore: _chatFromFirestore,
+      toFirestore: _chatToFirestore,
+    );
+  }
+
+  static ChatRoomDm? _chatFromFirestore(
+    DocumentSnapshot<Map<String, dynamic>> snapshot,
+    SnapshotOptions? options,
+  ) {
+    final data = snapshot.data();
+    if (data == null) return null;
+    try {
+      return ChatRoomDm.fromJson(data);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  static Map<String, dynamic> _chatToFirestore(
+    ChatRoomDm? chat,
+    SetOptions? options,
+  ) {
+    return chat?.toJson() ?? {};
   }
 
   /// Collection reference for user.

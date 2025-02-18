@@ -1,64 +1,56 @@
-import '../enum.dart';
-
 /// Represents a user's chat conversation details.
+///
 /// This data model is used to manage and serialize/deserialize chat conversations.
+/// The `userId` is used in one-to-one chats to uniquely identify that
+/// the chat has already been created. For group chats,
+/// `userId` field will be empty.
+///
+/// The `UserChatsConversationDm` class is essential for handling individual
+/// or group chat conversations.
 final class UserChatsConversationDm {
-  /// Creates a [UserChatsConversationDm] instance with
+  /// Creates a [UserChatsConversationDm] instance with the specified [userId].
   ///
   /// **Parameters:**
-  /// - (required): [chatType] The type of chat conversation.
-  /// - (required): [userId] The unique identifier of the user.
-  const UserChatsConversationDm({
-    required this.chatType,
-    required this.userId,
-  });
+  /// - (required): [userId] The unique identifier of the user
+  /// associated with the chat conversation.
+  ///
+  /// In a one-to-one chat, the `userId` uniquely identifies that
+  /// the chat has already been created. For group chats,
+  /// the `userId` will be empty.
+  const UserChatsConversationDm({this.userId});
 
   /// Creates a [UserChatsConversationDm] instance from a JSON object.
   ///
   /// - [json]: A [Map] containing the chat conversation data.
-  /// - Defaults [chatType] to [ChatRoomType.oneToOne]
-  /// if corresponding ChatRoomType not found.
   factory UserChatsConversationDm.fromJson(Map<String, dynamic> json) {
-    return UserChatsConversationDm(
-      chatType: ChatRoomTypeExtension.tryParse(json['chat_type'].toString()) ??
-          ChatRoomType.oneToOne,
-      userId: json['user_id'].toString(),
-    );
+    return UserChatsConversationDm(userId: json['user_id'].toString());
   }
 
-  /// The type of chat room (e.g., oneToOne).
-  final ChatRoomType chatType;
-
-  /// The unique identifier of other user associated with the chat conversation.
-  final String userId;
+  /// The unique identifier of the other user associated with
+  /// the chat conversation.
+  ///
+  /// This value is used to identify a one-to-one chat already created or not.
+  /// For group chats, this value is empty.
+  final String? userId;
 
   /// Converts the [UserChatsConversationDm] instance into a JSON object.
   ///
-  /// Returns a [Map] with the `chat_type` and `user_id` fields.
+  /// Returns a [Map] with the `user_id` field.
   Map<String, dynamic> toJson() {
-    return {
-      'chat_type': chatType.name,
-      'user_id': userId,
+    return <String, dynamic>{
+      if (userId?.isNotEmpty ?? false) 'user_id': userId,
     };
   }
 
   /// Creates a copy of the current [UserChatsConversationDm] with
   /// updated fields.
   ///
-  /// - [chatType]: The new chat type.
-  /// Defaults to the current [chatType] if not provided.
   /// - [userId]: The new user ID.
   /// Defaults to the current [userId] if not provided.
   ///
   /// Returns a new [UserChatsConversationDm] instance with the updated values.
-  UserChatsConversationDm copyWith({
-    ChatRoomType? chatType,
-    String? userId,
-  }) {
-    return UserChatsConversationDm(
-      chatType: chatType ?? this.chatType,
-      userId: userId ?? this.userId,
-    );
+  UserChatsConversationDm copyWith({String? userId}) {
+    return UserChatsConversationDm(userId: userId ?? this.userId);
   }
 
   @override

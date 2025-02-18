@@ -1,6 +1,6 @@
 import 'enum.dart';
 import 'manager/chatview_connection_manager.dart';
-import 'models/chat_database_path_config.dart';
+import 'models/config/chat_database_path_config.dart';
 import 'models/config/chat_user_model_config.dart';
 import 'models/config/chat_view_firestore_path_config.dart';
 

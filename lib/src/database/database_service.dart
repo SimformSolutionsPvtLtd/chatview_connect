@@ -4,6 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_chatview_models/flutter_chatview_models.dart';
 
 import '../enum.dart';
+import '../models/chat_room_dm.dart';
 import '../models/chat_room_user_dm.dart';
 import '../models/chat_view_participants_dm.dart';
 import '../models/config/add_message_config.dart';
@@ -217,6 +218,7 @@ abstract interface class DatabaseService {
     UserReactionCallback? userReaction,
   });
 
+  // TODO(YASH): Store user online/offline status in user_chats collection
   /// Updates the chat room user with the provided typing and/or user status.
   /// This method is used to update the status of a user in the chat room, such
   /// as their typing status or overall user status.
@@ -234,22 +236,34 @@ abstract interface class DatabaseService {
     UserStatus? userStatus,
   });
 
-  /// Returns a stream of chat rooms, each containing a list of users
-  /// (excluding the current user).
+  // TODO(YASH): Move sorting chats logic before applying the limit
+  /// {@template flutter_chatview_db_connection.DatabaseService.getChats}
+  /// Returns a stream of chat rooms,
+  /// each containing a list of users (excluding the current user).
   ///
   /// **Parameters:**
-  ///
+  /// - (required): [sortBy] determines the order in which chat rooms are
+  /// retrieved:
+  ///   - [ChatSortBy.newestFirst] sorts chat rooms in descending order
+  ///   based on the timestamp of the latest message.
+  ///   - [ChatSortBy.none] retrieves chat rooms in their default order
+  ///   without applying any sorting.
   /// - (optional): [limit] specifies the maximum number of chat rooms to
-  /// retrieve. By default, it will retrieve all users if not specified.
+  /// retrieve. If not specified, all chat rooms will be retrieved by default.
   ///
-  /// Each event in the stream emits a list of chats, where:
-  /// - Each chat (e.g., `chat1`, `chat2`) is represented as
-  /// a list of [ChatRoomUserDm] instances.
-  /// - The list of users in each chat **does not** include the current user.
+  /// Each event in the stream emits a list of chat rooms, where:
+  /// - Each chat room (e.g., `chat1`, `chat2`) is represented
+  /// as a [ChatRoomDm] instances.
+  /// - The list of users in each chat room **does not**
+  /// include the current user.
   ///
   /// The stream dynamically updates to reflect changes in chat room users,
-  /// such as their online/offline status and typing activity.
-  Stream<List<List<ChatRoomUserDm>>> getChats({int? limit});
+  /// such as:
+  /// - Online/offline status updates
+  /// - Typing activity
+  ///
+  /// {@endtemplate}
+  Stream<List<ChatRoomDm>> getChats({required ChatSortBy sortBy, int? limit});
 
   /// {@template flutter_chatview_db_connection.DatabaseService.createOneToOneUserChat}
   /// Creates a one-to-one chat with the specified user.
@@ -265,6 +279,43 @@ abstract interface class DatabaseService {
   /// Returns `null` if the chat creation fails.
   /// {@endtemplate}
   Future<String?> createOneToOneUserChat(String userId);
+
+  /// {@template flutter_chatview_db_connection.DatabaseService.createGroupChat}
+  /// Creates a new group chat.
+  ///
+  /// **Parameters:**
+  /// - (required): [groupName] is the name of the group chat to be created.
+  /// - (required): [userIds] is a list of user IDs to be included in
+  /// the group chat. The current user is automatically added.
+  /// - (optional): [groupProfilePic] is an optional profile picture for the
+  /// group chat. If not specified, the group will not have a profile picture.
+  ///
+  /// This method creates a new group chat with the provided group name, users,
+  /// and optional profile picture.
+  ///
+  /// Returns a ID of the newly created group chat.
+  /// If the creation fails, `null` is returned.
+  /// {@endtemplate}
+  Future<String?> createGroupChat({
+    required String groupName,
+    required List<String> userIds,
+    String? groupProfilePic,
+  });
+
+  /// {@template flutter_chatview_db_connection.DatabaseService.updateGroupChat}
+  /// Updates an existing group chat.
+  ///
+  /// This method allows updating the group chat's name and profile picture.
+  ///
+  /// **Parameters:**
+  /// - (optional): [groupName] is the new name for the group chat.
+  /// If `null`, the group name will not be updated.
+  /// - (optional): [groupProfilePic] is the new profile picture for the
+  /// group chat. If `null`, the profile picture will not be updated.
+  ///
+  /// Returns a true/false indicating whether the update was successful (`true`) or failed (`false`).
+  /// {@endtemplate}
+  Future<bool> updateGroupChat({String? groupName, String? groupProfilePic});
 
   /// Deletes the entire chat from the chat collection and removes it
   /// from all users involved in the chat.

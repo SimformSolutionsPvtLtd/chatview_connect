@@ -10,6 +10,18 @@ enum ChatViewDatabaseType {
   bool get isFirebase => this == firebase;
 }
 
+/// An enumeration representing different sorting options for chats.
+enum ChatSortBy {
+  /// Sorts chats in descending order based on the latest message timestamp.
+  newestFirst,
+
+  /// No sorting is applied; chats are retrieved in their default order.
+  none;
+
+  /// Returns `true` if the sorting option is set to [newestFirst].
+  bool get isNewestFirst => this == newestFirst;
+}
+
 /// An enumeration of messages sort by types.
 enum MessageSortBy {
   /// Sorts messages by the DateTime.

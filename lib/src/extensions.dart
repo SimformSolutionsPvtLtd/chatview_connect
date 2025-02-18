@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_chatview_models/flutter_chatview_models.dart';
 
 import 'enum.dart';
+import 'models/chat_room_user_dm.dart';
 
 /// Extension methods for the `String` class.
 extension StringExtension on String {
@@ -119,5 +120,78 @@ extension CollectionReferenceExtension<T> on CollectionReference<T> {
     }
 
     return collection;
+  }
+}
+
+/// An extension on [DateTime] to provide a safe comparison method.
+extension DateTimeCompareExtension on DateTime? {
+  /// Compares two nullable [DateTime] objects.
+  ///
+  /// - Returns `0` if both are `null`.
+  /// - Returns `-1` if `this` is `null` and `b` is not.
+  /// - Returns `1` if `b` is `null` and `this` is not.
+  /// - Otherwise, delegates to [DateTime.compareTo].
+  int compareTimestamp(DateTime? b) {
+    final a = this;
+    if (a == null && b == null) {
+      return 0;
+    } else if (a == null) {
+      return -1;
+    } else if (b == null) {
+      return 1;
+    } else {
+      return a.compareTo(b);
+    }
+  }
+}
+
+/// An extension on `List<ChatRoomUserDm>` to join user names into
+/// a single string.
+///
+/// Converts the list of chat room users into a string with names separated
+/// by a specified separator.
+/// Returns `null` if the list is empty or contains only users with empty names.
+extension ListOfChatRoomUserDmExtension on List<ChatRoomUserDm> {
+  /// Joins user names with a specified separator.
+  ///
+  /// - (optional): [separator] The string to separate names
+  /// (default is `' '`).
+  String? toJoinString([String separator = ' ']) {
+    if (isEmpty) return null;
+    final valueLength = length;
+    final lastIndex = valueLength - 1;
+    final stringBuffer = StringBuffer();
+    for (var i = 0; i < valueLength; i++) {
+      final user = this[i];
+      final username = user.chatUser?.name ?? '';
+      if (username.isEmpty) continue;
+      stringBuffer.write(i == lastIndex ? username : '$username$separator');
+    }
+    return stringBuffer.toString();
+  }
+}
+
+/// An extension on `List<ChatUser>` to join user names into a single string.
+///
+/// Converts the list of users into a string with names separated by
+/// a specified separator.
+/// Returns `null` if the list is empty or contains only users with empty names.
+extension ListOfChatUserDmExtension on List<ChatUser> {
+  /// Joins user names with a specified separator.
+  ///
+  /// - (optional): [separator] The string to separate names
+  /// (default is `' '`).
+  String? toJoinString([String separator = ' ']) {
+    if (isEmpty) return null;
+    final valueLength = length;
+    final lastIndex = valueLength - 1;
+    final stringBuffer = StringBuffer();
+    for (var i = 0; i < valueLength; i++) {
+      final user = this[i];
+      final username = user.name;
+      if (username.isEmpty) continue;
+      stringBuffer.write(i == lastIndex ? username : '$username$separator');
+    }
+    return stringBuffer.toString();
   }
 }

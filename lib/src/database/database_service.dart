@@ -124,14 +124,34 @@ abstract interface class DatabaseService {
   /// **userStatus** and **typingStatus**.
   ///
   /// **Parameters:**
+  /// - (required): [observeUserInfoChanges] determines whether the stream
+  /// should track changes to user metadata, such as username
+  /// and profile picture updates.
+  ///   - If `true`, user metadata will be tracked and updated in real-time.
+  ///   - If `false`, user data will be fetched only once without tracking
+  ///   updates.
   /// - (optional): [limit] Specifies the maximum number of chat room users
   /// to retrieve. If not provided, all users will be retrieved.
   ///
   /// **Returns:** A [Stream] that emits a [Map] of user IDs
   /// to [ChatRoomUserDm] instances.
   Stream<Map<String, ChatRoomUserDm>> getChatRoomUsersMetadataStream({
+    required bool observeUserInfoChanges,
     int? limit,
   });
+
+  /// Retrieves a stream of unread messages count for the given chat room.
+  /// This method listens for real-time updates to the unread message count.
+  ///
+  /// A message is considered unread if:
+  /// - It was not sent by the current user.
+  /// - Its status is not marked as read.
+  ///
+  /// **Parameters:**
+  ///
+  /// - (required): [chatId] The unique identifier of the chat room for
+  /// which the unread message count is retrieved.
+  Stream<int> getUnreadMessagesCount(String chatId);
 
   /// Retrieves the current user and a list of users in the chat room from the
   /// database.
@@ -244,10 +264,23 @@ abstract interface class DatabaseService {
   /// **Parameters:**
   /// - (required): [sortBy] determines the order in which chat rooms are
   /// retrieved:
-  ///   - [ChatSortBy.newestFirst] sorts chat rooms in descending order
-  ///   based on the timestamp of the latest message.
-  ///   - [ChatSortBy.none] retrieves chat rooms in their default order
-  ///   without applying any sorting.
+  ///  - [ChatSortBy.newestFirst] sorts chat rooms in descending order
+  ///  based on the timestamp of the latest message.
+  ///  - [ChatSortBy.none] retrieves chat rooms in their default order
+  ///  without applying any sorting.
+  ///
+  /// - (required): [showEmptyMessagesChats] determines whether to include
+  /// chat rooms that have no messages.
+  ///   - If `true`, one-to-one chats that have been created but contain
+  /// no messages will be included in the list.
+  ///   - If `false`, such empty chats will be excluded.
+  ///
+  /// - (required): [fetchUnreadMessageCount] determines whether the stream
+  /// will listen for unread message count updates.
+  ///   - If `true`, it will continuously listen and update the count.
+  ///   - If `false`, it will not listen, and `unreadMessagesCount`
+  ///   will always be `0`.
+  ///
   /// - (optional): [limit] specifies the maximum number of chat rooms to
   /// retrieve. If not specified, all chat rooms will be retrieved by default.
   ///
@@ -263,7 +296,12 @@ abstract interface class DatabaseService {
   /// - Typing activity
   ///
   /// {@endtemplate}
-  Stream<List<ChatRoomDm>> getChats({required ChatSortBy sortBy, int? limit});
+  Stream<List<ChatRoomDm>> getChats({
+    required ChatSortBy sortBy,
+    required bool showEmptyMessagesChats,
+    required bool fetchUnreadMessageCount,
+    int? limit,
+  });
 
   /// {@template flutter_chatview_db_connection.DatabaseService.createOneToOneUserChat}
   /// Creates a one-to-one chat with the specified user.

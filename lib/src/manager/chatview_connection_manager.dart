@@ -98,12 +98,29 @@ final class ChatViewConnectionManager {
   /// user activity.
   ///
   /// **Parameters:**
-  /// - (required) [chatRoomId]: The unique identifier of the chat room
+  /// - (required) [chatRoomId] The unique identifier of the chat room
   /// to be initialized.
-  /// - (optional) [initialMessageList]: An list of initial messages to
+  /// - (required): [syncOtherUsersInfo] determines whether the chat controller
+  /// should listen for real-time updates to user information, such as
+  /// profile picture, username changes.
+  ///   - If `true`, user details (e.g., username, profile picture) will be
+  ///   fetched and updated dynamically.
+  ///   - If `false`, no user data will be fetched.
+  /// - (optional) [initialMessageList] An list of initial messages to
   /// display in the chat.
-  /// - (optional) [scrollController]: An custom [ScrollController] for managing
-  /// scroll behavior.
+  /// - (optional) [scrollController] An custom [ScrollController] for
+  /// managing scroll behavior.
+  /// - (optional): [chatRoomInfo] provides details about the chat room,
+  /// including participants and other metadata. This callback receives
+  /// an instance of [ChatViewParticipantsDm] containing relevant
+  /// chat room information.
+  /// - (optional): [onUsersActivityChanges] listens for updates on user
+  /// activity within the chat room, such as online status, typing indicators.
+  /// This callback receives a map of user IDs to their corresponding
+  /// [ChatRoomUserDm] data.
+  ///
+  /// **Note:** For one-to-one chats, setting the typing indicator value from
+  /// the chat controller is handled internally.
   ///
   /// **Returns:**
   /// A [Future] that resolves to an initialized [ChatController].
@@ -112,6 +129,7 @@ final class ChatViewConnectionManager {
   /// An [Exception] if no chat room participants are found.
   Future<ChatController> getChatControllerByChatRoomId({
     required String chatRoomId,
+    required bool syncOtherUsersInfo,
     List<Message>? initialMessageList,
     ScrollController? scrollController,
     ValueSetter<ChatViewParticipantsDm>? chatRoomInfo,
@@ -135,9 +153,14 @@ final class ChatViewConnectionManager {
 
     _controller = controller;
 
-    _chatRoomUserStream = _database.getChatRoomUsersMetadataStream().listen(
-          (users) => _listenChatRoomUsersActivities(
+    _chatRoomUserStream = _database
+        .getChatRoomUsersMetadataStream(
+          observeUserInfoChanges: syncOtherUsersInfo,
+        )
+        .listen(
+          (users) => _listenChatRoomUsersActivityStream(
             users: users,
+            syncOtherUsersInfo: syncOtherUsersInfo,
             userActivityChangeCallback: onUsersActivityChanges,
           ),
         );
@@ -291,8 +314,14 @@ final class ChatViewConnectionManager {
   /// {@macro flutter_chatview_db_connection.DatabaseService.getChats}
   Stream<List<ChatRoomDm>> getChats({
     ChatSortBy sortBy = ChatSortBy.newestFirst,
+    bool includeUnreadMessagesCount = true,
+    bool includeEmptyChats = false,
   }) =>
-      _database.getChats(sortBy: sortBy);
+      _database.getChats(
+        sortBy: sortBy,
+        showEmptyMessagesChats: includeEmptyChats,
+        fetchUnreadMessageCount: includeUnreadMessagesCount,
+      );
 
   /// {@macro flutter_chatview_db_connection.DatabaseService.createOneToOneUserChat}
   Future<String?> createOneToOneChat(String userId) =>
@@ -356,6 +385,18 @@ final class ChatViewConnectionManager {
         deleteChatDocsFromStorageCallback: _storage.deleteChatDocs,
       );
 
+  void _listenChatRoomUsersActivityStream({
+    required Map<String, ChatRoomUserDm> users,
+    required bool syncOtherUsersInfo,
+    ValueSetter<Map<String, ChatRoomUserDm>>? userActivityChangeCallback,
+  }) {
+    if (syncOtherUsersInfo) _listenChatRoomUsersInfoChanges(users);
+    _listenChatRoomUsersActivities(
+      users: users,
+      userActivityChangeCallback: userActivityChangeCallback,
+    );
+  }
+
   void _listenChatRoomUsersActivities({
     required Map<String, ChatRoomUserDm> users,
     ValueSetter<Map<String, ChatRoomUserDm>>? userActivityChangeCallback,
@@ -366,6 +407,18 @@ final class ChatViewConnectionManager {
           users.values.first.typingStatus.isTyping;
     }
     if (userActivityChangeCallback case final callback?) callback(users);
+  }
+
+  void _listenChatRoomUsersInfoChanges(Map<String, ChatRoomUserDm> users) {
+    final chatUsers = users.values.toList();
+    final usersLength = chatUsers.length;
+
+    for (var i = 0; i < usersLength; i++) {
+      final chatUser = chatUsers[i].chatUser;
+      if (chatUser == null) continue;
+      _controller?.updateOtherUser(chatUser);
+    }
+    // TODO(YASH): Rebuild chatview once the user details udapted.
   }
 
   void _listenMessages(List<MessageDm> messages) {

@@ -113,8 +113,8 @@ abstract final class ChatViewFireStoreCollections {
     SetOptions? options,
   ) {
     // `includeChatId` is set to false to exclude `chat_id` from the JSON,
-    // preventing it from being stored in the database since it is obtained from
-    // the Firebase collection reference.
+    // preventing it from being stored in the database since it is obtained
+    // from the Firebase collection reference.
     return chat?.toJson(includeChatId: false) ?? {};
   }
 
@@ -217,8 +217,8 @@ abstract final class ChatViewFireStoreCollections {
     SetOptions? options,
   ) {
     // `includeUserId` is set to false to exclude `user_id` from the JSON,
-    // preventing it from being stored in the database since it is obtained from
-    // the Firebase collection reference.
+    // preventing it from being stored in the database since it is obtained
+    // from the Firebase collection reference.
     return user?.toJson(includeUserId: false) ?? {};
   }
 

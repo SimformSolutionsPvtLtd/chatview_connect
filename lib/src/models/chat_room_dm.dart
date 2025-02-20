@@ -7,8 +7,9 @@ import 'chat_room_user_dm.dart';
 /// A class that represents a chat room, whether it's a one-to-one chat
 /// or a group chat. It holds the information about the chat ID,
 /// chat room type, the users in the chat room, the group name and photo
-/// (if applicable), and the last message sent. This class also provides
-/// methods to fetch profile pictures and the chat room name.
+/// (if applicable), and the last message sent  and the number of unread
+/// messages. This class also provides methods to fetch profile pictures
+/// and the chat room name.
 ///
 /// The `ChatRoomDm` class is used to manage chat room data and
 /// simplify interactions with the chat room's properties and user details.
@@ -28,6 +29,8 @@ class ChatRoomDm {
   /// - (required): [chatId] The unique identifier of the chat.
   /// - (required): [chatRoomType] The type of the chat room
   /// (one-to-one or group).
+  /// - (optional): [unreadMessagesCount] The number of unread
+  /// messages for the current user. defaults to `0`.
   /// - (optional): [groupPhotoUrl] The URL of the group photo
   /// (null for one-to-one chats).
   /// - (optional): [lastMessage] The last message sent in the chat room
@@ -38,6 +41,7 @@ class ChatRoomDm {
   const ChatRoomDm({
     required this.chatId,
     required this.chatRoomType,
+    this.unreadMessagesCount = 0,
     this.groupPhotoUrl,
     this.lastMessage,
     this.groupName,
@@ -63,6 +67,8 @@ class ChatRoomDm {
       chatRoomType:
           ChatRoomTypeExtension.tryParse(json['chat_room_type'].toString()) ??
               ChatRoomType.oneToOne,
+      unreadMessagesCount:
+          num.tryParse(json['unread_messages_count'].toString())?.toInt() ?? 0,
       chatId: json['chat_id']?.toString() ?? '',
       groupName: json['group_name']?.toString(),
       groupPhotoUrl: json['group_photo_url']?.toString(),
@@ -89,6 +95,15 @@ class ChatRoomDm {
 
   /// The unique identifier of the chat.
   final String chatId;
+
+  /// The number of unread messages in the chat room for the current user.
+  ///
+  /// **Note:** In the `ChatViewDbConnection.connectionManager.getChats()`
+  /// method, if `includeUnreadMessagesCount` is set to `false`,
+  /// `0` will be returned.
+  ///
+  /// A value of `0` indicates that there are no unread messages.
+  final int unreadMessagesCount;
 
   /// Returns the name of the chat room.
   /// - For one-to-one chats, it returns the name of the user.
@@ -175,9 +190,11 @@ class ChatRoomDm {
     String? groupPhotoUrl,
     Message? lastMessage,
     List<ChatRoomUserDm>? users,
+    int? unreadMessagesCount,
     bool forceNullValue = false,
   }) {
     return ChatRoomDm(
+      unreadMessagesCount: unreadMessagesCount ?? this.unreadMessagesCount,
       chatId: chatId ?? this.chatId,
       chatRoomType: chatRoomType ?? this.chatRoomType,
       groupName: forceNullValue ? groupName : groupName ?? this.groupName,

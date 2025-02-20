@@ -65,14 +65,17 @@ class ChatRoomUserDm {
 
   /// Converts the [ChatRoomUserDm] instance to a JSON map.
   ///
-  /// **Note**: The [chatUser] field is not included in `toJson` because it serves as an aggregation
-  /// of multiple data streams. The [chatUser] property is populated dynamically using the `copyWith` method
-  /// when merging data from different sources, such as chat document IDs and user collection data.
-  /// Since it is dynamically assembled from multiple streams, serializing it back to JSON is not necessary.
+  /// **Note**: The [chatUser] field is not included in `toJson`
+  /// because it serves as an aggregation of multiple data streams.
+  /// The [chatUser] property is populated dynamically using the `copyWith`
+  /// method when merging data from different sources, such as chat document IDs
+  /// and user collection data. Since it is dynamically assembled from multiple
+  /// streams, serializing it back to JSON is not necessary.
   ///
-  /// Additionally, [chatUser] is not meant for storing in a database document because it is retrieved
-  /// from different sources rather than being a single entity. It is primarily used for runtime operations
-  /// where data from different sources is combined for ease of use in the application.
+  /// Additionally, [chatUser] is not meant for storing in a database document
+  /// because it is retrieved from different sources rather than being a single
+  /// entity. It is primarily used for runtime operations where data from
+  /// different sources is combined for ease of use in the application.
   ///
   /// Returns a map containing the `user_status` and `typing_status` fields.
   Map<String, dynamic> toJson({bool includeUserId = true}) {

@@ -365,13 +365,14 @@ final class ChatViewFireStoreDatabase implements DatabaseService {
 
   @override
   Stream<Map<String, ChatRoomUserDm>> getChatRoomUsersMetadataStream({
+    required bool observeUserInfoChanges,
     int? limit,
   }) {
     final userCollection = ChatViewFireStoreCollections.chatUsersCollection(
       _chatRoomCollectionPath(),
     ).toQuery(limit: limit);
 
-    return userCollection.snapshots().map(
+    return userCollection.snapshots().switchMap(
       (userSnapshot) {
         final docs = userSnapshot.docs;
         final docsLength = docs.length;
@@ -384,7 +385,23 @@ final class ChatViewFireStoreDatabase implements DatabaseService {
           if (userId == currentUserId) continue;
           users[userId] = chatRoomUser;
         }
-        return users;
+        if (!observeUserInfoChanges) return Stream.value(users);
+
+        final newUsers = users.values.toList();
+        final usersLength = newUsers.length;
+        final chatRoomUserStreamWithInfo = <Stream<ChatRoomUserDm>>[
+          for (var i = 0; i < usersLength; i++)
+            if (newUsers[i] case final chatRoomUser)
+              getUserStreamById(userId: chatRoomUser.userId).map(
+                (chatUser) {
+                  final user = chatRoomUser.copyWith(chatUser: chatUser);
+                  users[chatRoomUser.userId] = user;
+                  return user;
+                },
+              ),
+        ];
+
+        return Rx.combineLatest(chatRoomUserStreamWithInfo, (_) => users);
       },
     );
   }
@@ -445,7 +462,36 @@ final class ChatViewFireStoreDatabase implements DatabaseService {
   }
 
   @override
-  Stream<List<ChatRoomDm>> getChats({required ChatSortBy sortBy, int? limit}) {
+  Stream<int> getUnreadMessagesCount(String chatId) {
+    final currentUserId = ChatViewDbConnection.instance.currentUserId;
+    return ChatViewFireStoreCollections.messageCollection(
+      _chatRoomCollectionPath(chatId: chatId),
+    ).snapshots().map(
+      (messageSnapshot) {
+        final docs = messageSnapshot.docs;
+        final docsLength = docs.length;
+        var count = 0;
+        for (var i = 0; i < docsLength; i++) {
+          final message = docs[i].data();
+          if (message == null ||
+              message.sentBy == currentUserId ||
+              message.status.isRead) {
+            continue;
+          }
+          count++;
+        }
+        return count;
+      },
+    );
+  }
+
+  @override
+  Stream<List<ChatRoomDm>> getChats({
+    required ChatSortBy sortBy,
+    required bool showEmptyMessagesChats,
+    required bool fetchUnreadMessageCount,
+    int? limit,
+  }) {
     final currentUserId = ChatViewDbConnection.instance.currentUserId;
     if (currentUserId == null) {
       return Stream.error('Current User with ID $currentUserId not found!');
@@ -470,11 +516,22 @@ final class ChatViewFireStoreDatabase implements DatabaseService {
               (chatRoomSnapshot) {
                 final chatRoom = chatRoomSnapshot.data();
                 if (chatRoom == null) return Stream.value(null);
-                return getChatRoomParticipantsStream(
-                  includeCurrentUser: false,
-                  chatId: docs[i].id,
-                ).map(
-                  (chatRoomUsers) => chatRoom.copyWith(users: chatRoomUsers),
+                if (!showEmptyMessagesChats && chatRoom.lastMessage == null) {
+                  return Stream.value(null);
+                }
+                final chatId = chatRoomSnapshot.id;
+                return Rx.combineLatest2(
+                  getChatRoomParticipantsStream(
+                    includeCurrentUser: false,
+                    chatId: chatId,
+                  ),
+                  fetchUnreadMessageCount
+                      ? getUnreadMessagesCount(chatId)
+                      : Stream.value(0),
+                  (chatRoomUsers, unreadMessagesCount) => chatRoom.copyWith(
+                    users: chatRoomUsers,
+                    unreadMessagesCount: unreadMessagesCount,
+                  ),
                 );
               },
             ),

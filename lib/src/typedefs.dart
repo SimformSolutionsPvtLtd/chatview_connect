@@ -66,3 +66,16 @@ typedef ChatRoomInitializedCallback = void Function(
 /// };
 /// ```
 typedef ChatMessagesChangeCallback = void Function(List<MessageDm> messages);
+
+/// Represents a record of chat room participants,
+/// including the current user and other users in the chat.
+///
+/// **Fields:**
+/// - (optional) `currentUser` The current user participating in the chat room.
+/// If `null`, the user may not be a member.
+/// - (required) `otherUsers` A list of other users in the chat room excluding
+/// the current user.
+typedef ChatRoomParticipantsRecord = ({
+  ChatRoomUserDm? currentUser,
+  List<ChatRoomUserDm> otherUsers,
+});

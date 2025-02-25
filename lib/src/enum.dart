@@ -212,3 +212,84 @@ extension ChatRoomTypeExtension on ChatRoomType {
     }
   }
 }
+
+/// Represents the different roles a user can have in the chat system.
+enum Role {
+  /// An admin has the highest level of control.
+  /// They can manage users, delete messages, and moderate chatrooms.
+  admin,
+
+  /// A regular user who can participate in chat.
+  /// They can send and receive messages but have no moderation privileges.
+  user;
+
+  /// Returns `true` if the user is an admin.
+  bool get isAdmin => this == admin;
+
+  /// Returns `true` if the user is a regular chat participant.
+  bool get isUser => this == user;
+}
+
+/// Provides utility methods for [RoleExtension].
+extension RoleExtension on Role {
+  /// Parses a string value and returns the corresponding [Role].
+  ///
+  /// **Parameters:**
+  /// (required): [value] The input string to parse.
+  ///
+  /// Returns the corresponding [Role] if the value matches.
+  /// Defaults to [Role.admin] if the input is empty or doesn't match any role.
+  static Role parse(String? value) {
+    final type = value?.trim().toLowerCase() ?? '';
+    if (type.isEmpty) return Role.admin;
+    if (type == Role.admin.name.toLowerCase()) {
+      return Role.admin;
+    } else {
+      return Role.user;
+    }
+  }
+}
+
+/// Represents the membership status of a user in a chat group.
+enum MembershipStatus {
+  /// The user is an active member of the group.
+  member,
+
+  /// The user has been removed from the group.
+  removed,
+
+  /// The user voluntarily left the group.
+  left;
+
+  /// Returns `true` if the user is an active member of the group.
+  bool get isMember => this == member;
+
+  /// Returns `true` if the user has been removed from the group.
+  bool get isRemoved => this == removed;
+
+  /// Returns `true` if the user has voluntarily left the group.
+  bool get isLeft => this == left;
+}
+
+/// Provides utility methods for [MembershipStatusExtension].
+extension MembershipStatusExtension on MembershipStatus {
+  /// Parses a string value and returns the corresponding [MembershipStatus].
+  ///
+  /// **Parameters:**
+  /// (required): [value] The input string to parse.
+  ///
+  /// Returns the corresponding [MembershipStatus] if the value matches.
+  /// Defaults to [MembershipStatus.member] if the input is empty or doesn't
+  /// match any status.
+  static MembershipStatus parse(String? value) {
+    final type = value?.trim().toLowerCase() ?? '';
+    if (type.isEmpty) return MembershipStatus.member;
+    if (type == MembershipStatus.removed.name.toLowerCase()) {
+      return MembershipStatus.removed;
+    } else if (type == MembershipStatus.left.name.toLowerCase()) {
+      return MembershipStatus.left;
+    } else {
+      return MembershipStatus.member;
+    }
+  }
+}

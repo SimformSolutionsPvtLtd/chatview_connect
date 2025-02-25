@@ -8,16 +8,25 @@ class ChatRoomUserDm {
   /// Constructs a [ChatRoomUserDm] instance.
   ///
   /// **Parameters:**
-  /// - (optional): [userId] is the unique identifier of the user.
-  /// - (optional): [chatUser] contains detailed information about the user
+  /// - (required): [userId] is the unique identifier of the user.
+  /// - (required): [chatUser] contains detailed information about the user
   /// in the chat room.
-  /// - (optional): [userStatus] represents the online/offline status of the user.
+  /// - (required): [userStatus] represents the online/offline status of the user.
   /// - (optional): [typingStatus] indicates the typing status of the user,
   /// with a default value of [TypeWriterStatus.typed].
+  /// - (required): [role] defines the user's permissions within the chat room.
+  /// - (required): [membershipStatus] indicates whether the user is an active
+  /// member, has left, or was removed.
+  /// - (required): [membershipStatusTimestamp] records the timestamp of
+  /// the last membership status change, helping track when a user joined,
+  /// left, or was removed.
   const ChatRoomUserDm({
+    required this.role,
     required this.userId,
     required this.chatUser,
     required this.userStatus,
+    required this.membershipStatus,
+    required this.membershipStatusTimestamp,
     this.typingStatus = TypeWriterStatus.typed,
   });
 
@@ -42,6 +51,13 @@ class ChatRoomUserDm {
       typingStatus: TypeWriterStatusExtension.parse(
         json['typing_status'].toString(),
       ),
+      role: RoleExtension.parse(json['role'].toString()),
+      membershipStatus: MembershipStatusExtension.parse(
+        json['membership_status'].toString(),
+      ),
+      membershipStatusTimestamp: DateTime.tryParse(
+        json['membership_status_timestamp'].toString(),
+      ),
     );
   }
 
@@ -63,6 +79,22 @@ class ChatRoomUserDm {
   /// Possible values include statuses such as typing or typed.
   final TypeWriterStatus typingStatus;
 
+  /// The role of the user in the chat room.
+  ///
+  /// Determines the user's permissions within the chat.
+  final Role role;
+
+  /// The membership status of the user in the chat room.
+  ///
+  /// Indicates whether the user is an active member, has left, or was removed.
+  final MembershipStatus membershipStatus;
+
+  /// The timestamp of the last membership status change.
+  /// This helps determine when a user joined, left, or was removed from
+  /// the chat room.
+  /// If `null`, the exact time of the status change is unknown.
+  final DateTime? membershipStatusTimestamp;
+
   /// Converts the [ChatRoomUserDm] instance to a JSON map.
   ///
   /// **Note**: The [chatUser] field is not included in `toJson`
@@ -81,8 +113,12 @@ class ChatRoomUserDm {
   Map<String, dynamic> toJson({bool includeUserId = true}) {
     return {
       if (includeUserId) 'user_id': userId,
+      'role': role.name,
       'user_status': userStatus.name,
       'typing_status': typingStatus.name,
+      'membership_status': membershipStatus.name,
+      'membership_status_timestamp':
+          membershipStatusTimestamp?.toIso8601String(),
     };
   }
 
@@ -92,24 +128,37 @@ class ChatRoomUserDm {
   /// Any field not provided will retain its current value.
   ///
   /// **Parameters:**
+  /// - (optional): [role] is the updated role of the user in the chat room.
   /// - (optional): [userId] is the updated user ID.
   /// - (optional): [chatUser] is the updated chat user details.
   /// - (optional): [userStatus] is the updated online/offline status.
   /// - (optional): [typingStatus] is the updated typing status.
+  /// - (optional): [membershipStatus] is the updated membership status
+  /// of the user in the chat room.
+  /// - (optional): [membershipStatusTimestamp] is the updated timestamp
+  /// of the last membership status change. If `null`, the existing
+  /// timestamp is retained.
   ///
   /// Returns a new [ChatRoomUserDm] instance with the specified updates.
   ChatRoomUserDm copyWith({
+    Role? role,
     String? userId,
     ChatUser? chatUser,
     UserStatus? userStatus,
     TypeWriterStatus? typingStatus,
+    MembershipStatus? membershipStatus,
+    DateTime? membershipStatusTimestamp,
     bool forceNullValue = false,
   }) {
     return ChatRoomUserDm(
+      role: role ?? this.role,
       userId: userId ?? this.userId,
       chatUser: forceNullValue ? chatUser : chatUser ?? this.chatUser,
       userStatus: userStatus ?? this.userStatus,
       typingStatus: typingStatus ?? this.typingStatus,
+      membershipStatus: membershipStatus ?? this.membershipStatus,
+      membershipStatusTimestamp:
+          membershipStatusTimestamp ?? this.membershipStatusTimestamp,
     );
   }
 

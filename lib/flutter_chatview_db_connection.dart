@@ -16,6 +16,8 @@ export 'src/enum.dart'
     hide
         ChatRoomTypeExtension,
         DocumentChangeTypeExtension,
+        MembershipStatusExtension,
+        RoleExtension,
         TypeWriterStatusExtension,
         UserStatusExtension;
 export 'src/models/models.dart';

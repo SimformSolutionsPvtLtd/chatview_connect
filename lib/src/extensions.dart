@@ -70,6 +70,10 @@ extension MessageCollectionReferenceExtension on CollectionReference<Message?> {
   /// - (optional): [limit] Limits the number of messages retrieved.
   /// - (optional): [startAfterDocument] Starts fetching after the given
   /// document for pagination.
+  /// - (optional): [whereFieldName] Specifies the field to apply a filtering
+  /// condition.
+  /// - (optional): [whereFieldIsGreaterThanOrEqualTo] Filters messages where
+  /// [whereFieldName] is greater than or equal to this value.
   ///
   /// Returns a [Query] with the applied filters.
   Query<Message?> toMessageQuery({
@@ -77,13 +81,16 @@ extension MessageCollectionReferenceExtension on CollectionReference<Message?> {
     required MessageSortOrder sortOrder,
     int? limit,
     DocumentSnapshot<Message?>? startAfterDocument,
+    String? whereFieldName,
+    Object? whereFieldIsGreaterThanOrEqualTo,
   }) {
     return toQuery(
-      limit: limit,
-      descending: sortOrder.isDesc,
-      startAfterDocument: startAfterDocument,
-      orderByFieldName: sortBy.isNone ? null : sortBy.key,
-    );
+        limit: limit,
+        descending: sortOrder.isDesc,
+        startAfterDocument: startAfterDocument,
+        orderByFieldName: sortBy.isNone ? null : sortBy.key,
+        whereFieldName: whereFieldName,
+        whereFieldIsGreaterThanOrEqualTo: whereFieldIsGreaterThanOrEqualTo);
   }
 }
 
@@ -94,13 +101,18 @@ extension CollectionReferenceExtension<T> on CollectionReference<T> {
   /// messages.
   ///
   /// **Parameters:**
-  /// - (optional): [orderByFieldName] The field name to sort by. If `null`
-  /// or empty, no sorting is applied.
-  /// - (optional) [descending] Determines whether the sorting is in
-  /// descending order. Defaults to `false` (ascending order).
-  /// - (optional): [limit] Limits the number of messages retrieved.
+  /// - (optional): [orderByFieldName] The field name to sort by.
+  /// If `null` or empty, no sorting is applied.
+  /// - (optional): [descending] Determines whether sorting is in
+  /// descending order.
+  /// Defaults to `false` (ascending order).
+  /// - (optional): [limit] Limits the number of documents retrieved.
   /// - (optional): [startAfterDocument] Starts fetching after the given
   /// document for pagination.
+  /// - (optional): [whereFieldName] The field name to apply a filtering
+  /// condition.
+  /// - (optional): [whereFieldIsGreaterThanOrEqualTo] Filters results
+  /// where [whereFieldName] is greater than or equal to this value.
   ///
   /// Returns a [Query] with the applied filters.
   Query<T> toQuery({
@@ -108,10 +120,19 @@ extension CollectionReferenceExtension<T> on CollectionReference<T> {
     bool descending = false,
     int? limit,
     DocumentSnapshot<T>? startAfterDocument,
+    String? whereFieldName,
+    Object? whereFieldIsGreaterThanOrEqualTo,
   }) {
     var collection = orderByFieldName == null || orderByFieldName.isEmpty
         ? this
         : orderBy(orderByFieldName, descending: descending);
+
+    if (whereFieldName != null && whereFieldIsGreaterThanOrEqualTo != null) {
+      collection = collection.where(
+        whereFieldName,
+        isGreaterThanOrEqualTo: whereFieldIsGreaterThanOrEqualTo,
+      );
+    }
 
     if (limit != null) collection = collection.limit(limit);
 
@@ -125,6 +146,17 @@ extension CollectionReferenceExtension<T> on CollectionReference<T> {
 
 /// An extension on [DateTime] to provide a safe comparison method.
 extension DateTimeCompareExtension on DateTime? {
+  /// Checks if [lastMessageTimestamp] is before the current
+  /// DateTime instance.
+  ///
+  /// Returns `false` if the current DateTime is `null`.
+  bool isMessageBeforeMembership(DateTime? lastMessageTimestamp) {
+    final dateTime = this;
+    return dateTime == null
+        ? false
+        : lastMessageTimestamp?.compareTo(dateTime) == -1;
+  }
+
   /// Compares two nullable [DateTime] objects.
   ///
   /// - Returns `0` if both are `null`.

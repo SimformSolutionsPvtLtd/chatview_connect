@@ -29,6 +29,10 @@ final class ChatViewFireStoreDatabase implements DatabaseService {
   static const String _lastMessage = 'last_message';
   static const String _groupName = 'group_name';
   static const String _groupPhotoUrl = 'group_photo_url';
+  static const String _createdAt = 'createdAt';
+  static const String _membershipStatus = 'membership_status';
+  static const String _membershipStatusTimestamp =
+      'membership_status_timestamp';
 
   static String? _chatRoomId;
 
@@ -99,12 +103,15 @@ final class ChatViewFireStoreDatabase implements DatabaseService {
     required MessageSortOrder sortOrder,
     int? limit,
     DocumentSnapshot<Message?>? startAfterDocument,
+    DateTime? startFromDateTime,
   }) {
     final messageCollectionRef = _messageCollectionRef().toMessageQuery(
       sortBy: sortBy,
       sortOrder: sortOrder,
       limit: limit,
       startAfterDocument: startAfterDocument,
+      whereFieldName: _createdAt,
+      whereFieldIsGreaterThanOrEqualTo: startFromDateTime?.toIso8601String(),
     );
 
     return messageCollectionRef.snapshots().distinct().map(
@@ -342,22 +349,32 @@ final class ChatViewFireStoreDatabase implements DatabaseService {
 
   @override
   Future<void> updateChatRoomUserMetadata({
+    String? userId,
+    String? chatId,
     TypeWriterStatus? typingStatus,
     UserStatus? userStatus,
+    MembershipStatus? membershipStatus,
   }) async {
-    final userId = ChatViewDbConnection.instance.currentUserId;
-    if (userId == null) throw Exception("Sender ID Can't be null");
+    final newUserId = userId ?? ChatViewDbConnection.instance.currentUserId;
+    if (newUserId == null) throw Exception("Sender ID Can't be null");
+
+    final newChatId = chatId ?? _chatRoomId;
+    if (newChatId == null) throw Exception("Chat Room ID Can't be null");
 
     final data = <String, dynamic>{
       if (typingStatus case final status?) _typingStatus: status.name,
       if (userStatus case final status?) _userStatus: status.name,
+      if (membershipStatus case final status?) ...{
+        _membershipStatus: status.name,
+        _membershipStatusTimestamp: DateTime.now().toIso8601String(),
+      },
     };
 
     if (data.isEmpty) return;
 
     return ChatViewFireStoreCollections.chatUsersCollection(
-      _chatRoomCollectionPath(),
-    ).doc(userId).update(data);
+      _chatRoomCollectionPath(chatId: newChatId),
+    ).doc(newUserId).update(data);
   }
 
   @override
@@ -459,11 +476,24 @@ final class ChatViewFireStoreDatabase implements DatabaseService {
   }
 
   @override
-  Stream<int> getUnreadMessagesCount(String chatId) {
+  Stream<int> getUnreadMessagesCount(
+    String chatId, {
+    DateTime? startMessageFromDateTime,
+  }) {
     final currentUserId = ChatViewDbConnection.instance.currentUserId;
-    return ChatViewFireStoreCollections.messageCollection(
+
+    final chatRoomCollectionRef =
+        ChatViewFireStoreCollections.messageCollection(
       _chatRoomCollectionPath(chatId: chatId),
-    ).snapshots().map(
+    ).toMessageQuery(
+      sortBy: MessageSortBy.none,
+      sortOrder: MessageSortOrder.desc,
+      whereFieldName: _createdAt,
+      whereFieldIsGreaterThanOrEqualTo:
+          startMessageFromDateTime?.toIso8601String(),
+    );
+
+    return chatRoomCollectionRef.snapshots().map(
       (messageSnapshot) {
         final docs = messageSnapshot.docs;
         final docsLength = docs.length;
@@ -519,17 +549,17 @@ final class ChatViewFireStoreDatabase implements DatabaseService {
                   return Stream.value(null);
                 }
                 final chatId = chatRoomSnapshot.id;
-                return Rx.combineLatest2(
-                  getChatRoomParticipantsStream(
-                    includeCurrentUser: false,
-                    chatId: chatId,
-                  ),
-                  fetchUnreadMessageCount
-                      ? getUnreadMessagesCount(chatId)
-                      : Stream.value(0),
-                  (chatRoomUsers, unreadMessagesCount) => chatRoom.copyWith(
-                    users: chatRoomUsers,
-                    unreadMessagesCount: unreadMessagesCount,
+
+                return getChatRoomParticipantsStream(
+                  // Added group check as to get timestamp of current user
+                  // for when they joined the group for count unread messages.
+                  includeCurrentUser: chatRoom.chatRoomType.isGroup,
+                  chatId: chatId,
+                ).switchMap(
+                  (users) => _getChatRoomFromChatRoomParticipants(
+                    users: users,
+                    chatRoom: chatRoom,
+                    fetchUnreadMessageCount: fetchUnreadMessageCount,
                   ),
                 );
               },
@@ -555,6 +585,50 @@ final class ChatViewFireStoreDatabase implements DatabaseService {
           },
         );
       },
+    );
+  }
+
+  Stream<ChatRoomDm> _getChatRoomFromChatRoomParticipants({
+    required ChatRoomDm chatRoom,
+    required List<ChatRoomUserDm> users,
+    required bool fetchUnreadMessageCount,
+  }) {
+    ChatRoomUserDm? currentUser;
+    final List<ChatRoomUserDm> otherUsers;
+    if (chatRoom.chatRoomType.isGroup) {
+      final result = _getChatRoomParticipant(users);
+      currentUser = result.currentUser;
+      otherUsers = result.otherUsers;
+    } else {
+      otherUsers = users;
+    }
+
+    final membershipTimestamp = currentUser?.membershipStatusTimestamp;
+
+    final unreadMessagesCountStream = fetchUnreadMessageCount
+        ? getUnreadMessagesCount(
+            chatRoom.chatId,
+            startMessageFromDateTime: membershipTimestamp,
+          )
+        : Stream.value(0);
+
+    final isMessageBeforeMembership =
+        membershipTimestamp.isMessageBeforeMembership(
+      chatRoom.lastMessage?.createdAt,
+    );
+
+    return unreadMessagesCountStream.map(
+      (unreadMessagesCount) => chatRoom.copyWith(
+        forceNullValue: true,
+        users: otherUsers,
+        chatId: chatRoom.chatId,
+        groupName: chatRoom.groupName,
+        chatRoomType: chatRoom.chatRoomType,
+        groupPhotoUrl: chatRoom.groupPhotoUrl,
+        chatRoomCreateBy: chatRoom.chatRoomCreateBy,
+        unreadMessagesCount: unreadMessagesCount,
+        lastMessage: isMessageBeforeMembership ? null : chatRoom.lastMessage,
+      ),
     );
   }
 
@@ -819,7 +893,10 @@ final class ChatViewFireStoreDatabase implements DatabaseService {
             ChatRoomUserDm(
               chatUser: null,
               userId: userId,
+              role: Role.admin,
               userStatus: UserStatus.offline,
+              membershipStatusTimestamp: null,
+              membershipStatus: MembershipStatus.member,
             ),
           );
       return true;
@@ -947,6 +1024,157 @@ final class ChatViewFireStoreDatabase implements DatabaseService {
   }
 
   @override
+  Future<bool> addUserInGroup({
+    required String userId,
+    required Role role,
+  }) async {
+    final chatRoomId = _chatRoomId;
+    if (chatRoomId == null) throw Exception("Chat Room ID can't be null");
+
+    final isUserExist = await _isUserExists(userId);
+    if (!isUserExist) throw Exception('User ID ($userId) not exists');
+
+    final chatRoom = await _isChatRoomExists(chatRoomId);
+    if (chatRoom == null) {
+      throw Exception('Chat Room ($chatRoomId) not exists');
+    } else if (chatRoom.chatRoomType.isOneToOne) {
+      throw Exception("User can't be added in one to one chat");
+    }
+
+    try {
+      final userChatRoomCollection =
+          ChatViewFireStoreCollections.chatUsersCollection(
+        _chatRoomCollectionPath(),
+      );
+
+      final userChatRoomData = await userChatRoomCollection.doc(userId).get();
+
+      final memberStatus = userChatRoomData.data()?.membershipStatus;
+
+      if (memberStatus == null) {
+        await userChatRoomCollection.doc(userId).set(
+              ChatRoomUserDm(
+                role: role,
+                chatUser: null,
+                userId: userId,
+                userStatus: UserStatus.offline,
+                membershipStatus: MembershipStatus.member,
+                membershipStatusTimestamp: DateTime.now(),
+              ),
+            );
+      } else if (!memberStatus.isMember) {
+        await updateChatRoomUserMetadata(
+          userId: userId,
+          chatId: chatRoomId,
+          membershipStatus: MembershipStatus.member,
+        );
+      } else {
+        return true;
+      }
+
+      await ChatViewFireStoreCollections.userChatsConversationCollection(
+        userId: userId,
+      ).doc(chatRoomId).set(const UserChatsConversationDm());
+
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  @override
+  Future<bool> removeUserFromGroup({
+    required String userId,
+    required bool deleteGroupIfSingleUser,
+    required DeleteChatDocsFromStorageCallback
+        deleteChatDocsFromStorageCallback,
+  }) async {
+    final currentUserId = ChatViewDbConnection.instance.currentUserId;
+
+    final membershipStatus = currentUserId == userId
+        ? MembershipStatus.left
+        : MembershipStatus.removed;
+
+    if (membershipStatus.isMember) throw Exception('In appropriate operation');
+
+    final chatRoomId = _chatRoomId;
+    if (chatRoomId == null) throw Exception("Chat Room ID can't be null");
+
+    final isUserExist = await _isUserExists(userId);
+    if (!isUserExist) throw Exception('User ID ($userId) not exists');
+
+    final chatRoom = await _isChatRoomExists(chatRoomId);
+    if (chatRoom == null) {
+      throw Exception('Chat Room ($chatRoomId) not exists');
+    }
+
+    if (chatRoom.chatRoomType.isOneToOne) {
+      throw Exception("User can't be removed from the one to one chat");
+    }
+
+    try {
+      final userChatRoomCollection =
+          ChatViewFireStoreCollections.chatUsersCollection(
+        _chatRoomCollectionPath(),
+      );
+
+      ChatRoomUserDm? currentChatRoomUser;
+
+      if (deleteGroupIfSingleUser) {
+        final userChatRoomCollectionData = await userChatRoomCollection.get();
+
+        final docs = userChatRoomCollectionData.docs;
+        final docsLength = docs.length;
+
+        var activeMembers = 0;
+
+        for (var i = 0; i < docsLength; i++) {
+          final chatRoomUser = docs[i].data();
+          if (chatRoomUser == null) continue;
+          if (chatRoomUser.userId == userId) currentChatRoomUser = chatRoomUser;
+          if (chatRoomUser.membershipStatus.isMember) activeMembers++;
+        }
+
+        if (activeMembers == 1) {
+          final result = await deleteChat(
+            chatId: chatRoomId,
+            deleteChatDocsFromStorageCallback:
+                deleteChatDocsFromStorageCallback,
+          );
+          return result;
+        }
+      } else {
+        final userChatRoomData = await userChatRoomCollection.doc(userId).get();
+        currentChatRoomUser = userChatRoomData.data();
+      }
+
+      if (currentChatRoomUser != null &&
+          currentChatRoomUser.membershipStatus != membershipStatus) {
+        await updateChatRoomUserMetadata(
+          userId: userId,
+          chatId: chatRoomId,
+          membershipStatus: membershipStatus,
+        );
+      }
+
+      await ChatViewFireStoreCollections.userChatsConversationCollection(
+        userId: userId,
+      ).doc(chatRoomId).delete();
+
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  Future<ChatRoomDm?> _isChatRoomExists(String chatRoomId) async {
+    final result = await ChatViewFireStoreCollections.chatCollection()
+        .doc(chatRoomId)
+        .get();
+    return result.data();
+  }
+
+  @override
   Stream<ChatRoomMetadata> getGroupChatMetadataStream([String? chatId]) {
     final newChatId = chatId ?? _chatRoomId;
     if (newChatId == null) throw Exception("Chat Room ID can't be null");
@@ -973,6 +1201,30 @@ final class ChatViewFireStoreDatabase implements DatabaseService {
         );
       },
     );
+  }
+
+  @override
+  Future<DateTime?> userAddedInGroupChatTimestamp({
+    String? userId,
+    String? chatId,
+  }) async {
+    final newUserId = userId ?? ChatViewDbConnection.instance.currentUserId;
+    if (newUserId == null) throw Exception("User ID can't be null");
+
+    final newChatId = chatId ?? _chatRoomId;
+    if (newChatId == null) throw Exception("Chat ID can't be null");
+
+    final chatRoomUserData =
+        await ChatViewFireStoreCollections.chatUsersCollection(
+      _chatRoomCollectionPath(chatId: newChatId),
+    ).doc(newUserId).get();
+
+    final chatRoomUser = chatRoomUserData.data();
+
+    return switch (chatRoomUser?.membershipStatus) {
+      MembershipStatus.member => chatRoomUser?.membershipStatusTimestamp,
+      null || MembershipStatus.removed || MembershipStatus.left => null,
+    };
   }
 
   @override
@@ -1038,5 +1290,26 @@ final class ChatViewFireStoreDatabase implements DatabaseService {
           const ChatRoomMetadata(chatName: 'Unknown User'),
         ),
     };
+  }
+
+  ChatRoomParticipantsRecord _getChatRoomParticipant(
+    List<ChatRoomUserDm> users,
+  ) {
+    final usersLength = users.length;
+    final currentUserId = ChatViewDbConnection.instance.currentUserId;
+
+    ChatRoomUserDm? currentUser;
+    final otherUsers = <ChatRoomUserDm>[];
+
+    for (var i = 0; i < usersLength; i++) {
+      final user = users[i];
+      if (user.userId == currentUserId) {
+        currentUser = user;
+      } else {
+        otherUsers.add(user);
+      }
+    }
+
+    return (currentUser: currentUser, otherUsers: otherUsers);
   }
 }

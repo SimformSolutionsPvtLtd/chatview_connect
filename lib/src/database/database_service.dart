@@ -72,11 +72,16 @@ abstract interface class DatabaseService {
   ///
   /// - (optional): [startAfterDocument] specifies the message document snapshot
   /// if you want to retrieve message after the that.
+  ///
+  /// - (optional): [startFromDateTime] specifies a starting date-time to fetch
+  /// messages from. If provided, only messages after this timestamp will be
+  /// included.
   Stream<List<MessageDm>> getMessagesStream({
     required MessageSortBy sortBy,
     required MessageSortOrder sortOrder,
     int? limit,
     DocumentSnapshot<Message?>? startAfterDocument,
+    DateTime? startFromDateTime,
   });
 
   /// Retrieves a stream of users batches from database.
@@ -153,7 +158,14 @@ abstract interface class DatabaseService {
   ///
   /// - (required): [chatId] The unique identifier of the chat room for
   /// which the unread message count is retrieved.
-  Stream<int> getUnreadMessagesCount(String chatId);
+  ///
+  /// - (optional): [startMessageFromDateTime] Specifies a starting date-time
+  /// to count unread messages from. If provided, only messages after this
+  /// timestamp will be considered.
+  Stream<int> getUnreadMessagesCount(
+    String chatId, {
+    DateTime? startMessageFromDateTime,
+  });
 
   /// Retrieves the current user and a list of users in the chat room from the
   /// database.
@@ -242,18 +254,26 @@ abstract interface class DatabaseService {
 
   // TODO(YASH): Store user online/offline status in user_chats collection
   /// Updates the chat room user with the provided typing and/or user status.
-  /// This method is used to update the status of a user in the chat room, such
-  /// as their typing status or overall user status.
+  /// This method is used to update a user's status in a chat room, such
+  /// as their typing status or overall availability.
+  ///
+  /// If [userId] is not specified, the current user's ID is used.
+  /// If [chatId] is not specified, the current chat room ID is used.
   ///
   /// **Parameters:**
+  /// - (optional): [userId] The ID of the user. Defaults to the current user.
+  /// - (optional): [chatId] The ID of the chat room. Defaults to the
+  /// current chat room.
   /// - (optional): [typingStatus] The current typing status of the user
-  /// (e.g., typing, typed).
+  /// (e.g., `typing`, `typed`).
   /// - (optional): [userStatus] The overall status of the user
-  /// (e.g., online, offline).
+  /// (e.g., `online`, `offline`).
   ///
   /// Returns a [Future] that completes when the user's status is updated in
   /// the database.
   Future<void> updateChatRoomUserMetadata({
+    String? userId,
+    String? chatId,
     TypeWriterStatus? typingStatus,
     UserStatus? userStatus,
   });
@@ -368,6 +388,48 @@ abstract interface class DatabaseService {
   /// Returns a true/false indicating whether the last message is fetched and updated.
   Future<bool> fetchAndUpdateLastMessage({String? chatId});
 
+  /// {@template flutter_chatview_db_connection.DatabaseService.addUserInGroup}
+  /// Adds a user to the group chat with a specified role.
+  /// This method updates the group's membership list and assigns the user
+  /// a role.
+  ///
+  /// **Parameters:**
+  /// - (required): [userId] The unique identifier of the user to be added.
+  /// - (Required): [role] The role assigned to the user in the group chat.
+  ///
+  /// Returns a [Future] that resolves to `true` if the user was successfully
+  /// added, otherwise `false`.
+  /// {@endtemplate}
+  Future<bool> addUserInGroup({
+    required String userId,
+    required Role role,
+  });
+
+  /// {@template flutter_chatview_db_connection.DatabaseService.removeUserFromGroup}
+  /// Removes a user from the group chat and updates their membership status.
+  /// This method marks the user as removed but does not delete their
+  /// past messages.
+  ///
+  /// **Parameters:**
+  /// - (required): [userId] The unique identifier of the user to be removed.
+  /// - (required): [deleteGroupIfSingleUser] Whether to delete the group
+  ///   if the removed user was the last member.
+  /// - (required): [deleteChatDocsFromStorageCallback] A callback function
+  ///   to delete chat-related documents from storage.
+  ///
+  /// If the group has only one remaining user and [deleteGroupIfSingleUser]
+  /// is `true`, the group will be deleted along with its chat-related documents.
+  ///
+  /// Returns a [Future] that resolves to `true` if the user was successfully
+  /// removed, otherwise `false`.
+  /// {@endtemplate}
+  Future<bool> removeUserFromGroup({
+    required String userId,
+    required bool deleteGroupIfSingleUser,
+    required DeleteChatDocsFromStorageCallback
+        deleteChatDocsFromStorageCallback,
+  });
+
   /// Updates the chat room with new data.
   ///
   /// **Parameters:**
@@ -424,6 +486,34 @@ abstract interface class DatabaseService {
   /// Returns a [Stream] that emits [ChatRoomMetadata] whenever updates occur.
   Stream<ChatRoomMetadata> getChatRoomMetadataStream({
     required ChatRoomType chatRoomType,
+    String? userId,
+    String? chatId,
+  });
+
+  /// {@template flutter_chatview_db_connection.DatabaseService.userAddedInGroupChatTimestamp}
+  /// Retrieves the timestamp of when a user was added to a group chat.
+  /// This timestamp helps determine which messages should be displayed
+  /// to the user based on their membership start time.
+  ///
+  /// If `userId` is not specified, the current user's ID is used.
+  /// If `chatId` is not specified, the current chat room ID is used.
+  ///
+  /// Returns `null` if no timestamp is found.
+  ///
+  /// Parameters:
+  /// - `userId`: (Optional) The ID of the user. Defaults to the current user.
+  /// - `chatId`: (Optional) The ID of the group chat.
+  /// Defaults to the current chat room.
+  ///
+  /// Example usage:
+  /// ```dart
+  /// DateTime? joinTimestamp = await userAddedInGroupChatTimestamp(
+  ///            userId: "user123",
+  ///            chatId: "chat456",
+  ///          );
+  /// ```
+  /// {@endtemplate}
+  Future<DateTime?> userAddedInGroupChatTimestamp({
     String? userId,
     String? chatId,
   });

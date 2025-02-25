@@ -185,6 +185,11 @@ final class ChatViewConnectionManager {
           .listen(metadataChangesCallback);
     }
 
+    final startMessageTimestamp = chatRoomParticipants.chatRoomType.isGroup
+        // TODO(YASH): Handle case when the remove/left status arrived then don't listen the messages
+        ? await _database.userAddedInGroupChatTimestamp()
+        : null;
+
     _chatRoomUserStream = _database
         .getChatRoomUsersMetadataStream(
           observeUserInfoChanges: syncOtherUsersInfo,
@@ -201,6 +206,7 @@ final class ChatViewConnectionManager {
         .getMessagesStream(
           sortBy: MessageSortBy.dateTime,
           sortOrder: MessageSortOrder.asc,
+          startFromDateTime: startMessageTimestamp,
         )
         .listen(_listenMessages);
 
@@ -406,6 +412,43 @@ final class ChatViewConnectionManager {
     return _database.updateGroupChat(
       groupName: groupName,
       groupProfilePic: groupProfilePic,
+    );
+  }
+
+  /// {@macro flutter_chatview_db_connection.DatabaseService.addUserInGroup}
+  Future<bool> addUserInGroup({
+    required String userId,
+    required Role role,
+  }) =>
+      _database.addUserInGroup(userId: userId, role: role);
+
+  /// Removes a user from the group chat and updates their membership status
+  /// to [MembershipStatus.removed].
+  ///
+  /// **Parameters:**
+  /// - (required): [userId] The unique identifier of the user to be removed.
+  ///
+  /// Returns a [Future] that resolves to `true`
+  /// if the user was successfully removed, otherwise `false`.
+  Future<bool> removeUserFromGroup(String userId) =>
+      _database.removeUserFromGroup(
+        userId: userId,
+        deleteGroupIfSingleUser: true,
+        deleteChatDocsFromStorageCallback: _storage.deleteChatDocs,
+      );
+
+  /// Allows the current user to leave the group chat by updating their
+  /// membership status to [MembershipStatus.left].
+  ///
+  /// Returns a [Future] that resolves to `true`
+  /// if the user successfully left the group, otherwise `false`.
+  Future<bool> leaveCurrentUserFromGroup() {
+    final currentUserId = ChatViewDbConnection.instance.currentUserId;
+    if (currentUserId == null) throw Exception("Current User ID can't be null");
+    return _database.removeUserFromGroup(
+      userId: currentUserId,
+      deleteGroupIfSingleUser: true,
+      deleteChatDocsFromStorageCallback: _storage.deleteChatDocs,
     );
   }
 

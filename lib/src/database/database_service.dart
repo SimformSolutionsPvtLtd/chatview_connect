@@ -355,6 +355,39 @@ abstract interface class DatabaseService {
   /// {@endtemplate}
   Future<bool> updateGroupChat({String? groupName, String? groupProfilePic});
 
+  /// This method retrieves all messages of the given chat room, determines the
+  /// most recent one, and updates the chat room’s last message field.
+  ///
+  /// **Parameters:**
+  /// - (optional): [chatId] The unique identifier of the chat room to be
+  /// updated. If `chatId` is `null`, the currently active chat room ID will be
+  /// used.
+  ///
+  /// Returns a true/false indicating whether the last message is fetched and updated.
+  Future<bool> fetchAndUpdateLastMessage({String? chatId});
+
+  /// Updates the chat room with new data.
+  ///
+  /// **Parameters:**
+  /// - (optional): [chatId] is the unique identifier of the chat room to be
+  /// updated. If `chatId` is `null`, the currently active chat room ID will be
+  /// used.
+  ///
+  /// - (optional): [lastMessage] represents the most recent message in the
+  /// chat room.
+  ///
+  /// - (optional): [data] is a map containing additional fields to update in
+  /// the chat room. If `data` is provided, it will be used for the update.
+  /// Otherwise, if `lastMessage` is specified, it will be used to update
+  /// the chat room.
+  ///
+  /// Returns a `Future<bool>` indicating whether the update was successful.
+  Future<bool> updateChatRoom({
+    String? chatId,
+    Message? lastMessage,
+    Map<String, dynamic>? data,
+  });
+
   /// Deletes the entire chat from the chat collection and removes it
   /// from all users involved in the chat.
   ///

@@ -66,7 +66,18 @@ final class ChatViewConnectionManager {
   static StreamSubscription<Map<String, ChatRoomUserDm>>? _chatRoomUserStream;
   static ChatController? _controller;
 
-  bool get _isInitialized =>
+  ChatRoomType? get _chatRoomType {
+    final otherUsersLength = _controller?.otherUsers.length ?? 0;
+    if (otherUsersLength == 1) {
+      return ChatRoomType.oneToOne;
+    } else if (otherUsersLength > 1) {
+      return ChatRoomType.group;
+    } else {
+      return null;
+    }
+  }
+
+  static bool get _isInitialized =>
       _chatRoomUserStream != null || _messagesStream != null;
 
   /// Returns the singleton instance of [ChatViewConnectionManager].
@@ -286,12 +297,33 @@ final class ChatViewConnectionManager {
   /// - (required): [message] The message that is being unsent.
   Future<void> onUnsendTap(Message message) async {
     if (!_isInitialized) return;
-    await _database.deleteMessage(
+
+    final initialMessageList = _controller?.initialMessageList ?? [];
+
+    final length = initialMessageList.length;
+
+    final lastMessage = length > 0 ? initialMessageList[length - 1] : null;
+
+    final isDeleted = await _database.deleteMessage(
       message,
       deleteImageFromStorage: true,
       deleteVoiceFromStorage: false,
       onDeleteDocument: _storage.deleteDoc,
     );
+
+    final isLastMessage = message.id == lastMessage?.id;
+
+    if (isLastMessage && isDeleted) {
+      final secondLastMessage =
+          length > 1 ? initialMessageList[length - 2] : null;
+
+      if (secondLastMessage == null && (_chatRoomType?.isGroup ?? false)) {
+        await _database.fetchAndUpdateLastMessage();
+        return;
+      }
+
+      await _database.updateChatRoom(lastMessage: secondLastMessage);
+    }
   }
 
   /// Updates the reaction of a user on a message with the selected emoji.

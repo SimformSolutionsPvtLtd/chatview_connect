@@ -33,6 +33,8 @@ class ChatRoomDm {
   /// messages for the current user. defaults to `0`.
   /// - (optional): [groupPhotoUrl] The URL of the group photo
   /// (null for one-to-one chats).
+  /// - (optional): [chatRoomCreateBy] The user who created the chat room.
+  /// (null for one-to-one chats).
   /// - (optional): [lastMessage] The last message sent in the chat room
   /// (null if no message).
   /// - (optional): [groupName] The name of the group
@@ -43,6 +45,7 @@ class ChatRoomDm {
     required this.chatRoomType,
     this.unreadMessagesCount = 0,
     this.groupPhotoUrl,
+    this.chatRoomCreateBy,
     this.lastMessage,
     this.groupName,
     this.users,
@@ -72,6 +75,7 @@ class ChatRoomDm {
       chatId: json['chat_id']?.toString() ?? '',
       groupName: json['group_name']?.toString(),
       groupPhotoUrl: json['group_photo_url']?.toString(),
+      chatRoomCreateBy: json['chat_room_create_by']?.toString(),
       lastMessage: lastMessage,
     );
   }
@@ -95,6 +99,11 @@ class ChatRoomDm {
 
   /// The unique identifier of the chat.
   final String chatId;
+
+  /// The unique identifier of the user who created this chat room.
+  /// This is `null` for one-to-one chat rooms or if the creator information
+  /// is unavailable.
+  final String? chatRoomCreateBy;
 
   /// The number of unread messages in the chat room for the current user.
   ///
@@ -171,6 +180,7 @@ class ChatRoomDm {
       'chat_room_type': chatRoomType.name,
       'group_name': groupName,
       'group_photo_url': groupPhotoUrl,
+      'chat_room_create_by': chatRoomCreateBy,
       'last_message': lastMessage?.toJson(),
     };
   }
@@ -191,6 +201,7 @@ class ChatRoomDm {
     Message? lastMessage,
     List<ChatRoomUserDm>? users,
     int? unreadMessagesCount,
+    String? chatRoomCreateBy,
     bool forceNullValue = false,
   }) {
     return ChatRoomDm(
@@ -203,6 +214,9 @@ class ChatRoomDm {
       lastMessage:
           forceNullValue ? lastMessage : lastMessage ?? this.lastMessage,
       users: forceNullValue ? users : users ?? this.users,
+      chatRoomCreateBy: forceNullValue
+          ? chatRoomCreateBy
+          : chatRoomCreateBy ?? this.chatRoomCreateBy,
     );
   }
 

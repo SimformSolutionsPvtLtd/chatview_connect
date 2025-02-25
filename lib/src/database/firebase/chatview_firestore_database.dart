@@ -87,9 +87,7 @@ final class ChatViewFireStoreDatabase implements DatabaseService {
 
     // TODO(Yash): Switch to reading last message from message collection
     //  instead of updating last message in chat room document.
-    await ChatViewFireStoreCollections.chatCollection()
-        .doc(_chatRoomId)
-        .update({_lastMessage: updatedMessage.toJson()});
+    await updateChatRoom(lastMessage: updatedMessage);
 
     return updatedMessage;
   }
@@ -212,9 +210,7 @@ final class ChatViewFireStoreDatabase implements DatabaseService {
 
     await _messageCollectionRef().doc(message.id).update(data);
 
-    await ChatViewFireStoreCollections.chatCollection().doc(_chatRoomId).update(
-      {_lastMessage: message.copyWith(status: messageStatus).toJson()},
-    );
+    await updateChatRoom(lastMessage: message.copyWith(status: messageStatus));
   }
 
   @override
@@ -516,7 +512,9 @@ final class ChatViewFireStoreDatabase implements DatabaseService {
               (chatRoomSnapshot) {
                 final chatRoom = chatRoomSnapshot.data();
                 if (chatRoom == null) return Stream.value(null);
-                if (!showEmptyMessagesChats && chatRoom.lastMessage == null) {
+                if (!showEmptyMessagesChats &&
+                    chatRoom.chatRoomType.isOneToOne &&
+                    chatRoom.lastMessage == null) {
                   return Stream.value(null);
                 }
                 final chatId = chatRoomSnapshot.id;
@@ -662,9 +660,10 @@ final class ChatViewFireStoreDatabase implements DatabaseService {
       chatId: chatId,
       chatRoom: ChatRoomDm(
         chatId: chatId,
-        chatRoomType: ChatRoomType.group,
         groupName: groupName,
         groupPhotoUrl: groupProfilePic,
+        chatRoomCreateBy: currentUserId,
+        chatRoomType: ChatRoomType.group,
       ),
     );
 
@@ -730,9 +729,7 @@ final class ChatViewFireStoreDatabase implements DatabaseService {
     if (data.isEmpty) return true;
 
     try {
-      await ChatViewFireStoreCollections.chatCollection()
-          .doc(_chatRoomId)
-          .update(data);
+      await updateChatRoom(data: data);
       return true;
     } catch (_) {
       return false;
@@ -943,6 +940,46 @@ final class ChatViewFireStoreDatabase implements DatabaseService {
       await ChatViewFireStoreCollections.chatCollection().doc(chatId).delete();
 
       return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  @override
+  Future<bool> updateChatRoom({
+    String? chatId,
+    Message? lastMessage,
+    Map<String, dynamic>? data,
+  }) async {
+    final newChatId = chatId ?? _chatRoomId;
+    if (newChatId == null) throw Exception("Chat Room ID can't be null");
+
+    try {
+      await ChatViewFireStoreCollections.chatCollection()
+          .doc(newChatId)
+          .update(data ?? {_lastMessage: lastMessage?.toJson()});
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  @override
+  Future<bool> fetchAndUpdateLastMessage({String? chatId}) async {
+    try {
+      final messageCollection = ChatViewFireStoreCollections.messageCollection(
+        _chatRoomCollectionPath(chatId: chatId),
+      )
+          .orderBy(
+            MessageSortBy.dateTime.key,
+            descending: MessageSortOrder.desc.isDesc,
+          )
+          .limit(1);
+
+      final result = await messageCollection.get();
+      final lastMessage = result.docs.lastOrNull?.data();
+
+      return updateChatRoom(chatId: chatId, lastMessage: lastMessage);
     } catch (_) {
       return false;
     }

@@ -2,6 +2,7 @@ import 'package:flutter_chatview_models/flutter_chatview_models.dart';
 
 import '../enum.dart';
 import '../extensions.dart';
+import 'chat_room_metadata_model.dart';
 
 /// A data model representing the participants in a chat room.
 ///
@@ -57,40 +58,6 @@ final class ChatViewParticipantsDm {
   /// For one-to-one chats, this is `null`.
   final String? groupPhotoUrl;
 
-  /// Returns the name of the chat room.
-  /// - For one-to-one chats, it returns the name of the user.
-  /// If the name is `null`, "Unknown User" is returned.
-  /// - For group chats, it returns the group name, or a comma-separated
-  /// list of users' names if the group name is not available.
-  ///   If both the group name and users' names are unavailable,
-  ///   "Unknown Group" is returned.
-  String get chatName {
-    return switch (chatRoomType) {
-      ChatRoomType.oneToOne => otherUsers.firstOrNull?.name ?? 'Unknown User',
-      ChatRoomType.group =>
-        groupName ?? otherUsers.toJoinString(', ') ?? 'Unknown Group',
-    };
-  }
-
-  /// Returns the profile picture URL of the chat room,
-  /// or `null` if not available
-  /// - For one-to-one chats, it returns the profile picture of the front user,
-  /// if available.
-  /// - For group chats, it returns the group photo URL, if available.
-  ///
-  /// Returns the profile picture URL of the chat room, or
-  /// `null` if not available.
-  /// - For one-to-one chats, it returns the profile picture of the front user,
-  /// if available. otherwise `null` is returned.
-  /// - For group chats, it returns the group photo URL, if available.
-  /// otherwise `null` is returned.
-  String? get chatProfile {
-    return switch (chatRoomType) {
-      ChatRoomType.oneToOne => otherUsers.firstOrNull?.profilePhoto,
-      ChatRoomType.group => groupPhotoUrl,
-    };
-  }
-
   /// {@template flutter_chatview_db_connection.ChatViewParticipantsDm._getUsersProfilePictures}
   /// Retrieves the profile pictures of users in the chat room as
   /// a list of URLs as strings.
@@ -107,5 +74,68 @@ final class ChatViewParticipantsDm {
         // Filters out null values from the list.
         if (otherUsers[i].profilePhoto case final profilePic?) profilePic,
     ];
+  }
+
+  /// Retrieves metadata for the chat room, supporting both one-to-one
+  /// and group chats.
+  ///
+  /// This provides details such as the chat name and profile picture.
+  ///
+  /// - **For one-to-one chats:**
+  ///   - The `chatName` is the other user's name. If unavailable,
+  ///   "Unknown User" is used.
+  ///   - The `chatProfilePhoto` is the other user's profile picture,
+  ///   if available.
+  ///
+  /// - **For group chats:**
+  ///   - The `chatName` is the group name. If unavailable, a comma-separated
+  ///   list of user names is used.
+  ///   - The `chatProfilePhoto` is the group photo URL, if available.
+  ChatRoomMetadata get metadata {
+    final (chatName, chatProfile) = switch (chatRoomType) {
+      ChatRoomType.oneToOne => (
+          otherUsers.firstOrNull?.name ?? 'Unknown User',
+          otherUsers.firstOrNull?.profilePhoto,
+        ),
+      ChatRoomType.group => (
+          groupName ?? otherUsers.toJoinString(', ') ?? 'Unknown Group',
+          groupPhotoUrl,
+        ),
+    };
+    return ChatRoomMetadata(chatName: chatName, chatProfilePhoto: chatProfile);
+  }
+
+  /// Creates a copy of the current [ChatViewParticipantsDm] instance
+  /// with updated fields.
+  ///
+  /// Any field not provided will retain its current value.
+  ///
+  /// **Parameters:**
+  /// - (optional) [currentUser] The updated current user of the chat room.
+  /// - (optional) [otherUsers] The updated list of other participants
+  /// in the chat.
+  /// - (optional) [chatRoomType] The updated chat room type
+  /// (one-to-one or group).
+  /// - (optional) [groupName] The updated name of the group chat
+  /// (only applicable for group chats).
+  /// - (optional) [groupPhotoUrl] The updated group photo URL
+  /// (only applicable for group chats).
+  ///
+  /// Returns a new [ChatViewParticipantsDm] instance with the
+  /// specified updates.
+  ChatViewParticipantsDm copyWith({
+    ChatUser? currentUser,
+    List<ChatUser>? otherUsers,
+    ChatRoomType? chatRoomType,
+    String? groupName,
+    String? groupPhotoUrl,
+  }) {
+    return ChatViewParticipantsDm(
+      currentUser: currentUser ?? this.currentUser,
+      otherUsers: otherUsers ?? this.otherUsers,
+      chatRoomType: chatRoomType ?? this.chatRoomType,
+      groupName: groupName ?? this.groupName,
+      groupPhotoUrl: groupPhotoUrl ?? this.groupPhotoUrl,
+    );
   }
 }

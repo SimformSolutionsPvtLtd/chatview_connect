@@ -7,6 +7,7 @@ import '../../chatview_db_connection.dart';
 import '../../enum.dart';
 import '../../extensions.dart';
 import '../../models/chat_room_dm.dart';
+import '../../models/chat_room_metadata_model.dart';
 import '../../models/chat_room_user_dm.dart';
 import '../../models/chat_view_participants_dm.dart';
 import '../../models/config/add_message_config.dart';
@@ -946,6 +947,35 @@ final class ChatViewFireStoreDatabase implements DatabaseService {
   }
 
   @override
+  Stream<ChatRoomMetadata> getGroupChatMetadataStream([String? chatId]) {
+    final newChatId = chatId ?? _chatRoomId;
+    if (newChatId == null) throw Exception("Chat Room ID can't be null");
+
+    return ChatViewFireStoreCollections.chatCollection()
+        .doc(newChatId)
+        .snapshots()
+        .distinct(
+      (previous, next) {
+        final previousData = previous.data();
+        final nextData = next.data();
+        return previousData?.groupName == nextData?.groupName &&
+            previousData?.groupPhotoUrl == nextData?.groupPhotoUrl;
+      },
+    ).map(
+      (chatRoomSnapshot) {
+        final chatRoom = chatRoomSnapshot.data();
+        if (chatRoom == null || !chatRoom.chatRoomType.isGroup) {
+          throw Exception('No Group Chat Found');
+        }
+        return ChatRoomMetadata(
+          chatName: chatRoom.groupName ?? 'Unknown Group',
+          chatProfilePhoto: chatRoom.groupPhotoUrl,
+        );
+      },
+    );
+  }
+
+  @override
   Future<bool> updateChatRoom({
     String? chatId,
     Message? lastMessage,
@@ -983,5 +1013,30 @@ final class ChatViewFireStoreDatabase implements DatabaseService {
     } catch (_) {
       return false;
     }
+  }
+
+  @override
+  Stream<ChatRoomMetadata> getChatRoomMetadataStream({
+    required ChatRoomType chatRoomType,
+    String? userId,
+    String? chatId,
+  }) {
+    assert(
+      chatRoomType.isGroup || chatRoomType.isOneToOne && userId != null,
+      "User Id can't be null",
+    );
+    return switch (chatRoomType) {
+      ChatRoomType.oneToOne when userId != null =>
+        getUserStreamById(userId: userId).map(
+          (user) => ChatRoomMetadata(
+            chatName: user?.name ?? 'Unknown User',
+            chatProfilePhoto: user?.profilePhoto,
+          ),
+        ),
+      ChatRoomType.group => getGroupChatMetadataStream(),
+      _ => Stream.value(
+          const ChatRoomMetadata(chatName: 'Unknown User'),
+        ),
+    };
   }
 }

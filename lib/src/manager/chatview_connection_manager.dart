@@ -9,6 +9,7 @@ import '../database/database_service.dart';
 import '../database/firebase/chatview_firestore_database.dart';
 import '../enum.dart';
 import '../models/chat_room_dm.dart';
+import '../models/chat_room_metadata_model.dart';
 import '../models/chat_room_user_dm.dart';
 import '../models/chat_view_participants_dm.dart';
 import '../models/config/add_message_config.dart';
@@ -64,6 +65,7 @@ final class ChatViewConnectionManager {
   static ChatViewConnectionManager? _instance;
   static StreamSubscription<List<MessageDm>>? _messagesStream;
   static StreamSubscription<Map<String, ChatRoomUserDm>>? _chatRoomUserStream;
+  static StreamSubscription<ChatRoomMetadata>? _chatRoomStreamController;
   static ChatController? _controller;
 
   ChatRoomType? get _chatRoomType {
@@ -129,6 +131,12 @@ final class ChatViewConnectionManager {
   /// activity within the chat room, such as online status, typing indicators.
   /// This callback receives a map of user IDs to their corresponding
   /// [ChatRoomUserDm] data.
+  /// - (optional) [onChatRoomMetadataChanges] Listens for real-time updates
+  /// to chat room metadata, including the chat name and profile photo.
+  ///   - For **group chats**, this callback receives an instance of
+  ///   [ChatRoomMetadata] with updated details.
+  ///   - For **one-to-one chats**, `ChatRoomMetadata` is still provided,
+  ///   but updates are based on the other user's profile.
   ///
   /// **Note:** For one-to-one chats, setting the typing indicator value from
   /// the chat controller is handled internally.
@@ -145,6 +153,7 @@ final class ChatViewConnectionManager {
     ScrollController? scrollController,
     ValueSetter<ChatViewParticipantsDm>? chatRoomInfo,
     ValueSetter<Map<String, ChatRoomUserDm>>? onUsersActivityChanges,
+    ValueSetter<ChatRoomMetadata>? onChatRoomMetadataChanges,
   }) async {
     if (_isInitialized) dispose();
 
@@ -163,6 +172,18 @@ final class ChatViewConnectionManager {
     chatRoomInfo?.call(chatRoomParticipants);
 
     _controller = controller;
+
+    if (onChatRoomMetadataChanges case final metadataChangesCallback?) {
+      final chatRoomType = chatRoomParticipants.chatRoomType;
+      _chatRoomStreamController = _database
+          .getChatRoomMetadataStream(
+            chatRoomType: chatRoomType,
+            userId: chatRoomType.isOneToOne
+                ? chatRoomParticipants.otherUsers.firstOrNull?.id
+                : null,
+          )
+          .listen(metadataChangesCallback);
+    }
 
     _chatRoomUserStream = _database
         .getChatRoomUsersMetadataStream(
@@ -375,9 +396,9 @@ final class ChatViewConnectionManager {
   /// {@macro flutter_chatview_db_connection.DatabaseService.updateGroupChat}
   ///
   /// **Note:**
-  /// - This method does **not** restrict updates based on whether the chat room is
-  ///   one-to-one or a group. If called for a one-to-one chat, it will still attempt
-  ///   to update the group name without validation.
+  /// - This method does **not** restrict updates based on whether the
+  /// chat room is one-to-one or a group. If called for a one-to-one chat,
+  /// it will still attempt to update the group name without validation.
   Future<bool> updateGroupChat({
     String? groupName,
     String? groupProfilePic,
@@ -469,6 +490,8 @@ final class ChatViewConnectionManager {
     if (!_isInitialized) return;
     _controller = null;
     _database.resetChatRoom();
+    _chatRoomStreamController?.cancel();
+    _chatRoomStreamController = null;
     _chatRoomUserStream?.cancel();
     _chatRoomUserStream = null;
     _messagesStream?.cancel();

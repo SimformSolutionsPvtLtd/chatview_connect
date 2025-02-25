@@ -5,6 +5,7 @@ import 'package:flutter_chatview_models/flutter_chatview_models.dart';
 
 import '../enum.dart';
 import '../models/chat_room_dm.dart';
+import '../models/chat_room_metadata_model.dart';
 import '../models/chat_room_user_dm.dart';
 import '../models/chat_view_participants_dm.dart';
 import '../models/config/add_message_config.dart';
@@ -115,7 +116,8 @@ abstract interface class DatabaseService {
   /// **Returns:** A [Stream] that emits a [List] of [ChatRoomUserDm] instances.
   Stream<List<ChatRoomUserDm>> getChatRoomParticipantsStream({int? limit});
 
-  /// Returns a stream of chat room users from the database.
+  /// Returns a stream of chat room users (excluding the current user)
+  /// from the database.
   ///
   /// This method listens for real-time updates to chat room users' data but
   /// does **not** fetch detailed user information.
@@ -386,6 +388,44 @@ abstract interface class DatabaseService {
     String? chatId,
     Message? lastMessage,
     Map<String, dynamic>? data,
+  });
+
+  /// Retrieves a stream of [ChatRoomMetadata] for the specified chat room.
+  ///
+  /// **Parameters:**
+  ///
+  /// - (optional): [chatId] The ID of the chat room to fetch metadata for.
+  /// If provided, this ID will be used. Otherwise, the currently active
+  /// chat room ID will be used.
+  ///
+  /// **Returns:**
+  /// A [Stream] of [ChatRoomMetadata].
+  /// Returns `null` if the chat is a one-to-one chat, as metadata is
+  /// only applicable for group chats.
+  Stream<ChatRoomMetadata> getGroupChatMetadataStream([String? chatId]);
+
+  /// Returns a real-time stream of metadata for a specific chat room.
+  ///
+  /// This stream listens for updates to the chat room's metadata and emits
+  /// changes whenever the metadata is modified. This [ChatRoomMetadata]
+  /// contains the chat room's name and profile photo, which may be updated
+  /// dynamically.
+  ///
+  /// **Parameters:**
+  ///
+  /// - (required) [chatRoomType] The type of the chat room
+  /// (e.g., one-on-one, group).
+  /// - (optional) [userId] The unique identifier of the user.
+  /// **Required for one-to-one chat rooms.**
+  /// - (optional): [chatId] The ID of the chat room to fetch metadata for.
+  ///   If provided, this ID will be used. Otherwise, the currently active
+  ///   chat room ID will be used.
+  ///
+  /// Returns a [Stream] that emits [ChatRoomMetadata] whenever updates occur.
+  Stream<ChatRoomMetadata> getChatRoomMetadataStream({
+    required ChatRoomType chatRoomType,
+    String? userId,
+    String? chatId,
   });
 
   /// Deletes the entire chat from the chat collection and removes it

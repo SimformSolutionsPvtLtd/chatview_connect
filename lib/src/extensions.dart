@@ -85,12 +85,13 @@ extension MessageCollectionReferenceExtension on CollectionReference<Message?> {
     Object? whereFieldIsGreaterThanOrEqualTo,
   }) {
     return toQuery(
-        limit: limit,
-        descending: sortOrder.isDesc,
-        startAfterDocument: startAfterDocument,
-        orderByFieldName: sortBy.isNone ? null : sortBy.key,
-        whereFieldName: whereFieldName,
-        whereFieldIsGreaterThanOrEqualTo: whereFieldIsGreaterThanOrEqualTo);
+      limit: limit,
+      descending: sortOrder.isDesc,
+      startAfterDocument: startAfterDocument,
+      orderByFieldName: sortBy.isNone ? null : sortBy.key,
+      whereFieldName: whereFieldName,
+      whereFieldIsGreaterThanOrEqualTo: whereFieldIsGreaterThanOrEqualTo,
+    );
   }
 }
 

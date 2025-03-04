@@ -243,7 +243,7 @@ final class ChatViewFireStoreDatabase implements DatabaseService {
       (userSnapshot) {
         final docs = userSnapshot.docs;
         if (docs.isEmpty) {
-          return Stream.error('No users found in chat ID: $chatId');
+          return Stream.error('No users found in chat ID: $currentChatID');
         }
         final docsLength = docs.length;
         final listOfChatUserStream = <Stream<ChatRoomUserDm>>[];
@@ -633,7 +633,10 @@ final class ChatViewFireStoreDatabase implements DatabaseService {
   }
 
   @override
-  Future<String?> createOneToOneUserChat(String otherUserId) async {
+  Future<String?> createOneToOneUserChat(
+    String otherUserId, {
+    String? chatRoomId,
+  }) async {
     final currentUserId = ChatViewDbConnection.instance.currentUserId;
     if (currentUserId == null) {
       throw Exception("Current user ID can't be null!");
@@ -658,7 +661,11 @@ final class ChatViewFireStoreDatabase implements DatabaseService {
     final chatId = await _isChatExists(otherUserId);
     if (chatId != null) return chatId;
 
-    final newChatId = await _createChatForOneToOne(otherUserId);
+    final newChatId = await _createChatForOneToOne(
+      otherUserId,
+      chatRoomId: chatRoomId,
+    );
+
     if (newChatId?.isEmpty ?? true) throw Exception('Unable to create a chat');
 
     final result = await Future.wait([
@@ -699,23 +706,26 @@ final class ChatViewFireStoreDatabase implements DatabaseService {
   @override
   Future<String?> createGroupChat({
     required String groupName,
-    required List<String> userIds,
+    required Map<String, Role> userIds,
     String? groupProfilePic,
+    String? chatRoomId,
   }) async {
     final currentUserId = ChatViewDbConnection.instance.currentUserId;
     if (currentUserId == null) {
       throw Exception("Current user ID can't be null!");
     }
 
-    if (userIds.contains(currentUserId)) {
+    final ids = userIds.keys.toList();
+
+    if (ids.contains(currentUserId)) {
       throw Exception("userIds can't contains current user ID!");
     }
 
-    final userIdsLength = userIds.length;
+    final userIdsLength = ids.length;
 
     final isUsersExistsUserInCollection = await Future.wait([
       _isUserExists(currentUserId),
-      for (var i = 0; i < userIdsLength; i++) _isUserExists(userIds[i]),
+      for (var i = 0; i < userIdsLength; i++) _isUserExists(ids[i]),
     ]);
 
     final isAllUserExistsInUserCollection = isUsersExistsUserInCollection.fold(
@@ -729,7 +739,7 @@ final class ChatViewFireStoreDatabase implements DatabaseService {
       );
     }
 
-    final chatId = const Uuid().v8();
+    final chatId = chatRoomId ?? const Uuid().v8();
 
     final isChatCreated = await _createChat(
       chatId: chatId,
@@ -748,7 +758,12 @@ final class ChatViewFireStoreDatabase implements DatabaseService {
       [
         _addUserInChat(chatId: chatId, userId: currentUserId),
         for (var i = 0; i < userIdsLength; i++)
-          _addUserInChat(chatId: chatId, userId: userIds[i]),
+          if (ids[i] case final userId)
+            _addUserInChat(
+              chatId: chatId,
+              userId: userId,
+              role: userIds[userId] ?? Role.admin,
+            ),
       ],
     );
 
@@ -771,8 +786,8 @@ final class ChatViewFireStoreDatabase implements DatabaseService {
       for (var i = 0; i < userIdsLength; i++)
         _createChatInUserChats(
           chatId: chatId,
-          currentUserId: userIds[i],
           otherUserId: null,
+          currentUserId: ids[i],
         ),
     ]);
 
@@ -841,13 +856,16 @@ final class ChatViewFireStoreDatabase implements DatabaseService {
     }
   }
 
-  Future<String?> _createChatForOneToOne(String otherUserId) async {
+  Future<String?> _createChatForOneToOne(
+    String otherUserId, {
+    String? chatRoomId,
+  }) async {
     final currentUserId = ChatViewDbConnection.instance.currentUserId;
     if (currentUserId == null) {
       throw Exception("Current User ID can't be null");
     }
 
-    final chatId = const Uuid().v8();
+    final chatId = chatRoomId ?? const Uuid().v8();
 
     final isChatCreated = await _createChat(
       chatId: chatId,
@@ -885,6 +903,7 @@ final class ChatViewFireStoreDatabase implements DatabaseService {
   Future<bool> _addUserInChat({
     required String userId,
     required String chatId,
+    Role role = Role.admin,
   }) async {
     try {
       await ChatViewFireStoreCollections.chatUsersCollection(
@@ -893,7 +912,7 @@ final class ChatViewFireStoreDatabase implements DatabaseService {
             ChatRoomUserDm(
               chatUser: null,
               userId: userId,
-              role: Role.admin,
+              role: role,
               userStatus: UserStatus.offline,
               membershipStatusTimestamp: null,
               membershipStatus: MembershipStatus.member,
@@ -916,6 +935,19 @@ final class ChatViewFireStoreDatabase implements DatabaseService {
       return true;
     } catch (_) {
       return false;
+    }
+  }
+
+  @override
+  Future<String?> isOneToOneChatExists(String otherUserId) async {
+    try {
+      final isOtherUserExist = await _isUserExists(otherUserId);
+      if (!isOtherUserExist) {
+        throw Exception('User ID($otherUserId) not exists');
+      }
+      return _isChatExists(otherUserId);
+    } catch (_) {
+      return null;
     }
   }
 

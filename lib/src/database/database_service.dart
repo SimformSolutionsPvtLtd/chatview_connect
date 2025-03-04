@@ -331,14 +331,20 @@ abstract interface class DatabaseService {
   /// **Parameters:**
   /// - (required): [userId] The unique identifier of the user to
   /// create a chat with.
+  /// - (optional): [chatRoomId] The unique identifier of the
+  /// chat room to use when creating chat document, if specified.
   ///
   /// If a chat with the given [userId] already exists, the existing chat ID
   /// is returned.
   /// Otherwise, a new chat is created, and its ID is returned upon success.
   ///
+  /// If [chatRoomId] is provided, it will be used when creating the
+  /// chat document. Otherwise, a newly generated unique ID will be
+  /// assigned.
+  ///
   /// Returns `null` if the chat creation fails.
   /// {@endtemplate}
-  Future<String?> createOneToOneUserChat(String userId);
+  Future<String?> createOneToOneUserChat(String userId, {String? chatRoomId});
 
   /// {@template flutter_chatview_db_connection.DatabaseService.createGroupChat}
   /// Creates a new group chat.
@@ -349,17 +355,23 @@ abstract interface class DatabaseService {
   /// the group chat. The current user is automatically added.
   /// - (optional): [groupProfilePic] is an optional profile picture for the
   /// group chat. If not specified, the group will not have a profile picture.
+  /// - (optional): [chatRoomId] The unique identifier of the chat room to
+  /// use when creating chat document, if specified.
   ///
   /// This method creates a new group chat with the provided group name, users,
   /// and optional profile picture.
+  ///
+  /// If [chatRoomId] is provided, it will be used when creating the chat
+  /// document. Otherwise, a newly generated unique ID will be assigned.
   ///
   /// Returns a ID of the newly created group chat.
   /// If the creation fails, `null` is returned.
   /// {@endtemplate}
   Future<String?> createGroupChat({
     required String groupName,
-    required List<String> userIds,
+    required Map<String, Role> userIds,
     String? groupProfilePic,
+    String? chatRoomId,
   });
 
   /// {@template flutter_chatview_db_connection.DatabaseService.updateGroupChat}
@@ -465,6 +477,16 @@ abstract interface class DatabaseService {
   /// Returns `null` if the chat is a one-to-one chat, as metadata is
   /// only applicable for group chats.
   Stream<ChatRoomMetadata> getGroupChatMetadataStream([String? chatId]);
+
+  /// Checks if a one-to-one chat exists with the specified user.
+  ///
+  /// **Parameters:**
+  /// - (required): [otherUserId] The unique identifier of the user
+  /// to check for an existing chat.
+  ///
+  /// Returns the chat room ID if a chat already exists with
+  /// the given [otherUserId], Otherwise, returns `null`.
+  Future<String?> isOneToOneChatExists(String otherUserId);
 
   /// Returns a real-time stream of metadata for a specific chat room.
   ///

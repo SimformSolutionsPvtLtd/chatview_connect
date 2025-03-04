@@ -8,13 +8,13 @@ import '../chatview_db_connection.dart';
 import '../database/database_service.dart';
 import '../database/firebase/chatview_firestore_database.dart';
 import '../enum.dart';
+import '../extensions.dart';
 import '../models/chat_room_dm.dart';
 import '../models/chat_room_metadata_model.dart';
 import '../models/chat_room_user_dm.dart';
 import '../models/chat_view_participants_dm.dart';
 import '../models/config/add_message_config.dart';
 import '../models/config/chat_controller_config.dart';
-import '../models/message_dm.dart';
 import '../storage/firebase/chatview_firebase_storage.dart';
 import '../storage/storage_service.dart';
 import '../typedefs.dart';
@@ -64,7 +64,7 @@ final class ChatViewConnectionManager {
   final DatabaseService _database;
 
   static ChatViewConnectionManager? _instance;
-  static StreamSubscription<List<MessageDm>>? _messagesStream;
+  static StreamSubscription<List<Message>>? _messagesStream;
   static StreamSubscription<Map<String, ChatRoomUserDm>>? _chatRoomUserStream;
   static StreamSubscription<ChatRoomMetadata>? _chatRoomStreamController;
   static ChatController? _controller;
@@ -242,9 +242,7 @@ final class ChatViewConnectionManager {
       otherUsers: otherUsers,
       groupPhotoUrl: chatRoomType.isGroup ? groupProfile : null,
       groupName: groupName ??
-          (chatRoomType.isGroup
-              ? otherUsers.map((e) => e.name).join(', ')
-              : null),
+          (chatRoomType.isGroup ? otherUsers.toJoinString(', ') : null),
     );
 
     config?.chatRoomInfo?.call(chatViewParticipantsDm);
@@ -506,7 +504,7 @@ final class ChatViewConnectionManager {
   Stream<List<ChatRoomDm>> getChats({
     ChatSortBy sortBy = ChatSortBy.newestFirst,
     bool includeUnreadMessagesCount = true,
-    bool includeEmptyChats = false,
+    bool includeEmptyChats = true,
   }) =>
       _database.getChats(
         sortBy: sortBy,
@@ -649,10 +647,10 @@ final class ChatViewConnectionManager {
     // TODO(YASH): Rebuild chatview once the user details udapted.
   }
 
-  void _listenMessages(List<MessageDm> messages) {
+  void _listenMessages(List<Message> messages) {
     _controller
       ?..initialMessageList.clear()
-      ..loadMoreData(messages.map((e) => e.message).toList());
+      ..loadMoreData(messages);
   }
 
   /// Disposes of resources related to chat room and message streams.

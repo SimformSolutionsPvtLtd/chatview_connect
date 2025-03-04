@@ -153,9 +153,7 @@ extension DateTimeCompareExtension on DateTime? {
   /// Returns `false` if the current DateTime is `null`.
   bool isMessageBeforeMembership(DateTime? lastMessageTimestamp) {
     final dateTime = this;
-    return dateTime == null
-        ? false
-        : lastMessageTimestamp?.compareTo(dateTime) == -1;
+    return dateTime != null && lastMessageTimestamp?.compareTo(dateTime) == -1;
   }
 
   /// Compares two nullable [DateTime] objects.
@@ -228,5 +226,19 @@ extension ListOfChatUserDmExtension on List<ChatUser> {
       stringBuffer.write(i == lastIndex ? username : '$username$separator');
     }
     return stringBuffer.toString();
+  }
+}
+
+/// A collection of utility extensions for the `DateTime` class.
+/// Provides convenient methods for checking relative dates comparisons.
+extension DateTimeExtension on DateTime {
+  /// Checks if the current `DateTime` instance represents
+  /// the same date and time (up to the minute) as now.
+  bool get isNow {
+    final providedDateTime = DateTime(year, month, day, hour, minute);
+    final now = DateTime.now();
+    final nowDateTime =
+        DateTime(now.year, now.month, now.day, now.hour, now.minute);
+    return providedDateTime.compareTo(nowDateTime) == 0;
   }
 }

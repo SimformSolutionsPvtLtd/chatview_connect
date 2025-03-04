@@ -1,7 +1,9 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_chatview_models/flutter_chatview_models.dart';
 
 import '../chatview_db_connection.dart';
 import '../enum.dart';
+import '../extensions.dart';
 
 /// A data model representing a user in a chat room.
 class ChatRoomUserDm {
@@ -39,6 +41,12 @@ class ChatRoomUserDm {
   /// if data types do not match expectations.
   factory ChatRoomUserDm.fromJson(Map<String, dynamic> json) {
     final chatUserData = json['chat_user'];
+    final createAtJson = json[_membershipStatusTimestamp];
+    final createAt = createAtJson is Timestamp
+        ? createAtJson.toDate().toLocal().toIso8601String()
+        : createAtJson;
+    json[_membershipStatusTimestamp] = createAt;
+
     return ChatRoomUserDm(
       chatUser: chatUserData is Map<String, dynamic>
           ? ChatUser.fromJson(
@@ -56,10 +64,13 @@ class ChatRoomUserDm {
         json['membership_status'].toString(),
       ),
       membershipStatusTimestamp: DateTime.tryParse(
-        json['membership_status_timestamp'].toString(),
+        json[_membershipStatusTimestamp].toString(),
       ),
     );
   }
+
+  static const String _membershipStatusTimestamp =
+      'membership_status_timestamp';
 
   /// Detailed information about the user in the chat room.
   ///
@@ -87,7 +98,7 @@ class ChatRoomUserDm {
   /// The membership status of the user in the chat room.
   ///
   /// Indicates whether the user is an active member, has left, or was removed.
-  final MembershipStatus membershipStatus;
+  final MembershipStatus? membershipStatus;
 
   /// The timestamp of the last membership status change.
   /// This helps determine when a user joined, left, or was removed from
@@ -111,15 +122,20 @@ class ChatRoomUserDm {
   ///
   /// Returns a map containing the `user_status` and `typing_status` fields.
   Map<String, dynamic> toJson({bool includeUserId = true}) {
-    return {
+    final data = {
       if (includeUserId) 'user_id': userId,
       'role': role.name,
       'user_status': userStatus.name,
       'typing_status': typingStatus.name,
-      'membership_status': membershipStatus.name,
-      'membership_status_timestamp':
-          membershipStatusTimestamp?.toIso8601String(),
+      'membership_status': membershipStatus?.name,
+      _membershipStatusTimestamp: membershipStatusTimestamp,
     };
+    if (membershipStatusTimestamp case final membershipStatusTimestamp?) {
+      data[_membershipStatusTimestamp] = membershipStatusTimestamp.isNow
+          ? FieldValue.serverTimestamp()
+          : Timestamp.fromDate(membershipStatusTimestamp);
+    }
+    return data;
   }
 
   /// Creates a copy of the current [ChatRoomUserDm] instance with

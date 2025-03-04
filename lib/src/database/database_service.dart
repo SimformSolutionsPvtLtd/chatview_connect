@@ -56,6 +56,35 @@ abstract interface class DatabaseService {
     DocumentSnapshot<Message?>? startAfterDocument,
   });
 
+  /// Retrieves a stream of message batches from database with
+  /// document snapshot. This method listens for real-time updates to
+  /// the message's data in the database.
+  ///
+  /// **Parameters:**
+  ///
+  /// - (required): [sortBy] specifies the sorting order of messages
+  /// by defaults it will be sorted by the dateTime.
+  ///
+  /// - (required): [sortOrder] specifies the order of sorting for messages.
+  /// by defaults it will be ascending sort order.
+  ///
+  /// - (optional): [limit] specifies the limit of the messages to be retrieved.
+  /// by defaults it will retrieve the all messages if not specified.
+  ///
+  /// - (optional): [startAfterDocument] specifies the message document snapshot
+  /// if you want to retrieve message after the that.
+  ///
+  /// - (optional): [startFromDateTime] specifies a starting date-time to fetch
+  /// messages from. If provided, only messages after this timestamp will be
+  /// included.
+  Stream<List<MessageDm>> getMessagesStreamWithSnapshot({
+    required MessageSortBy sortBy,
+    required MessageSortOrder sortOrder,
+    int? limit,
+    DocumentSnapshot<Message?>? startAfterDocument,
+    DateTime? startFromDateTime,
+  });
+
   /// Retrieves a stream of message batches from database.
   /// This method listens for real-time updates to the chat room message's
   /// data in the database.
@@ -76,7 +105,7 @@ abstract interface class DatabaseService {
   /// - (optional): [startFromDateTime] specifies a starting date-time to fetch
   /// messages from. If provided, only messages after this timestamp will be
   /// included.
-  Stream<List<MessageDm>> getMessagesStream({
+  Stream<List<Message>> getMessagesStream({
     required MessageSortBy sortBy,
     required MessageSortOrder sortOrder,
     int? limit,
@@ -268,6 +297,8 @@ abstract interface class DatabaseService {
   /// (e.g., `typing`, `typed`).
   /// - (optional): [userStatus] The overall status of the user
   /// (e.g., `online`, `offline`).
+  /// - (optional): [membershipStatus] The user's membership status in the
+  /// chat room (e.g., `member`, `removed`, `left`).
   ///
   /// Returns a [Future] that completes when the user's status is updated in
   /// the database.
@@ -276,6 +307,7 @@ abstract interface class DatabaseService {
     String? chatId,
     TypeWriterStatus? typingStatus,
     UserStatus? userStatus,
+    MembershipStatus? membershipStatus,
   });
 
   // TODO(YASH): Move sorting chats logic before applying the limit
@@ -430,7 +462,8 @@ abstract interface class DatabaseService {
   ///   to delete chat-related documents from storage.
   ///
   /// If the group has only one remaining user and [deleteGroupIfSingleUser]
-  /// is `true`, the group will be deleted along with its chat-related documents.
+  /// is `true`, the group will be deleted along with its chat-related
+  /// documents.
   ///
   /// Returns a [Future] that resolves to `true` if the user was successfully
   /// removed, otherwise `false`.

@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_chatview_models/flutter_chatview_models.dart';
 
 import '../../chatview_db_connection.dart';
+import '../../extensions.dart';
 import '../../models/chat_room_dm.dart';
 import '../../models/chat_room_user_dm.dart';
 import '../../models/config/chat_view_firestore_path_config.dart';
@@ -11,6 +12,8 @@ import 'chatview_firestore_path.dart';
 /// Provides Firestore collections.
 abstract final class ChatViewFireStoreCollections {
   const ChatViewFireStoreCollections._();
+
+  static const String _createdAt = 'createdAt';
 
   static final _firestoreInstance = FirebaseFirestore.instance;
 
@@ -53,6 +56,11 @@ abstract final class ChatViewFireStoreCollections {
     final data = snapshot.data();
     if (data == null) return null;
     try {
+      final createAtJson = data[_createdAt];
+      final createAt = createAtJson is Timestamp
+          ? createAtJson.toDate().toLocal().toIso8601String()
+          : createAtJson;
+      data[_createdAt] = createAt;
       return Message.fromJson(data).copyWith(id: snapshot.id);
     } catch (_) {
       return null;
@@ -63,7 +71,13 @@ abstract final class ChatViewFireStoreCollections {
     Message? message,
     SetOptions? options,
   ) {
-    return message?.toJson() ?? {};
+    final data = message?.toJson() ?? {};
+    if (message?.createdAt case final createAtDateTime?) {
+      data[_createdAt] = createAtDateTime.isNow
+          ? FieldValue.serverTimestamp()
+          : Timestamp.fromDate(createAtDateTime);
+    }
+    return data;
   }
 
   /// Collection reference for chat rooms.

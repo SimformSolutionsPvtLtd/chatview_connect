@@ -164,5 +164,8 @@ final class ChatViewDbConnection {
   }
 
   /// To set current user's ID
-  void setCurrentUserId({required String userId}) => _currentUserId = userId;
+  void setCurrentUserId({required String userId}) {
+    assert(userId.isNotEmpty, "User ID can't be empty!");
+    _currentUserId = userId;
+  }
 }

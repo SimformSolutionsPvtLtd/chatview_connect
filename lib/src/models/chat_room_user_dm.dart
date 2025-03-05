@@ -15,7 +15,6 @@ class ChatRoomUserDm {
   /// - (optional): [typingStatus] indicates the typing status of the user,
   /// with a default value of [TypeWriterStatus.typed].
   const ChatRoomUserDm({
-    required this.chatId,
     required this.userId,
     required this.chatUser,
     required this.userStatus,
@@ -39,7 +38,6 @@ class ChatRoomUserDm {
             )
           : null,
       userId: json['user_id']?.toString() ?? '',
-      chatId: json['chat_id']?.toString() ?? '',
       userStatus: UserStatusExtension.parse(json['user_status'].toString()),
       typingStatus: TypeWriterStatusExtension.parse(
         json['typing_status'].toString(),
@@ -55,9 +53,6 @@ class ChatRoomUserDm {
   /// The unique identifier of the user.
   final String userId;
 
-  /// The unique identifier of the chat.
-  final String chatId;
-
   /// The online/offline status of the user.
   ///
   /// Possible values include statuses such as online or offline.
@@ -70,9 +65,19 @@ class ChatRoomUserDm {
 
   /// Converts the [ChatRoomUserDm] instance to a JSON map.
   ///
+  /// **Note**: The [chatUser] field is not included in `toJson` because it serves as an aggregation
+  /// of multiple data streams. The [chatUser] property is populated dynamically using the `copyWith` method
+  /// when merging data from different sources, such as chat document IDs and user collection data.
+  /// Since it is dynamically assembled from multiple streams, serializing it back to JSON is not necessary.
+  ///
+  /// Additionally, [chatUser] is not meant for storing in a database document because it is retrieved
+  /// from different sources rather than being a single entity. It is primarily used for runtime operations
+  /// where data from different sources is combined for ease of use in the application.
+  ///
   /// Returns a map containing the `user_status` and `typing_status` fields.
-  Map<String, dynamic> toJson() {
+  Map<String, dynamic> toJson({bool includeUserId = true}) {
     return {
+      if (includeUserId) 'user_id': userId,
       'user_status': userStatus.name,
       'typing_status': typingStatus.name,
     };
@@ -91,7 +96,6 @@ class ChatRoomUserDm {
   ///
   /// Returns a new [ChatRoomUserDm] instance with the specified updates.
   ChatRoomUserDm copyWith({
-    String? chatId,
     String? userId,
     ChatUser? chatUser,
     UserStatus? userStatus,
@@ -99,7 +103,6 @@ class ChatRoomUserDm {
     bool forceNullValue = false,
   }) {
     return ChatRoomUserDm(
-      chatId: chatId ?? this.chatId,
       userId: userId ?? this.userId,
       chatUser: forceNullValue ? chatUser : chatUser ?? this.chatUser,
       userStatus: userStatus ?? this.userStatus,

@@ -5,10 +5,10 @@ import '../extensions.dart';
 import 'chat_room_user_dm.dart';
 
 /// A class that represents a chat room, whether it's a one-to-one chat
-/// or a group chat. It holds the information about the chat room type,
-/// the users in the chat room, the group name and photo (if applicable),
-/// and the last message sent. This class also provides methods to fetch
-/// profile pictures and the chat room name.
+/// or a group chat. It holds the information about the chat ID,
+/// chat room type, the users in the chat room, the group name and photo
+/// (if applicable), and the last message sent. This class also provides
+/// methods to fetch profile pictures and the chat room name.
 ///
 /// The `ChatRoomDm` class is used to manage chat room data and
 /// simplify interactions with the chat room's properties and user details.
@@ -25,6 +25,7 @@ class ChatRoomDm {
   /// The `lastMessage` holds information about the most recent message
   /// sent in the chat room.
   ///
+  /// - (required): [chatId] The unique identifier of the chat.
   /// - (required): [chatRoomType] The type of the chat room
   /// (one-to-one or group).
   /// - (optional): [groupPhotoUrl] The URL of the group photo
@@ -35,6 +36,7 @@ class ChatRoomDm {
   /// (null for one-to-one chats).
   /// - (optional): [users] The list of users in the chat room.
   const ChatRoomDm({
+    required this.chatId,
     required this.chatRoomType,
     this.groupPhotoUrl,
     this.lastMessage,
@@ -61,6 +63,7 @@ class ChatRoomDm {
       chatRoomType:
           ChatRoomTypeExtension.tryParse(json['chat_room_type'].toString()) ??
               ChatRoomType.oneToOne,
+      chatId: json['chat_id']?.toString() ?? '',
       groupName: json['group_name']?.toString(),
       groupPhotoUrl: json['group_photo_url']?.toString(),
       lastMessage: lastMessage,
@@ -83,6 +86,9 @@ class ChatRoomDm {
 
   /// A list of users in the chat room.
   final List<ChatRoomUserDm>? users;
+
+  /// The unique identifier of the chat.
+  final String chatId;
 
   /// Returns the name of the chat room.
   /// - For one-to-one chats, it returns the name of the user.
@@ -119,27 +125,16 @@ class ChatRoomDm {
     };
   }
 
-  /// Retrieves the list of profile pictures for the chat room.
-  /// - For one-to-one chats,
-  /// {@macro flutter_chatview_db_connection.ChatRoomDm._getUsersProfilePictures}
-  /// - For group chats:
-  /// {@macro flutter_chatview_db_connection.ChatRoomDm._getGroupProfilePicture}
-  List<String> get chatRoomProfilePictures {
-    return switch (chatRoomType) {
-      ChatRoomType.oneToOne => _getUsersProfilePictures(),
-      ChatRoomType.group => _getGroupProfilePicture(),
-    };
-  }
-
   /// {@template flutter_chatview_db_connection.ChatRoomDm._getUsersProfilePictures}
   /// Retrieves the profile pictures of users in the chat room as
   /// a list of URLs as strings.
   ///
   /// This method will return a list of profile picture URLs of the users
   /// in the chat room.
+  ///
   /// It filters out any null values to ensure only valid URLs are returned.
   /// {@endtemplate}
-  List<String> _getUsersProfilePictures() {
+  List<String> get usersProfilePictures {
     final users = this.users ?? [];
     final usersLength = users.length;
     return [
@@ -149,27 +144,15 @@ class ChatRoomDm {
     ];
   }
 
-  /// {@template flutter_chatview_db_connection.ChatRoomDm._getGroupProfilePicture}
-  /// Retrieves the group profile picture or,
-  /// if not available, falls back to users' profile pictures.
-  ///
-  /// Returns a list with either the group photo URL (if provided) or
-  /// the profile pictures of the users in the chat room.
-  /// {@endtemplate}
-  List<String> _getGroupProfilePicture() {
-    final groupPicture = groupPhotoUrl ?? '';
-    // If there's no group picture, use users' profile pictures instead.
-    return groupPicture.isEmpty ? _getUsersProfilePictures() : [groupPicture];
-  }
-
   /// Converts the `ChatRoomDm` instance to a JSON object.
   ///
   /// This method is used to serialize the `ChatRoomDm` instance when sending
   /// data to the backend or saving it locally.
   ///
   /// Returns a `Map<String, dynamic>` representing the chat room's data.
-  Map<String, dynamic> toJson() {
+  Map<String, dynamic> toJson({bool includeChatId = true}) {
     return {
+      if (includeChatId) 'chat_id': chatId,
       'chat_room_type': chatRoomType.name,
       'group_name': groupName,
       'group_photo_url': groupPhotoUrl,
@@ -182,9 +165,11 @@ class ChatRoomDm {
   ///
   /// This method is useful when you want to update some properties of
   /// the chat room without affecting the rest of the properties.
+  ///
   /// It creates a new instance with the provided updates while keeping
   /// the existing values for other properties.
   ChatRoomDm copyWith({
+    String? chatId,
     ChatRoomType? chatRoomType,
     String? groupName,
     String? groupPhotoUrl,
@@ -193,6 +178,7 @@ class ChatRoomDm {
     bool forceNullValue = false,
   }) {
     return ChatRoomDm(
+      chatId: chatId ?? this.chatId,
       chatRoomType: chatRoomType ?? this.chatRoomType,
       groupName: forceNullValue ? groupName : groupName ?? this.groupName,
       groupPhotoUrl:

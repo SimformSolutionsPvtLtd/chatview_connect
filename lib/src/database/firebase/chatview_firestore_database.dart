@@ -254,10 +254,7 @@ final class ChatViewFireStoreDatabase implements DatabaseService {
           if (chatRoomUser == null) continue;
           listOfChatUserStream.add(
             getUserStreamById(userId: userId).map(
-              (chatUser) => chatRoomUser.copyWith(
-                chatUser: chatUser,
-                chatId: currentChatID,
-              ),
+              (chatUser) => chatRoomUser.copyWith(chatUser: chatUser),
             ),
           );
         }
@@ -607,6 +604,7 @@ final class ChatViewFireStoreDatabase implements DatabaseService {
     final isChatCreated = await _createChat(
       chatId: chatId,
       chatRoom: ChatRoomDm(
+        chatId: chatId,
         chatRoomType: ChatRoomType.group,
         groupName: groupName,
         groupPhotoUrl: groupProfilePic,
@@ -724,7 +722,10 @@ final class ChatViewFireStoreDatabase implements DatabaseService {
 
     final isChatCreated = await _createChat(
       chatId: chatId,
-      chatRoom: const ChatRoomDm(chatRoomType: ChatRoomType.oneToOne),
+      chatRoom: ChatRoomDm(
+        chatId: chatId,
+        chatRoomType: ChatRoomType.oneToOne,
+      ),
     );
 
     if (!isChatCreated) return null;
@@ -763,7 +764,6 @@ final class ChatViewFireStoreDatabase implements DatabaseService {
             ChatRoomUserDm(
               chatUser: null,
               userId: userId,
-              chatId: chatId,
               userStatus: UserStatus.offline,
             ),
           );

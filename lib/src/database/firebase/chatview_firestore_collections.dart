@@ -102,7 +102,7 @@ abstract final class ChatViewFireStoreCollections {
     final data = snapshot.data();
     if (data == null) return null;
     try {
-      return ChatRoomDm.fromJson(data);
+      return ChatRoomDm.fromJson(data).copyWith(chatId: snapshot.id);
     } catch (_) {
       return null;
     }
@@ -112,7 +112,10 @@ abstract final class ChatViewFireStoreCollections {
     ChatRoomDm? chat,
     SetOptions? options,
   ) {
-    return chat?.toJson() ?? {};
+    // `includeChatId` is set to false to exclude `chat_id` from the JSON,
+    // preventing it from being stored in the database since it is obtained from
+    // the Firebase collection reference.
+    return chat?.toJson(includeChatId: false) ?? {};
   }
 
   /// Collection reference for user.
@@ -213,7 +216,10 @@ abstract final class ChatViewFireStoreCollections {
     ChatRoomUserDm? user,
     SetOptions? options,
   ) {
-    return user?.toJson() ?? {};
+    // `includeUserId` is set to false to exclude `user_id` from the JSON,
+    // preventing it from being stored in the database since it is obtained from
+    // the Firebase collection reference.
+    return user?.toJson(includeUserId: false) ?? {};
   }
 
   /// Collection reference for chats in user chats collection.

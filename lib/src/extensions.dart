@@ -53,7 +53,7 @@ extension StringExtension on String {
   /// To get chat id from firestore collection path
   String? get chatId {
     final values = split('/');
-    return values.length >= 2 ? values[1] : null;
+    return values.length >= 2 ? values.lastOrNull : null;
   }
 }
 
@@ -150,6 +150,7 @@ extension DateTimeCompareExtension on DateTime? {
 ///
 /// Converts the list of chat room users into a string with names separated
 /// by a specified separator.
+///
 /// Returns `null` if the list is empty or contains only users with empty names.
 extension ListOfChatRoomUserDmExtension on List<ChatRoomUserDm> {
   /// Joins user names with a specified separator.
@@ -175,6 +176,7 @@ extension ListOfChatRoomUserDmExtension on List<ChatRoomUserDm> {
 ///
 /// Converts the list of users into a string with names separated by
 /// a specified separator.
+///
 /// Returns `null` if the list is empty or contains only users with empty names.
 extension ListOfChatUserDmExtension on List<ChatUser> {
   /// Joins user names with a specified separator.

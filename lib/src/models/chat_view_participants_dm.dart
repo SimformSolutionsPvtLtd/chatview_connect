@@ -91,45 +91,21 @@ final class ChatViewParticipantsDm {
     };
   }
 
-  /// Retrieves the list of profile pictures for the chat room.
-  /// - For one-to-one chats,
-  /// {@macro flutter_chatview_db_connection.ChatViewParticipantsDm._getUsersProfilePictures}
-  /// - For group chats:
-  /// {@macro flutter_chatview_db_connection.ChatViewParticipantsDm._getGroupProfilePicture}
-  List<String> get chatRoomProfilePictures {
-    return switch (chatRoomType) {
-      ChatRoomType.oneToOne => _getUsersProfilePictures(),
-      ChatRoomType.group => _getGroupProfilePicture(),
-    };
-  }
-
   /// {@template flutter_chatview_db_connection.ChatViewParticipantsDm._getUsersProfilePictures}
   /// Retrieves the profile pictures of users in the chat room as
   /// a list of URLs as strings.
   ///
   /// This method will return a list of profile picture URLs of the users
   /// in the chat room.
+  ///
   /// It filters out any null values to ensure only valid URLs are returned.
   /// {@endtemplate}
-  List<String> _getUsersProfilePictures() {
+  List<String> get usersProfilePictures {
     final otherUsersLength = otherUsers.length;
     return [
       for (var i = 0; i < otherUsersLength; i++)
         // Filters out null values from the list.
         if (otherUsers[i].profilePhoto case final profilePic?) profilePic,
     ];
-  }
-
-  /// {@template flutter_chatview_db_connection.ChatViewParticipantsDm._getGroupProfilePicture}
-  /// Retrieves the group profile picture or,
-  /// if not available, falls back to users' profile pictures.
-  ///
-  /// Returns a list with either the group photo URL (if provided) or
-  /// the profile pictures of the users in the chat room.
-  /// {@endtemplate}
-  List<String> _getGroupProfilePicture() {
-    final groupPicture = groupPhotoUrl ?? '';
-    // If there's no group picture, use users' profile pictures instead.
-    return groupPicture.isEmpty ? _getUsersProfilePictures() : [groupPicture];
   }
 }

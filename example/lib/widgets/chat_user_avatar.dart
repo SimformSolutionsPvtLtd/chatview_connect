@@ -21,19 +21,18 @@ class ChatUserAvatar extends StatelessWidget {
               profileURL == null ? null : NetworkImage(profileURL!),
         ),
         if (status?.isOnline ?? false)
-          Positioned(
+          const Positioned(
             top: 0,
             right: 0,
-            child: Container(
-              width: 14,
-              height: 14,
-              decoration: const BoxDecoration(
+            child: DecoratedBox(
+              decoration: BoxDecoration(
                 color: Colors.green,
                 shape: BoxShape.circle,
                 border: Border.fromBorderSide(
                   BorderSide(width: 2, color: Colors.white),
                 ),
               ),
+              child: SizedBox(width: 14, height: 14),
             ),
           ),
       ],

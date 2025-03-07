@@ -1,6 +1,7 @@
 import 'package:flutter_chatview_models/flutter_chatview_models.dart';
 
 import 'database/database_service.dart';
+import 'enum.dart';
 import 'models/chat_room_user_dm.dart';
 import 'models/chat_view_participants_dm.dart';
 import 'models/message_dm.dart';
@@ -78,4 +79,14 @@ typedef ChatMessagesChangeCallback = void Function(List<MessageDm> messages);
 typedef ChatRoomParticipantsRecord = ({
   ChatRoomUserDm? currentUser,
   List<ChatRoomUserDm> otherUsers,
+});
+
+/// A record type representing a user's information along with their status.
+///
+/// The [UserInfoWithStatusRecord] type contains:
+/// - [user]: An optional [ChatUser] instance representing the user's details.
+/// - [userStatus]: An optional [UserStatus] indicating the user's online/offline status.
+typedef UserInfoWithStatusRecord = ({
+  ChatUser? user,
+  UserStatus? userStatus,
 });

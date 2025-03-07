@@ -310,6 +310,14 @@ abstract interface class DatabaseService {
     MembershipStatus? membershipStatus,
   });
 
+  /// {@template flutter_chatview_db_connection.DatabaseService.updateCurrentUserStatus}
+  /// Updates the current user document with the current user status.
+  ///
+  /// **Parameters:**
+  /// - (required): [userStatus] The current status of the user (online/offline).
+  /// {@endtemplate}
+  Future<bool> updateCurrentUserStatus(UserStatus userStatus);
+
   // TODO(YASH): Move sorting chats logic before applying the limit
   /// {@template flutter_chatview_db_connection.DatabaseService.getChats}
   /// Returns a stream of chat rooms,

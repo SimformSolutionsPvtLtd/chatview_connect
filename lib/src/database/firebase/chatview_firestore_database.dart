@@ -14,6 +14,7 @@ import '../../models/config/add_message_config.dart';
 import '../../models/config/chat_database_path_config.dart';
 import '../../models/config/chat_view_firestore_path_config.dart';
 import '../../models/message_dm.dart';
+import '../../models/user_chat_dm.dart';
 import '../../models/user_chats_conversation_dm.dart';
 import '../../typedefs.dart';
 import '../database_service.dart';
@@ -289,8 +290,11 @@ final class ChatViewFireStoreDatabase implements DatabaseService {
           final chatRoomUser = doc.data();
           if (chatRoomUser == null) continue;
           listOfChatUserStream.add(
-            getUserStreamById(userId: userId).map(
-              (chatUser) => chatRoomUser.copyWith(chatUser: chatUser),
+            _getUserInfoWithStatusStream(userId).map(
+              (userResult) => chatRoomUser.copyWith(
+                chatUser: userResult.user,
+                userStatus: userResult.userStatus,
+              ),
             ),
           );
         }
@@ -409,6 +413,39 @@ final class ChatViewFireStoreDatabase implements DatabaseService {
   }
 
   @override
+  Future<bool> updateCurrentUserStatus(UserStatus userStatus) async {
+    final currentUserId = ChatViewDbConnection.instance.currentUserId;
+    if (currentUserId == null) throw Exception("Current ID can't be null");
+    try {
+      await ChatViewFireStoreCollections.userChatCollection()
+          .doc(currentUserId)
+          .update(UserChatDm(userStatus: userStatus).toJson());
+      return true;
+    } on FirebaseException catch (exception) {
+      switch (FirestoreExceptionType.fromCode(exception.code)) {
+        case FirestoreExceptionType.notFound:
+          return _setCurrentUserStatus(userId: currentUserId);
+        case FirestoreExceptionType.unknown:
+          return false;
+      }
+    }
+  }
+
+  Future<bool> _setCurrentUserStatus({
+    String? userId,
+    UserStatus userStatus = UserStatus.offline,
+  }) async {
+    try {
+      await ChatViewFireStoreCollections.userChatCollection()
+          .doc(userId)
+          .set(UserChatDm(userStatus: userStatus));
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  @override
   Stream<Map<String, ChatRoomUserDm>> getChatRoomUsersMetadataStream({
     required bool observeUserInfoChanges,
     int? limit,
@@ -437,9 +474,12 @@ final class ChatViewFireStoreDatabase implements DatabaseService {
         final chatRoomUserStreamWithInfo = <Stream<ChatRoomUserDm>>[
           for (var i = 0; i < usersLength; i++)
             if (newUsers[i] case final chatRoomUser)
-              getUserStreamById(userId: chatRoomUser.userId).map(
-                (chatUser) {
-                  final user = chatRoomUser.copyWith(chatUser: chatUser);
+              _getUserInfoWithStatusStream(chatRoomUser.userId).map(
+                (userResult) {
+                  final user = chatRoomUser.copyWith(
+                    chatUser: userResult.user,
+                    userStatus: userResult.userStatus,
+                  );
                   users[chatRoomUser.userId] = user;
                   return user;
                 },
@@ -790,7 +830,6 @@ final class ChatViewFireStoreDatabase implements DatabaseService {
             role: Role.admin,
             chatUser: null,
             userId: currentUserId,
-            userStatus: UserStatus.offline,
             membershipStatusTimestamp: null,
             membershipStatus: MembershipStatus.member,
           ),
@@ -803,7 +842,6 @@ final class ChatViewFireStoreDatabase implements DatabaseService {
                 role: userIds[userId] ?? Role.admin,
                 chatUser: null,
                 userId: userId,
-                userStatus: UserStatus.offline,
                 membershipStatusTimestamp: null,
                 membershipStatus: MembershipStatus.member,
               ),
@@ -930,7 +968,6 @@ final class ChatViewFireStoreDatabase implements DatabaseService {
             chatUser: null,
             userId: currentUserId,
             membershipStatus: null,
-            userStatus: UserStatus.offline,
             membershipStatusTimestamp: null,
           ),
         ),
@@ -941,7 +978,6 @@ final class ChatViewFireStoreDatabase implements DatabaseService {
             chatUser: null,
             userId: otherUserId,
             membershipStatus: null,
-            userStatus: UserStatus.offline,
             membershipStatusTimestamp: null,
           ),
         ),
@@ -1137,7 +1173,6 @@ final class ChatViewFireStoreDatabase implements DatabaseService {
                 role: role,
                 chatUser: null,
                 userId: userId,
-                userStatus: UserStatus.offline,
                 membershipStatus: MembershipStatus.member,
                 membershipStatusTimestamp: DateTime.now(),
               ),
@@ -1389,5 +1424,16 @@ final class ChatViewFireStoreDatabase implements DatabaseService {
     }
 
     return (currentUser: currentUser, otherUsers: otherUsers);
+  }
+
+  Stream<UserInfoWithStatusRecord> _getUserInfoWithStatusStream(String userId) {
+    return Rx.combineLatest2(
+      getUserStreamById(userId: userId),
+      ChatViewFireStoreCollections.userChatCollection().doc(userId).snapshots(),
+      (userInfo, userStatusSnapshot) => (
+        user: userInfo,
+        userStatus: userStatusSnapshot.data()?.userStatus,
+      ),
+    );
   }
 }

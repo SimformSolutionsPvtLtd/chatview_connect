@@ -425,14 +425,9 @@ final class ChatViewConnectionManager {
     return _database.updateChatRoomUserMetadata(typingStatus: status);
   }
 
-  /// Updates the current user document with the current user status.
-  ///
-  /// **Parameters:**
-  /// - (required): [status] The current status of the user (online/offline).
-  Future<void> updateCurrentUserStatus(UserStatus status) async {
-    if (!_isInitialized) return;
-    return _database.updateChatRoomUserMetadata(userStatus: status);
-  }
+  /// {@macro flutter_chatview_db_connection.DatabaseService.updateCurrentUserStatus}.
+  Future<bool> updateCurrentUserStatus(UserStatus status) =>
+      _database.updateCurrentUserStatus(status);
 
   /// Updates the status of a message to "read" or any other provided status.
   ///

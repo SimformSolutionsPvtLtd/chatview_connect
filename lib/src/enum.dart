@@ -293,3 +293,33 @@ extension MembershipStatusExtension on MembershipStatus {
     }
   }
 }
+
+/// Defines the types of exceptions that can occur when interacting with
+/// Cloud Firestore in Flutter.
+enum FirestoreExceptionType {
+  /// Represents a "not found" error,
+  /// typically when a document or collection does not exist.
+  notFound,
+
+  /// Represents an unknown error type that is not explicitly handled.
+  unknown;
+
+  /// Converts a Firestore error code string into a corresponding
+  /// [FirestoreExceptionType].
+  ///
+  /// Processes the input string by trimming, converting to lowercase, and
+  /// mapping:
+  /// - 'not-found' to [FirestoreExceptionType.notFound].
+  /// - Any other value to [FirestoreExceptionType.unknown].
+  ///
+  /// - (required): [value] The Firestore error code as a string.
+  /// - Returns: A corresponding [FirestoreExceptionType] enum value.
+  static FirestoreExceptionType fromCode(String? value) {
+    final safeValue = value?.trim().toLowerCase() ?? '';
+    if (safeValue == 'not-found') {
+      return FirestoreExceptionType.notFound;
+    } else {
+      return FirestoreExceptionType.unknown;
+    }
+  }
+}

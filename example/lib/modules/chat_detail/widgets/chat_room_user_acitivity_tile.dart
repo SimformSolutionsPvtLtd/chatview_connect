@@ -1,0 +1,59 @@
+import 'package:chatview/chatview.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_chatview_db_connection/flutter_chatview_db_connection.dart';
+
+import '../../chat_list/widgets/user_activity_tile.dart';
+
+class ChatRoomUserActivityTile extends StatelessWidget {
+  const ChatRoomUserActivityTile({
+    required this.usersActivitiesNotifier,
+    required this.chatController,
+    required this.chatRoomType,
+    super.key,
+  });
+
+  final ChatController chatController;
+  final ChatRoomType chatRoomType;
+  final ValueListenable<Map<String, ChatRoomUserDm>> usersActivitiesNotifier;
+
+  @override
+  Widget build(BuildContext context) {
+    return ValueListenableBuilder(
+      valueListenable: usersActivitiesNotifier,
+      builder: (_, usersActivity, __) {
+        final otherUsers = chatController.otherUsers;
+        final otherUsersLength = otherUsers.length;
+        final otherUsersLastIndex = otherUsersLength - 1;
+        return Row(
+          children: List.generate(
+            otherUsersLength,
+            (index) {
+              final user = otherUsers[index];
+              final userActivity = usersActivity[user.id];
+              final status = userActivity?.userStatus ?? UserStatus.offline;
+              return switch (chatRoomType) {
+                ChatRoomType.oneToOne when status.isOnline =>
+                  const UserActivityTile(
+                    userName: 'Online',
+                    userStatus: UserStatus.online,
+                  ),
+                ChatRoomType.group => Padding(
+                    padding: const EdgeInsets.only(right: 4),
+                    child: UserActivityTile(
+                      userStatus: status,
+                      userName: user.name,
+                      isLast: index == otherUsersLastIndex,
+                      userTypeStatus:
+                          userActivity?.typingStatus ?? TypeWriterStatus.typed,
+                    ),
+                  ),
+                _ => const SizedBox.shrink(),
+              };
+            },
+          ),
+        );
+      },
+    );
+  }
+}

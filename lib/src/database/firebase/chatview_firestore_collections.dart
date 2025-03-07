@@ -6,6 +6,7 @@ import '../../extensions.dart';
 import '../../models/chat_room_dm.dart';
 import '../../models/chat_room_user_dm.dart';
 import '../../models/config/chat_view_firestore_path_config.dart';
+import '../../models/user_chat_dm.dart';
 import '../../models/user_chats_conversation_dm.dart';
 import 'chatview_firestore_path.dart';
 
@@ -283,5 +284,47 @@ abstract final class ChatViewFireStoreCollections {
     SetOptions? options,
   ) {
     return userChatsConv?.toJson() ?? {};
+  }
+
+  /// Collection reference for user document in user chats collection.
+  ///
+  /// **Parameters:**
+  /// - (optional): [documentPath] specifies the database path to
+  /// use user chat collection.
+  ///
+  /// {@template flutter_chatview_db_connection.ChatDatabasePathConfig.userChatCollection}
+  ///
+  /// if path specified the user chats collection will be created at '[documentPath]/user_chats/{userId}'
+  /// and same path used to retrieve the user chats.
+  ///
+  /// Example: 'user_chats/user1'
+  ///
+  /// {@endtemplate}
+  static CollectionReference<UserChatDm?> userChatCollection({
+    String? documentPath,
+  }) {
+    final userChatsCollection = _chatViewFireStorePathConfig.userChats;
+    final collection = documentPath == null
+        ? _firestoreInstance.collection(userChatsCollection)
+        : _firestoreInstance.doc(documentPath).collection(userChatsCollection);
+    return collection.withConverter(
+      fromFirestore: _userChatFromFirestore,
+      toFirestore: _userChatToFirestore,
+    );
+  }
+
+  static UserChatDm? _userChatFromFirestore(
+    DocumentSnapshot<Map<String, dynamic>> snapshot,
+    SnapshotOptions? options,
+  ) {
+    final data = snapshot.data() ?? {};
+    return data.isEmpty ? null : UserChatDm.fromJson(data);
+  }
+
+  static Map<String, dynamic> _userChatToFirestore(
+    UserChatDm? userChat,
+    SetOptions? options,
+  ) {
+    return userChat?.toJson() ?? {};
   }
 }

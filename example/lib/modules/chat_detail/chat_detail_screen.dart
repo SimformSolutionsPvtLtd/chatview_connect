@@ -4,6 +4,9 @@ import 'package:chatview/chatview.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_chatview_db_connection/flutter_chatview_db_connection.dart';
 
+import 'widgets/chat_detail_screen_app_bar.dart';
+import 'widgets/chat_room_user_acitivity_tile.dart';
+
 class ChatDetailScreen extends StatefulWidget {
   ChatDetailScreen({
     this.chatRoomId,
@@ -87,12 +90,16 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
               valueListenable: _chatRoomMetadataNotifier,
               builder: (_, chatRoomMetadata, __) {
                 final metadata = chatRoomMetadata ?? _chatRoomInfo?.metadata;
-                return ChatViewAppBar(
-                  leading: Navigator.of(context).canPop()
-                      ? null
-                      : const SizedBox(width: 12),
-                  chatTitle: metadata?.chatName ?? '-',
-                  profilePicture: metadata?.chatProfilePhoto,
+                return ChatDetailScreenAppBar(
+                  chatName: metadata?.chatName ?? 'Unknown',
+                  chatProfileUrl: metadata?.chatProfilePhoto,
+                  usersProfileURLs: _chatRoomInfo?.usersProfilePictures ?? [],
+                  descriptionWidget: ChatRoomUserActivityTile(
+                    usersActivitiesNotifier: _usersActivitiesNotifier,
+                    chatController: controller,
+                    chatRoomType:
+                        _chatRoomInfo?.chatRoomType ?? ChatRoomType.oneToOne,
+                  ),
                 );
               },
             ),
@@ -219,7 +226,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
   void _listenUsersActivityChanges(
     Map<String, ChatRoomUserDm> usersActivities,
   ) {
-    _usersActivitiesNotifier.value = usersActivities;
+    _usersActivitiesNotifier.value = Map.of(usersActivities);
   }
 
   void _listenChatRoomMetadataChanges(ChatRoomMetadata metadata) {

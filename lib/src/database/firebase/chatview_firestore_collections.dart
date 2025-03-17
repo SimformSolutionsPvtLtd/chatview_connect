@@ -15,6 +15,7 @@ abstract final class ChatViewFireStoreCollections {
   const ChatViewFireStoreCollections._();
 
   static const String _createdAt = 'createdAt';
+  static const String _updateAt = 'update_at';
 
   static final _firestoreInstance = FirebaseFirestore.instance;
 
@@ -62,6 +63,11 @@ abstract final class ChatViewFireStoreCollections {
           ? createAtJson.toDate().toLocal().toIso8601String()
           : createAtJson;
       data[_createdAt] = createAt;
+      final updateAtJson = data[_updateAt];
+      final updateAt = updateAtJson is Timestamp
+          ? updateAtJson.toDate().toLocal().toIso8601String()
+          : updateAtJson;
+      data[_updateAt] = updateAt;
       return Message.fromJson(data).copyWith(id: snapshot.id);
     } catch (_) {
       return null;
@@ -72,11 +78,16 @@ abstract final class ChatViewFireStoreCollections {
     Message? message,
     SetOptions? options,
   ) {
-    final data = message?.toJson() ?? {};
+    final data = message?.toJson(includeNullValues: false) ?? {};
     if (message?.createdAt case final createAtDateTime?) {
       data[_createdAt] = createAtDateTime.isNow
           ? FieldValue.serverTimestamp()
           : Timestamp.fromDate(createAtDateTime);
+    }
+    if (message?.updateAt case final updateAtDateTime?) {
+      data[_updateAt] = updateAtDateTime.isNow
+          ? FieldValue.serverTimestamp()
+          : Timestamp.fromDate(updateAtDateTime);
     }
     return data;
   }
@@ -130,7 +141,7 @@ abstract final class ChatViewFireStoreCollections {
     // `includeChatId` is set to false to exclude `chat_id` from the JSON,
     // preventing it from being stored in the database since it is obtained
     // from the Firebase collection reference.
-    return chat?.toJson(includeChatId: false) ?? {};
+    return chat?.toJson(includeChatId: false, includeNullValues: false) ?? {};
   }
 
   /// Collection reference for user.

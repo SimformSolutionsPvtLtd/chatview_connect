@@ -127,12 +127,12 @@ class ChatRoomUserDm {
   /// Returns a map containing the `user_active_status` and `typing_status`
   /// fields.
   Map<String, dynamic> toJson({bool includeUserId = true}) {
-    final data = {
+    final data = <String, dynamic>{
       if (includeUserId) 'user_id': userId,
       'role': role.name,
       'typing_status': typingStatus.name,
       'membership_status': membershipStatus?.name,
-      _membershipStatusTimestamp: membershipStatusTimestamp,
+      _membershipStatusTimestamp: membershipStatusTimestamp?.toIso8601String(),
     };
     if (membershipStatusTimestamp case final membershipStatusTimestamp?) {
       data[_membershipStatusTimestamp] = membershipStatusTimestamp.isNow

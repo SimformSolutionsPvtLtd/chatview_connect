@@ -222,17 +222,16 @@ final class ChatRoomManager extends ChatController {
           ),
         );
 
-    final userJoinedTimestamp = chatRoomType.isGroup
-        ? _database.userAddedInGroupChatTimestamp(chatId: chatRoomId)
-        : Future.value(null);
-
-    userJoinedTimestamp.then(
+    (chatRoomType.isGroup
+            ? _database.userAddedInGroupChatTimestamp(chatId: chatRoomId)
+            : Future<DateTime?>.value())
+        .then(
       (startMessageTimestamp) {
         // TODO(YASH): Handle if received error here.
         _messagesStream = _database
             .getMessagesStream(
               chatId: chatRoomId,
-              sortBy: MessageSortBy.dateTime,
+              sortBy: MessageSortBy.createAt,
               sortOrder: MessageSortOrder.asc,
               startFromDateTime: startMessageTimestamp,
             )
@@ -399,9 +398,7 @@ final class ChatRoomManager extends ChatController {
       final secondLastMessage =
           length > 1 ? initialMessageList[length - 2] : null;
 
-      if (secondLastMessage == null && (_chatRoomType?.isGroup ?? false)) {
-        return _database.fetchAndUpdateLastMessage(chatId: chatRoomId);
-      } else {
+      if (!(secondLastMessage == null && (_chatRoomType?.isGroup ?? false))) {
         return _database.updateChatRoom(
           chatId: chatRoomId,
           lastMessage: secondLastMessage,
@@ -446,7 +443,6 @@ final class ChatRoomManager extends ChatController {
     );
   }
 
-  // TODO(YASH): Mention about the add timestamp effect
   /// {@macro flutter_chatview_db_connection.DatabaseService.addUserInGroup}
   Future<bool> addUserInGroup({
     required String userId,

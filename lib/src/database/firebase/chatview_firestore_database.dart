@@ -26,6 +26,8 @@ final class ChatViewFireStoreDatabase implements DatabaseService {
   static const String _typingStatus = 'typing_status';
   static const String _status = 'status';
   static const String _reaction = 'reaction';
+  static const String _updateAt = 'update_at';
+  static const String _update = 'update';
   static const String _lastMessage = 'last_message';
   static const String _groupName = 'group_name';
   static const String _groupPhotoUrl = 'group_photo_url';
@@ -56,7 +58,7 @@ final class ChatViewFireStoreDatabase implements DatabaseService {
         _chatRoomCollectionPath(chatId),
       );
 
-  CollectionReference<ChatUser?> _usersollectionRef() =>
+  CollectionReference<ChatUser?> _usersCollectionRef() =>
       ChatViewFireStoreCollections.usersCollection(_userCollection);
 
   @override
@@ -70,6 +72,7 @@ final class ChatViewFireStoreDatabase implements DatabaseService {
     final messageCollectionRef = _messageCollectionRef(chatId);
     final newMessage = message.copyWith(
       message: url,
+      updateAt: message.createdAt,
       status: MessageStatus.delivered,
     );
 
@@ -82,10 +85,6 @@ final class ChatViewFireStoreDatabase implements DatabaseService {
       await messageCollectionRef.doc(newMessage.id).set(newMessage);
       updatedMessage = newMessage;
     }
-
-    // TODO(Yash): Switch to reading last message from message collection
-    //  instead of updating last message in chat room document.
-    await updateChatRoom(chatId: chatId, lastMessage: updatedMessage);
 
     return updatedMessage;
   }
@@ -237,19 +236,27 @@ final class ChatViewFireStoreDatabase implements DatabaseService {
     MessageStatus? messageStatus,
     UserReactionCallback? userReaction,
   }) async {
+    final currentUserId = ChatViewDbConnection.instance.currentUserId;
+    final isReactionRemoved = message.reaction.reactions.isEmpty;
+    final updateData = <String, dynamic>{
+      if (messageStatus != null) _status: '',
+      if (userReaction != null && !isReactionRemoved) _reaction: currentUserId,
+    };
+
     final data = <String, dynamic>{
       if (messageStatus case final status?) _status: status.name,
-      if (userReaction != null) _reaction: message.reaction.toJson(),
+      if (userReaction != null) ...{
+        _reaction: message.reaction.toJson(),
+        _updateAt: isReactionRemoved
+            ? Timestamp.fromDate(message.createdAt)
+            : FieldValue.serverTimestamp(),
+      },
+      _update: updateData,
     };
 
     if (data.isEmpty) return;
 
     await _messageCollectionRef(chatId).doc(message.id).update(data);
-
-    await updateChatRoom(
-      chatId: chatId,
-      lastMessage: message.copyWith(status: messageStatus),
-    );
   }
 
   @override
@@ -305,7 +312,7 @@ final class ChatViewFireStoreDatabase implements DatabaseService {
 
   @override
   Stream<List<ChatUser>> getUsersStream({int? limit}) {
-    final userCollection = _usersollectionRef().toQuery(limit: limit);
+    final userCollection = _usersCollectionRef().toQuery(limit: limit);
 
     return userCollection.snapshots().map(
       (userSnapshot) {
@@ -321,7 +328,7 @@ final class ChatViewFireStoreDatabase implements DatabaseService {
 
   @override
   Future<List<ChatUser>> getUsers({int? limit}) async {
-    final userCollection = _usersollectionRef().toQuery(limit: limit);
+    final userCollection = _usersCollectionRef().toQuery(limit: limit);
     final userSnapshot = await userCollection.get();
     final docs = userSnapshot.docs;
     final docsLength = docs.length;
@@ -333,7 +340,7 @@ final class ChatViewFireStoreDatabase implements DatabaseService {
 
   @override
   Stream<ChatUser?> getUserStreamById({required String userId}) {
-    return _usersollectionRef()
+    return _usersCollectionRef()
         .doc(userId)
         .snapshots()
         .distinct((previous, next) => previous.data() == next.data())
@@ -520,7 +527,7 @@ final class ChatViewFireStoreDatabase implements DatabaseService {
       if (chatRoomUser == null) continue;
       chatRoomUsers[userId] = chatRoomUser;
       chatRoomUsersInfoFutures.add(
-        _usersollectionRef().doc(userId).get().then(
+        _usersCollectionRef().doc(userId).get().then(
           (chatUserDoc) {
             final userData = chatUserDoc.data() ??
                 ChatUser(id: userId, name: 'Unknown User');
@@ -576,7 +583,6 @@ final class ChatViewFireStoreDatabase implements DatabaseService {
     required ChatSortBy sortBy,
     required bool includeEmptyChats,
     required bool includeUnreadMessagesCount,
-    int? limit,
   }) {
     final currentUserId = ChatViewDbConnection.instance.currentUserId;
     if (currentUserId == null) {
@@ -586,7 +592,7 @@ final class ChatViewFireStoreDatabase implements DatabaseService {
     final chatRoomCollection =
         ChatViewFireStoreCollections.userChatsConversationCollection(
       userId: currentUserId,
-    ).toQuery(limit: limit);
+    );
 
     return chatRoomCollection.snapshots().switchMap(
       (userChatsSnapshot) {
@@ -595,25 +601,19 @@ final class ChatViewFireStoreDatabase implements DatabaseService {
         final docsLength = docs.length;
         final chatStreams = <Stream<ChatRoomDm?>>[
           for (var i = 0; i < docsLength; i++)
-            ChatViewFireStoreCollections.chatCollection()
-                .doc(docs[i].id)
-                .snapshots()
-                .switchMap(
-              (chatRoomSnapshot) {
-                final chatRoom = chatRoomSnapshot.data();
+            _chatRoomStream(docs[i].id).switchMap(
+              (chatRoom) {
                 if (chatRoom == null) return Stream.value(null);
                 if (!includeEmptyChats &&
                     chatRoom.chatRoomType.isOneToOne &&
                     chatRoom.lastMessage == null) {
                   return Stream.value(null);
                 }
-                final chatId = chatRoomSnapshot.id;
-
                 return getChatRoomParticipantsStream(
                   // Added group check as to get timestamp of current user
                   // for when they joined the group for count unread messages.
                   includeCurrentUser: chatRoom.chatRoomType.isGroup,
-                  chatId: chatId,
+                  chatId: chatRoom.chatId,
                 ).switchMap(
                   (users) => _getChatRoomFromChatRoomParticipants(
                     users: users,
@@ -640,6 +640,56 @@ final class ChatViewFireStoreDatabase implements DatabaseService {
             return nonEmptyChats;
           },
         );
+      },
+    );
+  }
+
+  Stream<ChatRoomDm?> _chatRoomStream(
+    String chatRoomId, {
+    bool fetchLastMessage = true,
+  }) {
+    return ChatViewFireStoreCollections.chatCollection()
+        .doc(chatRoomId)
+        .snapshots()
+        .switchMap(
+      (snapshot) {
+        final chatRoom = snapshot.data();
+        return fetchLastMessage
+            ? _getLastMessage(chatRoomId).map(
+                (message) => chatRoom?.copyWith(lastMessage: message),
+              )
+            : Stream.value(chatRoom);
+      },
+    );
+  }
+
+  Stream<Message?> _getLastMessage(String chatRoomId) {
+    final currentUserId = ChatViewDbConnection.instance.currentUserId;
+
+    final updateAtMessageCollection =
+        _messageCollectionRef(chatRoomId).toMessageQuery(
+      sortBy: MessageSortBy.updateAt,
+      sortOrder: MessageSortOrder.desc,
+      limit: 1,
+    );
+
+    return updateAtMessageCollection.snapshots().switchMap(
+      (snapshot) {
+        final message = snapshot.docs.firstOrNull?.data();
+        if (message == null) return Stream.value(null);
+        final reactedByUserId = message.update?[_reaction]?.toString() ?? '';
+        final showReactionMessage =
+            message.sentBy == currentUserId || reactedByUserId == currentUserId;
+        return showReactionMessage
+            ? Stream.value(message)
+            : _messageCollectionRef(chatRoomId)
+                .toMessageQuery(
+                  sortBy: MessageSortBy.createAt,
+                  sortOrder: MessageSortOrder.desc,
+                  limit: 1,
+                )
+                .snapshots()
+                .map((snapshot) => snapshot.docs.firstOrNull?.data());
       },
     );
   }
@@ -1052,7 +1102,7 @@ final class ChatViewFireStoreDatabase implements DatabaseService {
   }
 
   Future<bool> _isUserExists(String userId) async {
-    final result = await _usersollectionRef().doc(userId).get();
+    final result = await _usersCollectionRef().doc(userId).get();
     return result.exists;
   }
 
@@ -1348,7 +1398,7 @@ final class ChatViewFireStoreDatabase implements DatabaseService {
     try {
       final messageCollectionRef = _messageCollectionRef(chatId)
           .orderBy(
-            MessageSortBy.dateTime.key,
+            MessageSortBy.createAt.key,
             descending: MessageSortOrder.desc.isDesc,
           )
           .limit(1);

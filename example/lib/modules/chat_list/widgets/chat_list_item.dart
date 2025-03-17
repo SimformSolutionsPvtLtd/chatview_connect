@@ -1,3 +1,4 @@
+import 'package:example/widgets/user_stacked_profile.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_chatview_db_connection/flutter_chatview_db_connection.dart';
 
@@ -42,10 +43,12 @@ class ChatListItem extends StatelessWidget {
           children: [
             SizedBox.square(
               dimension: 40,
-              child: ChatUserAvatar(
-                profileURL: chatProfile,
-                status: oneToOneUserStatus,
-              ),
+              child: chatProfile == null
+                  ? UserStackedProfile(usersProfileURLs: usersProfileURLs)
+                  : ChatUserAvatar(
+                      profileURL: chatProfile,
+                      status: oneToOneUserStatus,
+                    ),
             ),
             const SizedBox(width: 12),
             Expanded(

@@ -58,14 +58,6 @@ class ChatRoomDm {
   ///
   /// Returns a `ChatRoomDm` instance populated with data from the JSON.
   factory ChatRoomDm.fromJson(Map<String, dynamic> json) {
-    final lastMessageData = json['last_message'];
-    Message? lastMessage;
-    if (lastMessageData is Map<String, dynamic>) {
-      try {
-        lastMessage = Message.fromJson(lastMessageData);
-      } catch (_) {}
-    }
-
     return ChatRoomDm(
       chatRoomType:
           ChatRoomTypeExtension.tryParse(json['chat_room_type'].toString()) ??
@@ -73,12 +65,15 @@ class ChatRoomDm {
       unreadMessagesCount:
           num.tryParse(json['unread_messages_count'].toString())?.toInt() ?? 0,
       chatId: json['chat_id']?.toString() ?? '',
-      groupName: json['group_name']?.toString(),
-      groupPhotoUrl: json['group_photo_url']?.toString(),
-      chatRoomCreateBy: json['chat_room_create_by']?.toString(),
-      lastMessage: lastMessage,
+      groupName: json[_groupName]?.toString(),
+      groupPhotoUrl: json[_groupPhotoUrl]?.toString(),
+      chatRoomCreateBy: json[_chatRoomCreateBy]?.toString(),
     );
   }
+
+  static const String _chatRoomCreateBy = 'chat_room_create_by';
+  static const String _groupName = 'group_name';
+  static const String _groupPhotoUrl = 'group_photo_url';
 
   /// The type of the chat room, either one-to-one or group.
   final ChatRoomType chatRoomType;
@@ -174,15 +169,31 @@ class ChatRoomDm {
   /// data to the backend or saving it locally.
   ///
   /// Returns a `Map<String, dynamic>` representing the chat room's data.
-  Map<String, dynamic> toJson({bool includeChatId = true}) {
-    return {
+  Map<String, dynamic> toJson({
+    bool includeChatId = true,
+    bool includeNullValues = true,
+  }) {
+    final data = <String, dynamic>{
       if (includeChatId) 'chat_id': chatId,
       'chat_room_type': chatRoomType.name,
-      'group_name': groupName,
-      'group_photo_url': groupPhotoUrl,
-      'chat_room_create_by': chatRoomCreateBy,
-      'last_message': lastMessage?.toJson(),
     };
+
+    if (includeNullValues) {
+      data[_chatRoomCreateBy] = chatRoomCreateBy;
+      data[_groupName] = groupName;
+      data[_groupPhotoUrl] = groupPhotoUrl;
+    } else {
+      if (chatRoomCreateBy case final chatRoomCreateBy?) {
+        data[_chatRoomCreateBy] = chatRoomCreateBy;
+      }
+      if (groupName case final groupName?) {
+        data[_groupName] = groupName;
+      }
+      if (groupPhotoUrl case final groupPhotoUrl?) {
+        data[_groupPhotoUrl] = groupPhotoUrl;
+      }
+    }
+    return data;
   }
 
   /// Creates and Returns a copy of the current `ChatRoomDm` instance

@@ -363,9 +363,6 @@ abstract interface class DatabaseService {
   ///   - If `false`, it will not listen, and `unreadMessagesCount`
   ///   will always be `0`.
   ///
-  /// - (optional): [limit] specifies the maximum number of chat rooms to
-  /// retrieve. If not specified, all chat rooms will be retrieved by default.
-  ///
   /// Each event in the stream emits a list of chat rooms, where:
   /// - Each chat room (e.g., `chat1`, `chat2`) is represented
   /// as a [ChatRoomDm] instances.
@@ -382,7 +379,6 @@ abstract interface class DatabaseService {
     required ChatSortBy sortBy,
     required bool includeEmptyChats,
     required bool includeUnreadMessagesCount,
-    int? limit,
   });
 
   /// {@template flutter_chatview_db_connection.DatabaseService.createOneToOneUserChat}
@@ -474,6 +470,12 @@ abstract interface class DatabaseService {
   /// Adds a user to the group chat with a specified role.
   /// This method updates the group's membership list and assigns the user
   /// a role.
+  ///
+  /// **Message Visibility:**
+  /// - If [includeAllChatHistory] is `true`, the user will have access to
+  ///   all previous messages in the group chat.
+  /// - If [includeAllChatHistory] is `false`, the user will only see messages
+  ///   from the point they are added onward.
   ///
   /// **Parameters:**
   /// - (required): [chatId] A unique identifier for the group chat.

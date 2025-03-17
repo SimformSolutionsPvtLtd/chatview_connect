@@ -1,4 +1,5 @@
 import 'package:chatview/chatview.dart';
+import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_chatview_db_connection/flutter_chatview_db_connection.dart';
 
@@ -84,6 +85,7 @@ class _ChatListScreenState extends State<ChatListScreen> {
                       : _getLastMessagePreview(
                           lastMessage: lastMessage,
                           count: unreadMessagesCount,
+                          users: users,
                         ),
                   onTap: () => _navigateToChatDetailScreen(chatId),
                   onTapMore: () => ChatViewDbConnection.chat.deleteChat(chatId),
@@ -121,7 +123,29 @@ class _ChatListScreenState extends State<ChatListScreen> {
     );
   }
 
-  String _getLastMessagePreview({required Message lastMessage, int count = 0}) {
+  String _getLastMessagePreview({
+    required Message lastMessage,
+    required List<ChatRoomUserDm> users,
+    int count = 0,
+  }) {
+    final reactedByUserId = lastMessage.update?['reaction']?.toString() ?? '';
+
+    final reactionEmoji = _getReaction(
+      userId: reactedByUserId,
+      lastMessage: lastMessage,
+    );
+
+    final username = reactedByUserId == currentUserId
+        ? 'You'
+        : users
+            .singleWhereOrNull((element) => element.userId == reactedByUserId)
+            ?.chatUser
+            ?.name;
+
+    if (username != null || reactionEmoji != null) {
+      return '$username reacted $reactionEmoji to "${lastMessage.message}"';
+    }
+
     final sender = lastMessage.sentBy == currentUserId ? 'You' : 'They';
     final hasMoreMessages = count > 1;
     return switch (lastMessage.messageType) {
@@ -137,5 +161,12 @@ class _ChatListScreenState extends State<ChatListScreen> {
           : '$sender sent a voice message',
       _ => hasMoreMessages ? '$count new messages' : 'New message',
     };
+  }
+
+  String? _getReaction({required String userId, required Message lastMessage}) {
+    final index = lastMessage.reaction.reactedUserIds.indexWhere(
+      (id) => id == userId,
+    );
+    return index == -1 ? null : lastMessage.reaction.reactions[index];
   }
 }

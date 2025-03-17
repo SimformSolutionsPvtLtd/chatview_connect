@@ -67,12 +67,21 @@ enum ChatSortBy {
 
   /// Returns `true` if the sorting option is set to [newestFirst].
   bool get isNewestFirst => this == newestFirst;
+
+  /// Returns `true` if no sorting is applied.
+  bool get isNone => this == none;
 }
 
-/// An enumeration of messages sort by types.
+/// Defines sorting options for messages.
+///
+/// This enumeration specifies the different ways messages can be sorted,
+/// such as by creation time, last update time, or no sorting at all.
 enum MessageSortBy {
-  /// Sorts messages by the DateTime.
-  dateTime('createdAt'),
+  /// Sorts messages by their creation time (`createdAt`).
+  createAt('createdAt'),
+
+  /// Sorts messages by their last update time (`update_at`).
+  updateAt('update_at'),
 
   /// No sorting is applied.
   none('');
@@ -83,8 +92,11 @@ enum MessageSortBy {
   /// It defines for the server by which field it will be sorted.
   final String key;
 
-  /// Returns `true` if sorting is based on date and time.
-  bool get isDateTime => this == dateTime;
+  /// Returns `true` if messages are sorted by creation time.
+  bool get isCreateAt => this == createAt;
+
+  /// Returns `true` if messages are sorted by update time.
+  bool get isUpdateAt => this == updateAt;
 
   /// Returns `true` if no sorting is applied.
   bool get isNone => this == none;

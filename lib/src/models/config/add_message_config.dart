@@ -12,27 +12,27 @@ import '../../typedefs.dart';
 class AddMessageConfig {
   /// Creates an instance of [AddMessageConfig].
   ///
-  /// - (required): [uploadImageToStorage]:
+  /// - (required): [uploadImageToStorage]
   /// {@macro flutter_chatview_db_connection.AddMessageConfig.uploadImageToStorage}
   ///
-  /// - (required): [uploadVoiceToStorage]:
+  /// - (required): [uploadVoiceToStorage]
   /// {@macro flutter_chatview_db_connection.AddMessageConfig.uploadVoiceToStorage}
   ///
-  /// - (required): [uploadDocumentCallback]:
-  /// {@macro flutter_chatview_db_connection.AddMessageConfig.uploadDocumentCallback}
+  /// - (required): [uploadDocument]
+  /// {@macro flutter_chatview_db_connection.AddMessageConfig.uploadDocument}
   ///
-  /// - (optional): [uploadPath]:
+  /// - (optional): [uploadPath]
   /// {@macro flutter_chatview_db_connection.AddMessageConfig.uploadPath}
   ///
-  /// - (optional): [imageName]:
+  /// - (optional): [imageName]
   /// {@macro flutter_chatview_db_connection.AddMessageConfig.imageName}
   ///
-  /// - (optional): [voiceName]:
+  /// - (optional): [voiceName]
   /// {@macro flutter_chatview_db_connection.AddMessageConfig.voiceName}
   const AddMessageConfig({
     required this.uploadImageToStorage,
     required this.uploadVoiceToStorage,
-    required this.uploadDocumentCallback,
+    required this.uploadDocument,
     this.uploadPath,
     this.imageName,
     this.voiceName,
@@ -50,10 +50,10 @@ class AddMessageConfig {
   /// {@endtemplate}
   final bool uploadVoiceToStorage;
 
-  /// {@template flutter_chatview_db_connection.AddMessageConfig.uploadDocumentCallback}
+  /// {@template flutter_chatview_db_connection.AddMessageConfig.uploadDocument}
   /// callback function for uploading image or voice documents to cloud storage.
   /// {@endtemplate}
-  final UploadDocumentCallback uploadDocumentCallback;
+  final UploadDocumentCallback uploadDocument;
 
   /// {@template flutter_chatview_db_connection.AddMessageConfig.uploadPath}
   /// The path to store image at that directory on the storage.
@@ -76,12 +76,12 @@ class AddMessageConfig {
   /// returns the file URL or `null`.
   Future<String?> uploadDocumentFromMessage(Message message) async {
     return switch (message.messageType) {
-      MessageType.image when uploadImageToStorage => uploadDocumentCallback(
+      MessageType.image when uploadImageToStorage => uploadDocument(
           message,
           uploadPath: uploadPath,
           fileName: imageName,
         ),
-      MessageType.voice when uploadVoiceToStorage => uploadDocumentCallback(
+      MessageType.voice when uploadVoiceToStorage => uploadDocument(
           message,
           uploadPath: uploadPath,
           fileName: voiceName,

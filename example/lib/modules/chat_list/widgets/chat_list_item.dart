@@ -22,7 +22,7 @@ class ChatListItem extends StatelessWidget {
   final VoidCallback? onTap;
   final VoidCallback? onTapMore;
   final List<String> usersProfileURLs;
-  final UserStatus? oneToOneUserStatus;
+  final UserActiveStatus? oneToOneUserStatus;
   final int unreadMessageCount;
 
   @override

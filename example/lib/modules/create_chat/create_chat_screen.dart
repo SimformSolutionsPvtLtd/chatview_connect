@@ -22,7 +22,7 @@ class _CreateChatScreenState extends State<CreateChatScreen> {
     return Scaffold(
       appBar: AppBar(title: const Text('New Chat')),
       body: FutureBuilder(
-        future: ChatViewDbConnection.connectionManager.getUsers(),
+        future: ChatViewDbConnection.chat.getUsers(),
         builder: (_, snapshot) {
           final users = snapshot.data?.values.toList() ?? [];
           _separateUsers(users);
@@ -50,8 +50,9 @@ class _CreateChatScreenState extends State<CreateChatScreen> {
                       context,
                       MaterialPageRoute(
                         builder: (_) => ChatDetailScreen(
-                          currentUser: currentChatUser,
                           otherUsers: [user],
+                          currentUser: currentChatUser,
+                          chatRoomType: ChatRoomType.oneToOne,
                         ),
                       ),
                     ),
@@ -88,6 +89,7 @@ class _CreateChatScreenState extends State<CreateChatScreen> {
               'https://images.unsplash.com/photo-1739305235159-308ddffb4129?w=900&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxmZWF0dXJlZC1waG90b3MtZmVlZHw2fHx8ZW58MHx8fHx8',
           currentUser: currentChatUser,
           otherUsers: otherChatUsers,
+          chatRoomType: ChatRoomType.group,
         ),
       ),
     );

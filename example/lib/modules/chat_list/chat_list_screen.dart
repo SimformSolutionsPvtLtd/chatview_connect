@@ -27,7 +27,7 @@ class _ChatListScreenState extends State<ChatListScreen> {
         title: const Text('Chats'),
         actions: [
           FutureBuilder(
-            future: ChatViewDbConnection.connectionManager.getUsers(),
+            future: ChatViewDbConnection.chat.getUsers(),
             builder: (_, snapshot) {
               final data = snapshot.data ?? {};
               final users = data.values.toList();
@@ -52,7 +52,7 @@ class _ChatListScreenState extends State<ChatListScreen> {
         ],
       ),
       body: StreamBuilder(
-        stream: ChatViewDbConnection.connectionManager.getChats(),
+        stream: ChatViewDbConnection.chat.getChats(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(
@@ -77,7 +77,7 @@ class _ChatListScreenState extends State<ChatListScreen> {
                   unreadMessageCount: unreadMessagesCount,
                   usersProfileURLs: chat.usersProfilePictures,
                   oneToOneUserStatus: chat.chatRoomType.isOneToOne
-                      ? users.firstOrNull?.userStatus
+                      ? users.firstOrNull?.userActiveStatus
                       : null,
                   description: lastMessage == null
                       ? null
@@ -86,8 +86,7 @@ class _ChatListScreenState extends State<ChatListScreen> {
                           count: unreadMessagesCount,
                         ),
                   onTap: () => _navigateToChatDetailScreen(chatId),
-                  onTapMore: () =>
-                      ChatViewDbConnection.connectionManager.deleteChat(chatId),
+                  onTapMore: () => ChatViewDbConnection.chat.deleteChat(chatId),
                 );
               },
             );

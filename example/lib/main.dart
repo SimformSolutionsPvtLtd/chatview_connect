@@ -20,7 +20,7 @@ Future<void> main() async {
     firestoreCollectionNameConfig: ChatViewFireStoreCollectionNameConfig(
       users: 'app_users',
     ),
-    databasePathConfig: ChatDatabasePathConfig(
+    firestoreDatabasePathConfig: ChatFirestoreDatabasePathConfig(
       userCollectionPath: 'organizations/simform',
     ),
   ).setCurrentUserId(userId: '2');

@@ -115,7 +115,7 @@ final class ChatViewFirebaseStorage implements StorageService {
   }
 
   @override
-  Future<bool> deleteChatDocs(String chatId) async {
+  Future<bool> deleteChatMedia(String chatId) async {
     final values = await Future.wait([
       _imageRef(chatId)
           .listAll()

@@ -5,14 +5,14 @@ import 'package:flutter_chatview_db_connection/flutter_chatview_db_connection.da
 class UserActivityTile extends StatelessWidget {
   const UserActivityTile({
     required this.userName,
-    this.userStatus = UserStatus.offline,
+    this.userStatus = UserActiveStatus.offline,
     this.userTypeStatus = TypeWriterStatus.typed,
     this.isLast = true,
     super.key,
   });
 
   final String userName;
-  final UserStatus userStatus;
+  final UserActiveStatus userStatus;
   final TypeWriterStatus userTypeStatus;
   final bool isLast;
 

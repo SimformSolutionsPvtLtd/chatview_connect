@@ -1,6 +1,12 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_chatview_models/flutter_chatview_models.dart';
 
+import 'database/database_service.dart';
+import 'database/firebase/chatview_firestore_database.dart';
+import 'storage/firebase/chatview_firebase_storage.dart';
+import 'storage/storage_service.dart';
+import 'typedefs.dart';
+
 /// An enumeration of databases types.
 enum ChatViewDatabaseType {
   /// Indicates a Firebase Database.
@@ -8,6 +14,47 @@ enum ChatViewDatabaseType {
 
   /// Checks if the current database type is Firebase.
   bool get isFirebase => this == firebase;
+}
+
+/// A strongly-typed extension that provides structured access to database
+/// and storage services based on the selected [ChatViewDatabaseType].
+///
+/// This type ensures that appropriate implementations of [DatabaseService]
+/// and [StorageService] are used depending on the selected database type.
+///
+/// **Constructors:**
+/// - [DatabaseTypeServices]: Initializes with a specified [DatabaseService]
+///   and [StorageService].
+/// - [DatabaseTypeServices.fromDataType]: Factory constructor that instantiates
+///   the appropriate services based on the given [ChatViewDatabaseType].
+///
+/// **Getters:**
+/// - [database]: Retrieves the database service instance.
+/// - [storage]: Retrieves the storage service instance.
+extension type const DatabaseTypeServices._(DatabaseTypeServicesRecord record) {
+  /// Creates an instance of [DatabaseTypeServices] with the given
+  /// [DatabaseService] and [StorageService].
+  const DatabaseTypeServices({
+    required DatabaseService database,
+    required StorageService storage,
+  }) : this._((database: database, storage: storage));
+
+  /// Factory constructor that returns the appropriate implementation of
+  /// [DatabaseTypeServices] based on the provided [ChatViewDatabaseType].
+  factory DatabaseTypeServices.fromDataType(ChatViewDatabaseType type) {
+    return switch (type) {
+      ChatViewDatabaseType.firebase => DatabaseTypeServices(
+          database: ChatViewFireStoreDatabase(),
+          storage: ChatViewFirebaseStorage(),
+        ),
+    };
+  }
+
+  /// The storage service instance associated with the selected database type.
+  StorageService get storage => record.storage;
+
+  /// The database service instance associated with the selected database type.
+  DatabaseService get database => record.database;
 }
 
 /// An enumeration representing different sorting options for chats.
@@ -106,7 +153,7 @@ extension DocumentChangeTypeExtension on DocumentChangeType {
 }
 
 /// An enumeration of user status.
-enum UserStatus {
+enum UserActiveStatus {
   /// user is active
   online,
 
@@ -120,15 +167,16 @@ enum UserStatus {
   bool get isOffline => this == offline;
 }
 
-/// Extension methods for [UserStatus], providing utilities
+/// Extension methods for [UserActiveStatus], providing utilities
 /// for parsing and handling user status values.
-extension UserStatusExtension on UserStatus {
-  /// Parses a string value and returns the corresponding [UserStatus].
+extension UserActiveStatusExtension on UserActiveStatus {
+  /// Parses a string value and returns the corresponding [UserActiveStatus].
   ///
-  /// - If the [value] is `null` or empty, it defaults to [UserStatus.offline].
-  /// - If the [value] matches [UserStatus.online.name] (case-insensitive),
-  ///   it returns [UserStatus.online].
-  /// - For all other cases, it defaults to [UserStatus.offline].
+  /// - If the [value] is `null` or empty,
+  /// it defaults to [UserActiveStatus.offline].
+  /// - If the [value] matches [UserActiveStatus.online.name]
+  /// (case-insensitive), it returns [UserActiveStatus.online].
+  /// - For all other cases, it defaults to [UserActiveStatus.offline].
   ///
   /// Example:
   /// ```dart
@@ -137,14 +185,14 @@ extension UserStatusExtension on UserStatus {
   /// ```
   ///
   /// [value]: The input string to parse.
-  /// Returns the corresponding [UserStatus].
-  static UserStatus parse(String? value) {
+  /// Returns the corresponding [UserActiveStatus].
+  static UserActiveStatus parse(String? value) {
     final safeValue = value?.trim().toLowerCase() ?? '';
-    if (safeValue.isEmpty) return UserStatus.offline;
-    if (safeValue == UserStatus.online.name) {
-      return UserStatus.online;
+    if (safeValue.isEmpty) return UserActiveStatus.offline;
+    if (safeValue == UserActiveStatus.online.name) {
+      return UserActiveStatus.online;
     } else {
-      return UserStatus.offline;
+      return UserActiveStatus.offline;
     }
   }
 }

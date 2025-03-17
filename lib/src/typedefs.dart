@@ -3,8 +3,6 @@ import 'package:flutter_chatview_models/flutter_chatview_models.dart';
 import 'database/database_service.dart';
 import 'enum.dart';
 import 'models/chat_room_user_dm.dart';
-import 'models/chat_view_participants_dm.dart';
-import 'models/message_dm.dart';
 import 'storage/storage_service.dart';
 
 /// Callback function used for updating reactions.
@@ -31,42 +29,9 @@ typedef DeleteDocumentCallback = Future<bool> Function(Message message);
 
 /// Callback function for deleting all documents of specific [chatId] from
 /// storage.
-typedef DeleteChatDocsFromStorageCallback = Future<bool> Function(
+typedef DeleteChatMediaFromStorageCallback = Future<bool> Function(
   String chatId,
 );
-
-/// A callback type used for handling changes in chat room user data.
-typedef ChatRoomUserStreamCallback = void Function(
-  ChatRoomUserDm? chatRoomUser,
-);
-
-/// A callback type used for handling the initialization of the chat room with
-/// users. this callbacks is triggered when the chat room is initialized with
-/// a list of users. The callback receives a [ChatViewParticipantsDm] object
-/// representing the participants of the chat room.
-///
-/// Example usage:
-/// ```dart
-/// ChatRoomInitializedCallback onChatRoomInitialized = (users) {
-///   // Handle the initialized chat room users
-/// };
-/// ```
-typedef ChatRoomInitializedCallback = void Function(
-  ChatViewParticipantsDm users,
-);
-
-/// A callback type used for handling changes in chat messages.
-///
-/// It will be triggered when there is a change in the list of chat messages.
-/// The callback receives a list of [MessageDm] objects.
-///
-/// Example usage:
-/// ```dart
-/// ChatMessagesChangeCallback onChatMessagesChange = (messages) {
-///   // Handle the updated chat messages
-/// };
-/// ```
-typedef ChatMessagesChangeCallback = void Function(List<MessageDm> messages);
 
 /// Represents a record of chat room participants,
 /// including the current user and other users in the chat.
@@ -85,8 +50,17 @@ typedef ChatRoomParticipantsRecord = ({
 ///
 /// The [UserInfoWithStatusRecord] type contains:
 /// - [user]: An optional [ChatUser] instance representing the user's details.
-/// - [userStatus]: An optional [UserStatus] indicating the user's online/offline status.
+/// - [userActiveStatus]: An optional [UserActiveStatus] indicating the user's online/offline status.
 typedef UserInfoWithStatusRecord = ({
   ChatUser? user,
-  UserStatus? userStatus,
+  UserActiveStatus? userActiveStatus,
 });
+
+/// Represents information about a group, including its name and participants.
+///
+/// **Fields:**
+/// - (required): `groupName` A string representing the name of the group,
+/// generated based on participants' names.
+/// - (required): `participants` A map of user IDs to their assigned [Role] in
+/// the group.
+typedef GroupInfoRecord = ({String groupName, Map<String, Role> participants});

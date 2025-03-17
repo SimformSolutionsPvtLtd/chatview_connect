@@ -16,28 +16,12 @@ import '../typedefs.dart';
 abstract interface class DatabaseService {
   const DatabaseService._();
 
-  /// The unique identifier for the chat room.
-  ///
-  /// This ID is used to distinguish between different chat rooms.
-  /// It can be `null` if the chat room has not been initialized
-  /// or assigned yet.
-  String? get chatRoomId;
-
-  /// Sets the chat room configuration with the specified [chatRoomId].
-  ///
-  /// **Parameters:**
-  ///
-  /// - (required): [chatRoomId] is required and represents the
-  /// unique identifier for the chat room.
-  void setChatRoom({required String chatRoomId});
-
-  /// Resets the chat room configuration to its default state.
-  /// This method clears any previously set chat room data or configurations.
-  void resetChatRoom();
-
   /// Asynchronously fetches messages and returns [List] of [MessageDm].
   ///
   /// **Parameters:**
+  /// - (required): [chatId] A unique identifier for the chat room.
+  /// Used to fetch messages associated with a specific chat session.
+  ///
   /// - (required): [sortBy] specifies the sorting order of messages
   /// by defaults it will be sorted by the dateTime.
   ///
@@ -50,6 +34,7 @@ abstract interface class DatabaseService {
   /// - (optional): [startAfterDocument] specifies the message document snapshot
   /// if you want to retrieve message after the that.
   Future<List<MessageDm>> getMessages({
+    required String chatId,
     required MessageSortBy sortBy,
     required MessageSortOrder sortOrder,
     int? limit,
@@ -61,6 +46,8 @@ abstract interface class DatabaseService {
   /// the message's data in the database.
   ///
   /// **Parameters:**
+  /// - (required): [chatId] A unique identifier for the chat room.
+  /// Determines the chat session for which messages will be streamed.
   ///
   /// - (required): [sortBy] specifies the sorting order of messages
   /// by defaults it will be sorted by the dateTime.
@@ -78,6 +65,7 @@ abstract interface class DatabaseService {
   /// messages from. If provided, only messages after this timestamp will be
   /// included.
   Stream<List<MessageDm>> getMessagesStreamWithSnapshot({
+    required String chatId,
     required MessageSortBy sortBy,
     required MessageSortOrder sortOrder,
     int? limit,
@@ -90,6 +78,9 @@ abstract interface class DatabaseService {
   /// data in the database.
   ///
   /// **Parameters:**
+  /// - (required): [chatId] A unique identifier for the chat room.
+  /// Used to stream messages for the specified chat session in real time.
+  ///
   /// - (required): [sortBy] specifies the sorting order of messages
   /// by defaults it will be sorted by the dateTime.
   ///
@@ -106,6 +97,7 @@ abstract interface class DatabaseService {
   /// messages from. If provided, only messages after this timestamp will be
   /// included.
   Stream<List<Message>> getMessagesStream({
+    required String chatId,
     required MessageSortBy sortBy,
     required MessageSortOrder sortOrder,
     int? limit,
@@ -144,11 +136,17 @@ abstract interface class DatabaseService {
   /// user information like **profile details**.
   ///
   /// **Parameters:**
+  /// - (required): [chatId] A unique identifier for the chat room.
+  /// Used to stream the list of participants in the specified chat room.
+  ///
   /// - (optional): [limit] Specifies the maximum number of users to retrieve.
   ///   If not provided, all users will be retrieved.
   ///
   /// **Returns:** A [Stream] that emits a [List] of [ChatRoomUserDm] instances.
-  Stream<List<ChatRoomUserDm>> getChatRoomParticipantsStream({int? limit});
+  Stream<List<ChatRoomUserDm>> getChatRoomParticipantsStream({
+    required String chatId,
+    int? limit,
+  });
 
   /// Returns a stream of chat room users (excluding the current user)
   /// from the database.
@@ -160,6 +158,8 @@ abstract interface class DatabaseService {
   /// **userStatus** and **typingStatus**.
   ///
   /// **Parameters:**
+  /// - (required): [chatId] A unique identifier for the chat room.
+  /// Used to stream metadata of users in the specified chat room.
   /// - (required): [observeUserInfoChanges] determines whether the stream
   /// should track changes to user metadata, such as username
   /// and profile picture updates.
@@ -172,6 +172,7 @@ abstract interface class DatabaseService {
   /// **Returns:** A [Stream] that emits a [Map] of user IDs
   /// to [ChatRoomUserDm] instances.
   Stream<Map<String, ChatRoomUserDm>> getChatRoomUsersMetadataStream({
+    required String chatId,
     required bool observeUserInfoChanges,
     int? limit,
   });
@@ -185,14 +186,14 @@ abstract interface class DatabaseService {
   ///
   /// **Parameters:**
   ///
-  /// - (required): [chatId] The unique identifier of the chat room for
-  /// which the unread message count is retrieved.
+  /// - (required): [chatId] A unique identifier for the chat room.
+  /// Used to fetch the count of unread messages for the specified chat session.
   ///
   /// - (optional): [startMessageFromDateTime] Specifies a starting date-time
   /// to count unread messages from. If provided, only messages after this
   /// timestamp will be considered.
-  Stream<int> getUnreadMessagesCount(
-    String chatId, {
+  Stream<int> getUnreadMessagesCount({
+    required String chatId,
     DateTime? startMessageFromDateTime,
   });
 
@@ -201,14 +202,22 @@ abstract interface class DatabaseService {
   /// This method fetches the participants of the chat room, including the
   /// current user.
   ///
+  /// **Parameters:**
+  /// - (required): [chatId] A unique identifier for the chat room.
+  /// Used to retrieve the participants of the specified chat room.
+  ///
   /// Returns [ChatViewParticipantsDm] object containing the chat room
   /// participants.
-  Future<ChatViewParticipantsDm?> getChatRoomParticipants();
+  Future<ChatViewParticipantsDm?> getChatRoomParticipants(String chatId);
 
   /// Retrieves a stream of messages along with their associated operation
   /// types.
   ///
   /// **Parameters:**
+  /// - (required): [chatId] A unique identifier for the chat room.
+  /// Used to stream messages along with their operation types in the specified
+  /// chat room.
+  ///
   /// - (required): [sortBy] specifies the sorting order of messages
   /// by defaults it will be sorted by the dateTime.
   ///
@@ -218,6 +227,7 @@ abstract interface class DatabaseService {
   /// - (optional): [limit] specifies the limit of the messages to be retrieved.
   /// by defaults it will retrieve the all messages if not specified.
   Stream<Map<Message, DocumentType>> getMessagesStreamWithOperationType({
+    required String chatId,
     required MessageSortBy sortBy,
     required MessageSortOrder sortOrder,
     int? limit,
@@ -226,6 +236,9 @@ abstract interface class DatabaseService {
   /// Asynchronously adds a new message and returns nullable [Message].
   ///
   /// **Parameters:**
+  /// - (required): [chatId]  A unique identifier for the chat room.
+  /// Specifies the chat room where the message will be added.
+  ///
   /// - (required): [message] specifies the [Message] to be add on database.
   ///
   /// - (required): [useAutoGeneratedId] determines whether to use
@@ -235,8 +248,9 @@ abstract interface class DatabaseService {
   ///
   /// - (required): [addMessageConfig]
   /// {@macro flutter_chatview_db_connection.AddMessageConfig}
-  Future<Message?> addMessage(
-    Message message, {
+  Future<Message?> addMessage({
+    required String chatId,
+    required Message message,
     required bool useAutoGeneratedId,
     required AddMessageConfig addMessageConfig,
   });
@@ -244,6 +258,9 @@ abstract interface class DatabaseService {
   /// Asynchronously delete a message and returns [bool] value.
   ///
   /// **Parameters:**
+  /// - (required): [chatId] A unique identifier for the chat room.
+  /// Specifies the chat room from which the message will be deleted.
+  ///
   /// - (required): [message] specifies the [Message] to be delete
   /// from database.
   ///
@@ -256,8 +273,9 @@ abstract interface class DatabaseService {
   /// - (required): [onDeleteDocument] specifies function for deleting
   /// image or voice document from cloud storage before deleting the message
   /// from database.
-  Future<bool> deleteMessage(
-    Message message, {
+  Future<bool> deleteMessage({
+    required String chatId,
+    required Message message,
     required DeleteDocumentCallback onDeleteDocument,
     required bool deleteImageFromStorage,
     required bool deleteVoiceFromStorage,
@@ -266,6 +284,9 @@ abstract interface class DatabaseService {
   /// Asynchronously update a message.
   ///
   /// **Parameters:**
+  /// - (required): [chatId]  A unique identifier for the chat room.
+  /// Specifies the chat room where the message will be updated.
+  ///
   /// - (required): [message] specifies the [Message] to be update on database.
   ///
   /// - (optional): [messageStatus] specifies the [MessageStatus]
@@ -275,39 +296,38 @@ abstract interface class DatabaseService {
   /// - (optional): [userReaction] specifies the [UserReactionCallback]
   /// to update the reaction of particular user.
   /// if the value is not provided then [userReaction] will not update.
-  Future<void> updateMessage(
-    Message message, {
+  Future<void> updateMessage({
+    required String chatId,
+    required Message message,
     MessageStatus? messageStatus,
     UserReactionCallback? userReaction,
   });
 
-  // TODO(YASH): Store user online/offline status in user_chats collection
-  /// Updates the chat room user with the provided typing and/or user status.
-  /// This method is used to update a user's status in a chat room, such
-  /// as their typing status or overall availability.
+  /// Updates the chat room user with the provided typing status, or
+  /// membership status.
+  ///
+  /// **Note:** If [chatRoomUserData] is provided, it is used to
+  /// update the document data; otherwise, individual parameters are used.
   ///
   /// If [userId] is not specified, the current user's ID is used.
-  /// If [chatId] is not specified, the current chat room ID is used.
   ///
   /// **Parameters:**
+  /// - (required): [chatId] A unique identifier for the chat room.
+  /// Specifies the chat room where the user's metadata will be updated.
   /// - (optional): [userId] The ID of the user. Defaults to the current user.
-  /// - (optional): [chatId] The ID of the chat room. Defaults to the
-  /// current chat room.
   /// - (optional): [typingStatus] The current typing status of the user
   /// (e.g., `typing`, `typed`).
-  /// - (optional): [userStatus] The overall status of the user
-  /// (e.g., `online`, `offline`).
   /// - (optional): [membershipStatus] The user's membership status in the
   /// chat room (e.g., `member`, `removed`, `left`).
-  ///
-  /// Returns a [Future] that completes when the user's status is updated in
-  /// the database.
+  /// - (optional): [chatRoomUserData] A map containing user data updates.
+  ///   If provided, this data is used to update the document instead of the
+  ///   other individual parameters.
   Future<void> updateChatRoomUserMetadata({
+    required String chatId,
     String? userId,
-    String? chatId,
     TypeWriterStatus? typingStatus,
-    UserStatus? userStatus,
     MembershipStatus? membershipStatus,
+    Map<String, dynamic>? chatRoomUserData,
   });
 
   /// {@template flutter_chatview_db_connection.DatabaseService.updateCurrentUserStatus}
@@ -316,7 +336,7 @@ abstract interface class DatabaseService {
   /// **Parameters:**
   /// - (required): [userStatus] The current status of the user (online/offline).
   /// {@endtemplate}
-  Future<bool> updateCurrentUserStatus(UserStatus userStatus);
+  Future<bool> updateUserActiveStatus(UserActiveStatus userStatus);
 
   // TODO(YASH): Move sorting chats logic before applying the limit
   /// {@template flutter_chatview_db_connection.DatabaseService.getChats}
@@ -326,18 +346,18 @@ abstract interface class DatabaseService {
   /// **Parameters:**
   /// - (required): [sortBy] determines the order in which chat rooms are
   /// retrieved:
-  ///  - [ChatSortBy.newestFirst] sorts chat rooms in descending order
+  ///   - [ChatSortBy.newestFirst] sorts chat rooms in descending order
   ///  based on the timestamp of the latest message.
-  ///  - [ChatSortBy.none] retrieves chat rooms in their default order
+  ///   - [ChatSortBy.none] retrieves chat rooms in their default order
   ///  without applying any sorting.
   ///
-  /// - (required): [showEmptyMessagesChats] determines whether to include
+  /// - (required): [includeEmptyChats] determines whether to include
   /// chat rooms that have no messages.
   ///   - If `true`, one-to-one chats that have been created but contain
   /// no messages will be included in the list.
   ///   - If `false`, such empty chats will be excluded.
   ///
-  /// - (required): [fetchUnreadMessageCount] determines whether the stream
+  /// - (required): [includeUnreadMessagesCount] determines whether the stream
   /// will listen for unread message count updates.
   ///   - If `true`, it will continuously listen and update the count.
   ///   - If `false`, it will not listen, and `unreadMessagesCount`
@@ -360,8 +380,8 @@ abstract interface class DatabaseService {
   /// {@endtemplate}
   Stream<List<ChatRoomDm>> getChats({
     required ChatSortBy sortBy,
-    required bool showEmptyMessagesChats,
-    required bool fetchUnreadMessageCount,
+    required bool includeEmptyChats,
+    required bool includeUnreadMessagesCount,
     int? limit,
   });
 
@@ -369,13 +389,13 @@ abstract interface class DatabaseService {
   /// Creates a one-to-one chat with the specified user.
   ///
   /// **Parameters:**
-  /// - (required): [userId] The unique identifier of the user to
+  /// - (required): [otherUserId] The unique identifier of the user to
   /// create a chat with.
   /// - (optional): [chatRoomId] The unique identifier of the
   /// chat room to use when creating chat document, if specified.
   ///
-  /// If a chat with the given [userId] already exists, the existing chat ID
-  /// is returned.
+  /// If a chat with the given [otherUserId] already exists,
+  /// the existing chat ID is returned.
   /// Otherwise, a new chat is created, and its ID is returned upon success.
   ///
   /// If [chatRoomId] is provided, it will be used when creating the
@@ -384,32 +404,36 @@ abstract interface class DatabaseService {
   ///
   /// Returns `null` if the chat creation fails.
   /// {@endtemplate}
-  Future<String?> createOneToOneUserChat(String userId, {String? chatRoomId});
+  Future<String?> createOneToOneUserChat({
+    required String otherUserId,
+    String? chatRoomId,
+  });
 
   /// {@template flutter_chatview_db_connection.DatabaseService.createGroupChat}
-  /// Creates a new group chat.
+  /// Creates a new group chat with the specified details.
   ///
   /// **Parameters:**
-  /// - (required): [groupName] is the name of the group chat to be created.
-  /// - (required): [userIds] is a list of user IDs to be included in
-  /// the group chat. The current user is automatically added.
-  /// - (optional): [groupProfilePic] is an optional profile picture for the
-  /// group chat. If not specified, the group will not have a profile picture.
-  /// - (optional): [chatRoomId] The unique identifier of the chat room to
-  /// use when creating chat document, if specified.
+  /// - (required): [groupName] The name of the group chat.
+  /// - (required): [participants] A map of user IDs to their assigned roles
+  /// in the group chat. The current user is automatically added.
+  /// - (optional): [groupProfilePic] The profile picture of the group chat.
+  /// If not provided, the group will not have a profile picture.
+  /// - (optional): [chatRoomId] A unique identifier for the chat room.
+  /// If specified, it will be used when creating the chat document;
+  /// otherwise, a new unique ID will be generated.
   ///
-  /// This method creates a new group chat with the provided group name, users,
-  /// and optional profile picture.
-  ///
-  /// If [chatRoomId] is provided, it will be used when creating the chat
-  /// document. Otherwise, a newly generated unique ID will be assigned.
+  /// **Behavior:**
+  /// - This method initializes a new group chat with the given participants,
+  ///   group name, and optional profile picture.
+  /// - If [chatRoomId] is provided, it is used;
+  /// otherwise, a new unique ID is assigned.
   ///
   /// Returns a ID of the newly created group chat.
   /// If the creation fails, `null` is returned.
   /// {@endtemplate}
   Future<String?> createGroupChat({
     required String groupName,
-    required Map<String, Role> userIds,
+    required Map<String, Role> participants,
     String? groupProfilePic,
     String? chatRoomId,
   });
@@ -420,6 +444,8 @@ abstract interface class DatabaseService {
   /// This method allows updating the group chat's name and profile picture.
   ///
   /// **Parameters:**
+  /// - (required): [chatId] A unique identifier for the group chat.
+  /// Specifies the group chat that will be updated.
   /// - (optional): [groupName] is the new name for the group chat.
   /// If `null`, the group name will not be updated.
   /// - (optional): [groupProfilePic] is the new profile picture for the
@@ -427,18 +453,22 @@ abstract interface class DatabaseService {
   ///
   /// Returns a true/false indicating whether the update was successful (`true`) or failed (`false`).
   /// {@endtemplate}
-  Future<bool> updateGroupChat({String? groupName, String? groupProfilePic});
+  Future<bool> updateGroupChat({
+    required String chatId,
+    String? groupName,
+    String? groupProfilePic,
+  });
 
   /// This method retrieves all messages of the given chat room, determines the
   /// most recent one, and updates the chat room’s last message field.
   ///
   /// **Parameters:**
-  /// - (optional): [chatId] The unique identifier of the chat room to be
-  /// updated. If `chatId` is `null`, the currently active chat room ID will be
-  /// used.
+  /// - (required): [chatId] A unique identifier for the chat room.
+  /// Specifies the chat room where the last message will be fetched
+  /// and updated.
   ///
   /// Returns a true/false indicating whether the last message is fetched and updated.
-  Future<bool> fetchAndUpdateLastMessage({String? chatId});
+  Future<bool> fetchAndUpdateLastMessage({required String chatId});
 
   /// {@template flutter_chatview_db_connection.DatabaseService.addUserInGroup}
   /// Adds a user to the group chat with a specified role.
@@ -446,15 +476,21 @@ abstract interface class DatabaseService {
   /// a role.
   ///
   /// **Parameters:**
+  /// - (required): [chatId] A unique identifier for the group chat.
+  /// Specifies the group chat where the user will be added.
   /// - (required): [userId] The unique identifier of the user to be added.
-  /// - (Required): [role] The role assigned to the user in the group chat.
+  /// - (required): [role] The role assigned to the user in the group chat.
+  /// - (required): [includeAllChatHistory]  Determines whether the user
+  ///   should have access to all previous chat history in the group.
   ///
   /// Returns a [Future] that resolves to `true` if the user was successfully
   /// added, otherwise `false`.
   /// {@endtemplate}
   Future<bool> addUserInGroup({
+    required String chatId,
     required String userId,
     required Role role,
+    required bool includeAllChatHistory,
   });
 
   /// {@template flutter_chatview_db_connection.DatabaseService.removeUserFromGroup}
@@ -463,10 +499,12 @@ abstract interface class DatabaseService {
   /// past messages.
   ///
   /// **Parameters:**
+  /// - (required): [chatId]  A unique identifier for the group chat.
+  /// Specifies the group chat from which the user will be removed.
   /// - (required): [userId] The unique identifier of the user to be removed.
   /// - (required): [deleteGroupIfSingleUser] Whether to delete the group
   ///   if the removed user was the last member.
-  /// - (required): [deleteChatDocsFromStorageCallback] A callback function
+  /// - (required): [deleteChatDocsFromStorage] A callback function
   ///   to delete chat-related documents from storage.
   ///
   /// If the group has only one remaining user and [deleteGroupIfSingleUser]
@@ -477,18 +515,17 @@ abstract interface class DatabaseService {
   /// removed, otherwise `false`.
   /// {@endtemplate}
   Future<bool> removeUserFromGroup({
+    required String chatId,
     required String userId,
     required bool deleteGroupIfSingleUser,
-    required DeleteChatDocsFromStorageCallback
-        deleteChatDocsFromStorageCallback,
+    required DeleteChatMediaFromStorageCallback deleteChatDocsFromStorage,
   });
 
   /// Updates the chat room with new data.
   ///
   /// **Parameters:**
-  /// - (optional): [chatId] is the unique identifier of the chat room to be
-  /// updated. If `chatId` is `null`, the currently active chat room ID will be
-  /// used.
+  /// - (required): [chatId] A unique identifier for the chat room.
+  /// Specifies the chat room that will be updated with the provided data.
   ///
   /// - (optional): [lastMessage] represents the most recent message in the
   /// chat room.
@@ -500,7 +537,7 @@ abstract interface class DatabaseService {
   ///
   /// Returns a `Future<bool>` indicating whether the update was successful.
   Future<bool> updateChatRoom({
-    String? chatId,
+    required String chatId,
     Message? lastMessage,
     Map<String, dynamic>? data,
   });
@@ -508,16 +545,14 @@ abstract interface class DatabaseService {
   /// Retrieves a stream of [ChatRoomMetadata] for the specified chat room.
   ///
   /// **Parameters:**
-  ///
-  /// - (optional): [chatId] The ID of the chat room to fetch metadata for.
-  /// If provided, this ID will be used. Otherwise, the currently active
-  /// chat room ID will be used.
+  /// - (required): [chatId] A unique identifier for the group chat.
+  /// Specifies the group chat whose metadata will be streamed.
   ///
   /// **Returns:**
   /// A [Stream] of [ChatRoomMetadata].
   /// Returns `null` if the chat is a one-to-one chat, as metadata is
   /// only applicable for group chats.
-  Stream<ChatRoomMetadata> getGroupChatMetadataStream([String? chatId]);
+  Stream<ChatRoomMetadata> getGroupChatMetadataStream(String chatId);
 
   /// Checks if a one-to-one chat exists with the specified user.
   ///
@@ -537,20 +572,18 @@ abstract interface class DatabaseService {
   /// dynamically.
   ///
   /// **Parameters:**
-  ///
+  /// - (required): [chatId] A unique identifier for the chat room.
+  /// Specifies the chat room whose metadata will be streamed.
   /// - (required) [chatRoomType] The type of the chat room
   /// (e.g., one-on-one, group).
   /// - (optional) [userId] The unique identifier of the user.
   /// **Required for one-to-one chat rooms.**
-  /// - (optional): [chatId] The ID of the chat room to fetch metadata for.
-  ///   If provided, this ID will be used. Otherwise, the currently active
-  ///   chat room ID will be used.
   ///
   /// Returns a [Stream] that emits [ChatRoomMetadata] whenever updates occur.
   Stream<ChatRoomMetadata> getChatRoomMetadataStream({
     required ChatRoomType chatRoomType,
+    required String chatId,
     String? userId,
-    String? chatId,
   });
 
   /// {@template flutter_chatview_db_connection.DatabaseService.userAddedInGroupChatTimestamp}
@@ -564,9 +597,10 @@ abstract interface class DatabaseService {
   /// Returns `null` if no timestamp is found.
   ///
   /// Parameters:
-  /// - `userId`: (Optional) The ID of the user. Defaults to the current user.
-  /// - `chatId`: (Optional) The ID of the group chat.
-  /// Defaults to the current chat room.
+  /// - (required): [chatId]  A unique identifier for the group chat.
+  /// Specifies the group chat where the user's addition timestamp will be
+  /// retrieved.
+  /// - (optional): [userId] The ID of the user. Defaults to the current user.
   ///
   /// Example usage:
   /// ```dart
@@ -577,25 +611,25 @@ abstract interface class DatabaseService {
   /// ```
   /// {@endtemplate}
   Future<DateTime?> userAddedInGroupChatTimestamp({
+    required String chatId,
     String? userId,
-    String? chatId,
   });
 
   /// Deletes the entire chat from the chat collection and removes it
   /// from all users involved in the chat.
   ///
-  /// Additionally, this method triggers the [deleteChatDocsFromStorageCallback]
+  /// Additionally, this method triggers the [deleteMediaFromStorage]
   /// to delete all associated media (such as images and voice messages)
   /// from storage.
   ///
   /// **Parameters:**
   /// - (required): [chatId] The unique identifier of the chat to be deleted.
-  /// - (optional): [deleteChatDocsFromStorageCallback] A callback function
+  /// - (optional): [deleteMediaFromStorage] A callback function
   /// responsible for deleting the chat's media from storage.
   ///
   /// Returns a true/false indicating whether the deletion was successful.
   Future<bool> deleteChat({
     required String chatId,
-    DeleteChatDocsFromStorageCallback? deleteChatDocsFromStorageCallback,
+    DeleteChatMediaFromStorageCallback? deleteMediaFromStorage,
   });
 }

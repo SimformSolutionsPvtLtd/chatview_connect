@@ -20,7 +20,7 @@ abstract final class ChatViewFireStoreCollections {
 
   static ChatViewFireStoreCollectionNameConfig
       get _chatViewFireStorePathConfig =>
-          ChatViewDbConnection.instance.getChatViewFireStorePathConfig;
+          ChatViewDbConnection.instance.getFirestoreCollectionPathConfig;
 
   /// Collection reference for messages.
   ///
@@ -292,7 +292,7 @@ abstract final class ChatViewFireStoreCollections {
   /// - (optional): [documentPath] specifies the database path to
   /// use user chat collection.
   ///
-  /// {@template flutter_chatview_db_connection.ChatDatabasePathConfig.userChatCollection}
+  /// {@template flutter_chatview_db_connection.ChatFirestoreDatabasePathConfig.userChatCollection}
   ///
   /// if path specified the user chats collection will be created at '[documentPath]/user_chats/{userId}'
   /// and same path used to retrieve the user chats.

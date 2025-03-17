@@ -15,7 +15,7 @@ class CreateChatTile extends StatelessWidget {
   final String username;
   final String? userProfile;
   final VoidCallback? onTap;
-  final UserStatus? oneToOneUserStatus;
+  final UserActiveStatus? oneToOneUserStatus;
 
   @override
   Widget build(BuildContext context) {

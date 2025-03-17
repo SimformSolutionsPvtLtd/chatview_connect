@@ -4,12 +4,12 @@ import 'package:flutter_chatview_db_connection/flutter_chatview_db_connection.da
 class ChatUserAvatar extends StatelessWidget {
   const ChatUserAvatar({
     required this.profileURL,
-    this.status = UserStatus.offline,
+    this.status = UserActiveStatus.offline,
     super.key,
   });
 
   final String? profileURL;
-  final UserStatus? status;
+  final UserActiveStatus? status;
 
   @override
   Widget build(BuildContext context) {

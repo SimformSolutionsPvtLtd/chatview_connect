@@ -12,6 +12,7 @@ class ChatDetailScreenAppBar extends StatelessWidget {
     this.oneToOneUserStatus,
     this.description,
     this.descriptionWidget,
+    this.actions = const [],
     super.key,
   });
 
@@ -20,13 +21,15 @@ class ChatDetailScreenAppBar extends StatelessWidget {
   final Widget? descriptionWidget;
   final String? chatProfileUrl;
   final List<String> usersProfileURLs;
-  final UserStatus? oneToOneUserStatus;
+  final UserActiveStatus? oneToOneUserStatus;
+  final List<Widget> actions;
 
   @override
   Widget build(BuildContext context) {
     return AppBar(
       titleSpacing: 0,
       centerTitle: true,
+      actions: actions,
       title: Row(
         children: [
           Center(

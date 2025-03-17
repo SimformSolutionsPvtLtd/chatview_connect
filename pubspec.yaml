@@ -5,7 +5,7 @@ issue_tracker: https://github.com/SimformSolutionsPvtLtd/flutter_chatview_db_con
 homepage: https://github.com/SimformSolutionsPvtLtd/flutter_chatview_db_connection
 
 environment:
-  sdk: '>=3.2.0 <4.0.0'
+  sdk: '>=3.3.0 <4.0.0'
 
 dependencies:
   cloud_firestore: ^5.6.0

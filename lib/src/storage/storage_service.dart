@@ -48,5 +48,5 @@ abstract interface class StorageService {
   /// will be deleted.
   ///
   /// Returns a true/false indicating whether the deletion was successful.
-  Future<bool> deleteChatDocs(String chatId);
+  Future<bool> deleteChatMedia(String chatId);
 }

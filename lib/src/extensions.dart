@@ -3,6 +3,7 @@ import 'package:flutter_chatview_models/flutter_chatview_models.dart';
 
 import 'enum.dart';
 import 'models/chat_room_user_dm.dart';
+import 'typedefs.dart';
 
 /// Extension methods for the `String` class.
 extension StringExtension on String {
@@ -227,6 +228,33 @@ extension ListOfChatUserDmExtension on List<ChatUser> {
     }
     return stringBuffer.toString();
   }
+
+  /// Generates a [GroupInfoRecord] by constructing a group name from
+  /// participant names and assigning them roles.
+  ///
+  /// This method iterates through the list of users, concatenates their names
+  /// to form the group name, and assigns each user the role of [Role.admin].
+  ///
+  /// **Returns:**
+  /// A [GroupInfoRecord] containing:
+  /// - `groupName`: A comma-separated list of participant names.
+  /// - `participants`: A map associating user IDs with their roles.
+  GroupInfoRecord getGroupInfo() {
+    final groupNameBuffer = StringBuffer();
+    final usersLength = length;
+    final lastLength = usersLength - 1;
+    final participants = <String, Role>{};
+    for (var i = 0; i < usersLength; i++) {
+      final user = this[i];
+      final userName = user.name;
+      groupNameBuffer.write(i == lastLength ? userName : '$userName, ');
+      participants[user.id] = Role.admin;
+    }
+    return (
+      groupName: groupNameBuffer.toString(),
+      participants: participants,
+    );
+  }
 }
 
 /// A collection of utility extensions for the `DateTime` class.
@@ -240,5 +268,31 @@ extension DateTimeExtension on DateTime {
     final nowDateTime =
         DateTime(now.year, now.month, now.day, now.hour, now.minute);
     return providedDateTime.compareTo(nowDateTime) == 0;
+  }
+}
+
+/// Extension on [Message] to provide utility methods for
+/// comparing message creation timestamps.
+extension MessageExtension on Message? {
+  /// Compares the creation time of this message with another message.
+  ///
+  /// Returns:
+  /// - `0` if both messages have the same timestamp or are null.
+  /// - `-1` if this message is null (considered earlier).
+  /// - `1` if the other message is null (considered later).
+  /// - A positive or negative integer based on the natural ordering
+  /// of timestamps.
+  int compareCreateAt(Message? message) {
+    final a = this?.createdAt;
+    final b = message?.createdAt;
+    if (a == null && b == null) {
+      return 0;
+    } else if (a == null) {
+      return -1;
+    } else if (b == null) {
+      return 1;
+    } else {
+      return a.compareTo(b);
+    }
   }
 }

@@ -31,12 +31,13 @@ class ChatRoomUserActivityTile extends StatelessWidget {
             (index) {
               final user = otherUsers[index];
               final userActivity = usersActivity[user.id];
-              final status = userActivity?.userStatus ?? UserStatus.offline;
+              final status =
+                  userActivity?.userActiveStatus ?? UserActiveStatus.offline;
               return switch (chatRoomType) {
                 ChatRoomType.oneToOne when status.isOnline =>
                   const UserActivityTile(
                     userName: 'Online',
-                    userStatus: UserStatus.online,
+                    userStatus: UserActiveStatus.online,
                   ),
                 ChatRoomType.group => Padding(
                     padding: const EdgeInsets.only(right: 4),

@@ -13,7 +13,7 @@ class ChatRoomUserDm {
   /// - (required): [userId] is the unique identifier of the user.
   /// - (required): [chatUser] contains detailed information about the user
   /// in the chat room.
-  /// - (required): [userStatus] represents the online/offline status of the user.
+  /// - (required): [userActiveStatus] represents the online/offline status of the user.
   /// - (optional): [typingStatus] indicates the typing status of the user,
   /// with a default value of [TypeWriterStatus.typed].
   /// - (required): [role] defines the user's permissions within the chat room.
@@ -28,7 +28,7 @@ class ChatRoomUserDm {
     required this.chatUser,
     required this.membershipStatus,
     required this.membershipStatusTimestamp,
-    this.userStatus = UserStatus.offline,
+    this.userActiveStatus = UserActiveStatus.offline,
     this.typingStatus = TypeWriterStatus.typed,
   });
 
@@ -55,7 +55,9 @@ class ChatRoomUserDm {
             )
           : null,
       userId: json['user_id']?.toString() ?? '',
-      userStatus: UserStatusExtension.parse(json['user_status'].toString()),
+      userActiveStatus: UserActiveStatusExtension.parse(
+        json['user_active_status'].toString(),
+      ),
       typingStatus: TypeWriterStatusExtension.parse(
         json['typing_status'].toString(),
       ),
@@ -83,7 +85,7 @@ class ChatRoomUserDm {
   /// The online/offline status of the user.
   ///
   /// Possible values include statuses such as online or offline.
-  final UserStatus userStatus;
+  final UserActiveStatus userActiveStatus;
 
   /// The typing status of the user.
   ///
@@ -108,20 +110,22 @@ class ChatRoomUserDm {
 
   /// Converts the [ChatRoomUserDm] instance to a JSON map.
   ///
-  /// **Note**: The [chatUser], [userStatus] field is not included in `toJson`
-  /// because it serves as an aggregation of multiple data streams.
-  /// The [chatUser], [userStatus] property is populated dynamically using the
-  /// `copyWith` method when merging data from different sources, such as chat
-  /// document IDs and user collection data. Since it is dynamically assembled
-  /// from multiple streams, serializing it back to JSON is not necessary.
+  /// **Note**: The [chatUser], [userActiveStatus] field is not included in
+  /// `toJson` because it serves as an aggregation of multiple data streams.
+  /// The [chatUser], [userActiveStatus] property is populated dynamically using
+  /// the `copyWith` method when merging data from different sources, such as
+  /// chat document IDs and user collection data. Since it is dynamically
+  /// assembled from multiple streams, serializing it back to JSON is not
+  /// necessary.
   ///
-  /// Additionally, [chatUser], [userStatus] is not meant for storing in
+  /// Additionally, [chatUser], [userActiveStatus] is not meant for storing in
   /// a database document because it is retrieved from different sources rather
   /// than being a single entity. It is primarily used for runtime operations
   /// where data from different sources is combined for ease of use in the
   /// application.
   ///
-  /// Returns a map containing the `user_status` and `typing_status` fields.
+  /// Returns a map containing the `user_active_status` and `typing_status`
+  /// fields.
   Map<String, dynamic> toJson({bool includeUserId = true}) {
     final data = {
       if (includeUserId) 'user_id': userId,
@@ -147,7 +151,7 @@ class ChatRoomUserDm {
   /// - (optional): [role] is the updated role of the user in the chat room.
   /// - (optional): [userId] is the updated user ID.
   /// - (optional): [chatUser] is the updated chat user details.
-  /// - (optional): [userStatus] is the updated online/offline status.
+  /// - (optional): [userActiveStatus] is the updated online/offline status.
   /// - (optional): [typingStatus] is the updated typing status.
   /// - (optional): [membershipStatus] is the updated membership status
   /// of the user in the chat room.
@@ -160,7 +164,7 @@ class ChatRoomUserDm {
     Role? role,
     String? userId,
     ChatUser? chatUser,
-    UserStatus? userStatus,
+    UserActiveStatus? userActiveStatus,
     TypeWriterStatus? typingStatus,
     MembershipStatus? membershipStatus,
     DateTime? membershipStatusTimestamp,
@@ -170,11 +174,14 @@ class ChatRoomUserDm {
       role: role ?? this.role,
       userId: userId ?? this.userId,
       chatUser: forceNullValue ? chatUser : chatUser ?? this.chatUser,
-      userStatus: userStatus ?? this.userStatus,
+      userActiveStatus: userActiveStatus ?? this.userActiveStatus,
       typingStatus: typingStatus ?? this.typingStatus,
-      membershipStatus: membershipStatus ?? this.membershipStatus,
-      membershipStatusTimestamp:
-          membershipStatusTimestamp ?? this.membershipStatusTimestamp,
+      membershipStatus: forceNullValue
+          ? membershipStatus
+          : membershipStatus ?? this.membershipStatus,
+      membershipStatusTimestamp: forceNullValue
+          ? membershipStatusTimestamp
+          : membershipStatusTimestamp ?? this.membershipStatusTimestamp,
     );
   }
 

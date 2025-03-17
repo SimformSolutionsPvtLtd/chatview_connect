@@ -8,31 +8,29 @@ import 'widgets/chat_detail_screen_app_bar.dart';
 import 'widgets/chat_room_user_acitivity_tile.dart';
 
 class ChatDetailScreen extends StatefulWidget {
-  ChatDetailScreen({
+  const ChatDetailScreen({
     this.chatRoomId,
     this.currentUser,
     this.otherUsers,
     this.groupChatName,
     this.groupChatProfile,
+    this.chatRoomType,
     super.key,
-  }) : assert(
-          chatRoomId != null ||
-              (currentUser != null && (otherUsers?.isNotEmpty ?? true)),
-          'chatRoomId must not be null, or currentUser must be non-null with at least one other user.',
-        );
+  });
 
   final String? chatRoomId;
   final ChatUser? currentUser;
   final List<ChatUser>? otherUsers;
   final String? groupChatName;
   final String? groupChatProfile;
+  final ChatRoomType? chatRoomType;
 
   @override
   State<ChatDetailScreen> createState() => _ChatDetailScreenState();
 }
 
 class _ChatDetailScreenState extends State<ChatDetailScreen> {
-  ChatController? _chatController;
+  ChatRoomManager? _chatController;
   ChatViewParticipantsDm? _chatRoomInfo;
   final _scrollController = ScrollController();
   final _initialMessageList = <Message>[];
@@ -64,19 +62,19 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
     return Scaffold(
       body: Builder(
         builder: (context) {
-          final controller = _chatController;
-          if (controller == null) {
+          final chatController = _chatController;
+          if (chatController == null) {
             return const Center(
               child: RepaintBoundary(child: CircularProgressIndicator()),
             );
           }
           return ChatView(
-            chatController: controller,
+            chatController: chatController,
             chatViewState: ChatViewState.hasMessages,
             chatBackgroundConfig: ChatBackgroundConfiguration(
               backgroundColor: cardColor,
             ),
-            onSendTap: ChatViewDbConnection.connectionManager.onSendTap,
+            onSendTap: chatController.onSendTap,
             loadingWidget: const RepaintBoundary(
               child: CircularProgressIndicator(),
             ),
@@ -94,9 +92,25 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
                   chatName: metadata?.chatName ?? 'Unknown',
                   chatProfileUrl: metadata?.chatProfilePhoto,
                   usersProfileURLs: _chatRoomInfo?.usersProfilePictures ?? [],
+                  actions: (_chatRoomInfo?.chatRoomType.isGroup ?? false)
+                      ? [
+                          IconButton(
+                            onPressed: chatController.leaveFromGroup,
+                            icon: const Icon(Icons.remove),
+                          ),
+                          IconButton(
+                            onPressed: () => chatController.addUserInGroup(
+                              userId: '2',
+                              role: Role.admin,
+                              includeAllChatHistory: false,
+                            ),
+                            icon: const Icon(Icons.add),
+                          ),
+                        ]
+                      : [],
                   descriptionWidget: ChatRoomUserActivityTile(
                     usersActivitiesNotifier: _usersActivitiesNotifier,
-                    chatController: controller,
+                    chatController: chatController,
                     chatRoomType:
                         _chatRoomInfo?.chatRoomType ?? ChatRoomType.oneToOne,
                   ),
@@ -112,8 +126,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
               defaultSendButtonColor: primaryColor,
               textFieldConfig: TextFieldConfiguration(
                 textStyle: const TextStyle(color: Colors.black),
-                onMessageTyping: ChatViewDbConnection
-                    .connectionManager.updateCurrentUserTypingStatus,
+                onMessageTyping: chatController.updateCurrentUserTypingStatus,
               ),
               voiceRecordingConfiguration: const VoiceRecordingConfiguration(
                 backgroundColor: Colors.white,
@@ -144,8 +157,9 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
                   topRight: Radius.circular(16),
                   bottomRight: Radius.circular(16),
                 ),
-                onMessageRead:
-                    ChatViewDbConnection.connectionManager.onMessageRead,
+                onMessageRead: (message) => chatController.onMessageRead(
+                  message.copyWith(status: MessageStatus.read),
+                ),
               ),
             ),
             featureActiveConfig: const FeatureActiveConfig(
@@ -155,11 +169,10 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
               enableScrollToBottomButton: true,
             ),
             replyPopupConfig: ReplyPopupConfiguration(
-              onUnsendTap: ChatViewDbConnection.connectionManager.onUnsendTap,
+              onUnsendTap: chatController.onUnsendTap,
             ),
             reactionPopupConfig: ReactionPopupConfiguration(
-              userReactionCallback:
-                  ChatViewDbConnection.connectionManager.userReactionCallback,
+              userReactionCallback: chatController.userReactionCallback,
             ),
             scrollToBottomButtonConfig: ScrollToBottomButtonConfig(
               backgroundColor: Colors.white,
@@ -184,40 +197,26 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
 
   @override
   void dispose() {
-    ChatViewDbConnection.connectionManager
-      ..updateCurrentUserStatus(UserStatus.offline)
-      ..dispose();
+    ChatViewDbConnection.chat.updateUserActiveStatus(UserActiveStatus.offline);
     _chatController?.dispose();
     super.dispose();
   }
 
   Future<void> _initChatRoom() async {
-    final chatId = widget.chatRoomId;
-    final currentUser = widget.currentUser;
-    final otherUsers = widget.otherUsers ?? [];
-    if (chatId != null) {
-      _chatController = await ChatViewDbConnection.connectionManager
-          .getChatControllerByChatRoomId(
-        chatRoomId: chatId,
-        initialMessageList: _initialMessageList,
-        scrollController: _scrollController,
-        config: _config,
-      );
-    } else if (currentUser != null && otherUsers.isNotEmpty) {
-      _chatController =
-          await ChatViewDbConnection.connectionManager.getChatControllerByUsers(
-        otherUsers: otherUsers,
-        currentUser: currentUser,
-        groupName: widget.groupChatName,
-        groupProfile: widget.groupChatProfile,
-        initialMessageList: _initialMessageList,
-        scrollController: _scrollController,
-        config: _config,
-      );
-    }
+    _chatController = await ChatViewDbConnection.instance.getChatManager(
+      config: _config,
+      chatRoomId: widget.chatRoomId,
+      otherUsers: widget.otherUsers,
+      currentUser: widget.currentUser,
+      groupName: widget.groupChatName,
+      chatRoomType: widget.chatRoomType,
+      scrollController: _scrollController,
+      groupProfile: widget.groupChatProfile,
+      initialMessageList: _initialMessageList,
+    );
     unawaited(
-      ChatViewDbConnection.connectionManager.updateCurrentUserStatus(
-        UserStatus.online,
+      ChatViewDbConnection.chat.updateUserActiveStatus(
+        UserActiveStatus.online,
       ),
     );
     if (mounted) setState(() {});

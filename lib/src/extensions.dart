@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_chatview_models/flutter_chatview_models.dart';
 
 import 'enum.dart';
+import 'models/chat_room_dm.dart';
 import 'models/chat_room_user_dm.dart';
 import 'typedefs.dart';
 
@@ -271,20 +272,22 @@ extension DateTimeExtension on DateTime {
   }
 }
 
-/// Extension on [Message] to provide utility methods for
-/// comparing message creation timestamps.
-extension MessageExtension on Message? {
-  /// Compares the creation time of this message with another message.
+/// Extension methods for nullable [DateTime] objects.
+///
+/// Provides utility methods for comparing nullable [DateTime] instances,
+/// ensuring safe comparisons even when one or both values are null.
+extension DateTimeNullableExtension on DateTime? {
+  /// Compares this nullable [DateTime] with another nullable [other].
   ///
   /// Returns:
-  /// - `0` if both messages have the same timestamp or are null.
-  /// - `-1` if this message is null (considered earlier).
-  /// - `1` if the other message is null (considered later).
-  /// - A positive or negative integer based on the natural ordering
-  /// of timestamps.
-  int compareCreateAt(Message? message) {
-    final a = this?.createdAt;
-    final b = message?.createdAt;
+  /// - `0` if both dates are null or occur at the same moment.
+  /// - A negative value if this date is null (considered earlier)
+  /// or occurs before [other].
+  /// - A positive value if [other] is null (considered later)
+  /// or occurs after this date.
+  int compareWith(DateTime? other) {
+    final a = this;
+    final b = other;
     if (a == null && b == null) {
       return 0;
     } else if (a == null) {
@@ -294,5 +297,54 @@ extension MessageExtension on Message? {
     } else {
       return a.compareTo(b);
     }
+  }
+}
+
+/// Extension on [Message] to provide utility methods for
+/// comparing message creation timestamps.
+extension MessageExtension on Message? {
+  /// Compares the creation timestamp of this message with another message.
+  ///
+  /// Returns:
+  /// - `0` if both creation timestamps are null or occur at the same moment.
+  /// - A negative value if this message's timestamp is null
+  /// (considered earlier) or occurs before the other message's timestamp.
+  /// - A positive value if the other message's timestamp is null
+  /// (considered later) or occurs after this message's timestamp.
+  int compareCreateAt(Message? message) {
+    final dateTime = this?.createdAt;
+    return dateTime.compareWith(message?.createdAt);
+  }
+
+  /// Compares the update timestamp of this message with another message.
+  ///
+  /// Returns:
+  /// - `0` if both update timestamps are null or occur at the same moment.
+  /// - A negative value if this message's update timestamp is null
+  /// (considered earlier) or occurs before the other message's
+  /// update timestamp.
+  /// - A positive value if the other message's update timestamp is null
+  /// (considered later) or occurs after this message's update timestamp.
+  int compareUpdateAt(Message? message) {
+    final dateTime = this?.updateAt;
+    return dateTime.compareWith(message?.updateAt);
+  }
+}
+
+/// Extension methods for lists of nullable [ChatRoomDm] objects.
+///
+/// Provides utility methods to filter out null values and
+/// work with only non-null chat rooms.
+extension ChatRoomsListExtension on List<ChatRoomDm?> {
+  /// Returns a new list containing only non-null [ChatRoomDm] objects.
+  ///
+  /// This method filters out any `null` values from the list, ensuring that
+  /// operations on the resulting list can be performed without null checks.
+  List<ChatRoomDm> get toNonEmpty {
+    final chatsLength = length;
+    return [
+      for (var i = 0; i < chatsLength; i++)
+        if (this[i] case final chat?) chat,
+    ];
   }
 }

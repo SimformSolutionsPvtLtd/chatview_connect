@@ -274,9 +274,11 @@ final class ChatViewDbConnection {
     required ScrollController scrollController,
     required ChatControllerConfig config,
   }) async {
+    final userId = _currentUserId ?? '';
+    if (userId.isEmpty) throw Exception("Current User ID can't be empty!");
     if (chatRoomId.isEmpty) throw Exception("Chat Room ID can't be empty!");
-    final chatRoomParticipants =
-        await _service?.database.getChatRoomParticipants(chatRoomId);
+    final chatRoomParticipants = await _service?.database
+        .getChatRoomParticipants(chatId: chatRoomId, userId: userId);
     if (chatRoomParticipants == null) throw Exception('No Users Found!');
     config.chatRoomInfo?.call(chatRoomParticipants);
     return ChatManager.fromChatRoomId(
@@ -344,10 +346,13 @@ final class ChatViewDbConnection {
     String? groupName,
     String? groupProfile,
   }) async {
+    final userId = _currentUserId ?? '';
+    if (userId.isEmpty) throw Exception("Current User ID can't be empty!");
     if (otherUsers.isEmpty) throw Exception("Other Users can't be empty!");
     if (chatRoomType.isOneToOne) {
       final chatRoomID = await _service?.database.isOneToOneChatExists(
-        otherUsers.first.id,
+        userId: userId,
+        otherUserId: otherUsers.first.id,
       );
       if (chatRoomID case final chatRoomId?) {
         return _getChatManagerByChatRoomId(
@@ -365,11 +370,13 @@ final class ChatViewDbConnection {
       switch (chatRoomType) {
         case ChatRoomType.oneToOne:
           chatRoomId = await _service?.database.createOneToOneUserChat(
+            userId: userId,
             otherUserId: otherUsers.first.id,
           );
         case ChatRoomType.group:
           final groupInfo = otherUsers.createGroupInfo();
           chatRoomId = await _service?.database.createGroupChat(
+            userId: userId,
             groupName: groupInfo.groupName,
             participants: groupInfo.participants,
           );

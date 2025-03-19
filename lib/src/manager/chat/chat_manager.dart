@@ -202,6 +202,12 @@ final class ChatManager extends ChatController {
 
   ChatRoomType? get _chatRoomType => _currentChatRoomInfo?.chatRoomType;
 
+  String get _currentUserId {
+    final userId = ChatViewDbConnection.instance.currentUserId;
+    assert(userId?.isNotEmpty ?? false, "Current User ID can't be empty!");
+    return userId!;
+  }
+
   /// The unique identifier for the chat room.
   ///
   /// This ID is used to distinguish between different chat rooms.
@@ -245,6 +251,7 @@ final class ChatManager extends ChatController {
 
     _chatRoomUserStream = _database
         .getChatRoomUsersMetadataStream(
+          userId: _currentUserId,
           chatId: chatRoomId,
           observeUserInfoChanges: syncOtherUsersInfo,
         )
@@ -257,7 +264,10 @@ final class ChatManager extends ChatController {
         );
 
     (chatRoomType.isGroup
-            ? _database.userAddedInGroupChatTimestamp(chatId: chatRoomId)
+            ? _database.userAddedInGroupChatTimestamp(
+                chatId: chatRoomId,
+                userId: _currentUserId,
+              )
             : Future<DateTime?>.value())
         .then(
       (startMessageTimestamp) {
@@ -293,14 +303,12 @@ final class ChatManager extends ChatController {
   ) async {
     if (_isChatRoomCreated && !_isInitialized) return null;
 
-    final sentByUserId = ChatViewDbConnection.instance.currentUserId;
-    if (sentByUserId == null) throw Exception("Sender ID Can't be null");
     return onSendTapFromMessage(
       Message(
         id: const Uuid().v8(),
         createdAt: DateTime.now(),
         message: message,
-        sentBy: sentByUserId,
+        sentBy: _currentUserId,
         replyMessage: replyMessage,
         messageType: messageType,
       ),
@@ -335,6 +343,7 @@ final class ChatManager extends ChatController {
       switch (chatRoomType) {
         case ChatRoomType.oneToOne:
           await _database.createOneToOneUserChat(
+            userId: _currentUserId,
             chatRoomId: chatRoomId,
             otherUserId: chatViewParticipants.otherUsers.first.id,
           );
@@ -351,6 +360,7 @@ final class ChatManager extends ChatController {
             userIds[user.id] = Role.admin;
           }
           await _database.createGroupChat(
+            userId: _currentUserId,
             chatRoomId: chatRoomId,
             participants: userIds,
             groupName:
@@ -387,6 +397,7 @@ final class ChatManager extends ChatController {
   Future<void> updateCurrentUserTypingStatus(TypeWriterStatus status) async {
     if (!_isInitialized) return;
     return _database.updateChatRoomUserMetadata(
+      userId: _currentUserId,
       chatId: chatRoomId,
       typingStatus: status,
     );
@@ -399,6 +410,7 @@ final class ChatManager extends ChatController {
   Future<void> onMessageRead(Message message) async {
     if (!_isInitialized) return;
     return _database.updateMessage(
+      userId: _currentUserId,
       chatId: chatRoomId,
       message: message,
       messageStatus: message.status,
@@ -450,9 +462,9 @@ final class ChatManager extends ChatController {
   /// - (required): [emoji] The emoji representing the user's reaction.
   Future<void> userReactionCallback(Message message, String emoji) async {
     if (!_isInitialized) return;
-    final userId = ChatViewDbConnection.instance.currentUserId;
-    if (userId == null) throw Exception("Sender ID Can't be null");
+    final userId = _currentUserId;
     return _database.updateMessage(
+      userId: userId,
       message: message,
       chatId: chatRoomId,
       userReaction: (userId: userId, emoji: emoji),
@@ -507,7 +519,8 @@ final class ChatManager extends ChatController {
     if (!_isInitialized) return false;
     return _database.removeUserFromGroup(
       chatId: chatRoomId,
-      userId: userId,
+      removeUserId: userId,
+      userId: _currentUserId,
       deleteGroupIfSingleUser: deleteGroupIfSingleUser,
       deleteChatDocsFromStorage: _storage.deleteChatMedia,
     );
@@ -520,11 +533,11 @@ final class ChatManager extends ChatController {
   /// if the user successfully left the group, otherwise `false`.
   Future<bool> leaveFromGroup() async {
     if (!_isInitialized) return false;
-    final currentUserId = ChatViewDbConnection.instance.currentUserId;
-    if (currentUserId == null) throw Exception("Current User ID can't be null");
+    final currentUserId = _currentUserId;
     return _database.removeUserFromGroup(
-      chatId: chatRoomId,
       userId: currentUserId,
+      chatId: chatRoomId,
+      removeUserId: currentUserId,
       deleteGroupIfSingleUser: true,
       deleteChatDocsFromStorage: _storage.deleteChatMedia,
     );
@@ -570,23 +583,31 @@ final class ChatManager extends ChatController {
 
   /// {@macro flutter_chatview_db_connection.DatabaseService.updateUserActiveStatus}.
   Future<bool> updateUserActiveStatus(UserActiveStatus status) =>
-      _database.updateUserActiveStatus(status);
+      _database.updateUserActiveStatus(
+        userStatus: status,
+        userId: _currentUserId,
+      );
 
   /// {@macro flutter_chatview_db_connection.DatabaseService.getChats}
   Stream<List<ChatRoomDm>> getChats({
     ChatSortBy sortBy = ChatSortBy.newestFirst,
     bool includeUnreadMessagesCount = true,
     bool includeEmptyChats = true,
+    int? limit,
   }) =>
-      _database.getChats(
+      _database.getChatsStream(
         sortBy: sortBy,
+        userId: _currentUserId,
         includeEmptyChats: includeEmptyChats,
         includeUnreadMessagesCount: includeUnreadMessagesCount,
+        limit: limit,
       );
 
   /// {@macro flutter_chatview_db_connection.DatabaseService.createOneToOneUserChat}
-  Future<String?> createChat(String userId) =>
-      _database.createOneToOneUserChat(otherUserId: userId);
+  Future<String?> createChat(String userId) => _database.createOneToOneUserChat(
+        userId: _currentUserId,
+        otherUserId: userId,
+      );
 
   /// Creates a new group chat with the specified details.
   ///
@@ -610,6 +631,7 @@ final class ChatManager extends ChatController {
   }) {
     return _database.createGroupChat(
       groupName: groupName,
+      userId: _currentUserId,
       participants: participants,
       groupProfilePic: groupProfilePic,
     );

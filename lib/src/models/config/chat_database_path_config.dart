@@ -30,7 +30,7 @@ final class ChatFirestoreDatabasePathConfig {
   ChatFirestoreDatabasePathConfig({this.userCollectionPath})
       : assert(
           userCollectionPath == null ||
-              userCollectionPath.isValidFirestoreDocument,
+              userCollectionPath.isValidFirestoreDocumentName,
           'Chat Collection Path should not have the nested collection',
         );
 

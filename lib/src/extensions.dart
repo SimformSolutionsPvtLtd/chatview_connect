@@ -36,7 +36,7 @@ extension StringExtension on String {
   ///
   /// Returns `true` if this string is a valid Firestore document path,
   /// otherwise `false`.
-  bool get isValidFirestoreDocument {
+  bool get isValidFirestoreDocumentName {
     final isNotEmptyWithNoDoubleSlash = isNotEmpty && !contains('//');
 
     if (!isNotEmptyWithNoDoubleSlash) return false;
@@ -239,7 +239,7 @@ extension ListOfChatUserDmExtension on List<ChatUser> {
   /// A [GroupInfoRecord] containing:
   /// - `groupName`: A comma-separated list of participant names.
   /// - `participants`: A map associating user IDs with their roles.
-  GroupInfoRecord getGroupInfo() {
+  GroupInfoRecord createGroupInfo() {
     final groupNameBuffer = StringBuffer();
     final usersLength = length;
     final lastLength = usersLength - 1;

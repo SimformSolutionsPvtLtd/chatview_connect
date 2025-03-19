@@ -58,7 +58,7 @@ final class ChatViewParticipantsDm {
   /// For one-to-one chats, this is `null`.
   final String? groupPhotoUrl;
 
-  /// {@template flutter_chatview_db_connection.ChatViewParticipantsDm._getUsersProfilePictures}
+  /// {@template flutter_chatview_db_connection.ChatViewParticipantsDm.usersProfilePictures}
   /// Retrieves the profile pictures of users in the chat room as
   /// a list of URLs as strings.
   ///

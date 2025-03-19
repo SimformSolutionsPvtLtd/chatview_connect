@@ -15,6 +15,8 @@ class ChatListScreen extends StatefulWidget {
 }
 
 class _ChatListScreenState extends State<ChatListScreen> {
+  final _chatController = ChatViewDbConnection.instance.getChatManager();
+
   String? currentUserId = ChatViewDbConnection.instance.currentUserId;
 
   @override
@@ -28,7 +30,7 @@ class _ChatListScreenState extends State<ChatListScreen> {
         title: const Text('Chats'),
         actions: [
           FutureBuilder(
-            future: ChatViewDbConnection.chat.getUsers(),
+            future: _chatController.getUsers(),
             builder: (_, snapshot) {
               final data = snapshot.data ?? {};
               final users = data.values.toList();
@@ -53,7 +55,7 @@ class _ChatListScreenState extends State<ChatListScreen> {
         ],
       ),
       body: StreamBuilder(
-        stream: ChatViewDbConnection.chat.getChats(),
+        stream: _chatController.getChats(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(
@@ -88,7 +90,7 @@ class _ChatListScreenState extends State<ChatListScreen> {
                           users: users,
                         ),
                   onTap: () => _navigateToChatDetailScreen(chatId),
-                  onTapMore: () => ChatViewDbConnection.chat.deleteChat(chatId),
+                  onTapMore: () => _chatController.deleteChat(chatId),
                 );
               },
             );
@@ -143,7 +145,16 @@ class _ChatListScreenState extends State<ChatListScreen> {
             ?.name;
 
     if (username != null || reactionEmoji != null) {
-      return '$username reacted $reactionEmoji to "${lastMessage.message}"';
+      String message;
+      switch (lastMessage.messageType) {
+        case MessageType.image:
+          message = 'photo';
+        case MessageType.voice:
+          message = 'audio';
+        case MessageType.text || MessageType.custom:
+          message = lastMessage.message;
+      }
+      return '$username reacted $reactionEmoji to "$message"';
     }
 
     final sender = lastMessage.sentBy == currentUserId ? 'You' : 'They';

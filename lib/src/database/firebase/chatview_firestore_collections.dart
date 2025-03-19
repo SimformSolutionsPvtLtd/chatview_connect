@@ -29,14 +29,10 @@ abstract final class ChatViewFireStoreCollections {
   /// - (optional): [documentPath] specifies the database path to use
   /// message collection from that.
   ///
-  /// {@template flutter_chatview_db_connection.StorageService.messageCollection}
-  ///
   /// if path specified the message collection will be created at
   /// '[documentPath]/messages' and same path used to retrieve the messages.
   ///
   /// Example: 'chat/room123/messages'
-  ///
-  /// {@endtemplate}
   static CollectionReference<Message?> messageCollection([
     String? documentPath,
   ]) {
@@ -98,14 +94,10 @@ abstract final class ChatViewFireStoreCollections {
   /// - (optional): [documentPath] specifies the database path where the
   /// chat collection should be accessed.
   ///
-  /// {@template flutter_chatview_db_connection.StorageService.chatCollection}
-  ///
   /// If a path is specified, the chat collection will be created at '[documentPath]/chats' and
   /// the same path will be used to retrieve chat rooms.
   ///
   /// Example: 'organizations/simform/chats'
-  ///
-  /// {@endtemplate}
   static CollectionReference<ChatRoomDm?> chatCollection([
     String? documentPath,
   ]) {
@@ -150,14 +142,10 @@ abstract final class ChatViewFireStoreCollections {
   /// - (optional): [documentPath] specifies the database path to use
   /// user collection from that.
   ///
-  /// {@template flutter_chatview_db_connection.StorageService.usersCollection}
-  ///
   /// if path specified the message collection will be created at '[documentPath]/users' and
   /// same path used to retrieve the users.
   ///
   /// Example: 'users/user1'
-  ///
-  /// {@endtemplate}
   static CollectionReference<ChatUser?> usersCollection([
     String? documentPath,
   ]) {
@@ -205,14 +193,10 @@ abstract final class ChatViewFireStoreCollections {
   /// - (optional): [documentPath] specifies the database path to use
   /// user collection in chat room.
   ///
-  /// {@template flutter_chatview_db_connection.StorageService.chatUsersCollection}
-  ///
   /// if path specified the chat room user collection will be created at '[documentPath]/users'
   /// and same path used to retrieve the users.
   ///
   /// Example: 'chat/room123/messages/users'
-  ///
-  /// {@endtemplate}
   static CollectionReference<ChatRoomUserDm?> chatUsersCollection([
     String? documentPath,
   ]) {
@@ -254,14 +238,10 @@ abstract final class ChatViewFireStoreCollections {
   /// - (optional): [documentPath] specifies the database path to
   /// use user collection in chat room.
   ///
-  /// {@template flutter_chatview_db_connection.StorageService.userChatsConversationCollection}
-  ///
   /// if path specified the user chats collection will be created at '[documentPath]/user_chats/{userId}/chats'
   /// and same path used to retrieve the user chats.
   ///
   /// Example: 'user_chats/user1/chats/chat1'
-  ///
-  /// {@endtemplate}
   static CollectionReference<UserChatsConversationDm?>
       userChatsConversationCollection({
     required String userId,
@@ -303,14 +283,10 @@ abstract final class ChatViewFireStoreCollections {
   /// - (optional): [documentPath] specifies the database path to
   /// use user chat collection.
   ///
-  /// {@template flutter_chatview_db_connection.ChatFirestoreDatabasePathConfig.userChatCollection}
-  ///
   /// if path specified the user chats collection will be created at '[documentPath]/user_chats/{userId}'
   /// and same path used to retrieve the user chats.
   ///
   /// Example: 'user_chats/user1'
-  ///
-  /// {@endtemplate}
   static CollectionReference<UserChatDm?> userChatCollection({
     String? documentPath,
   }) {

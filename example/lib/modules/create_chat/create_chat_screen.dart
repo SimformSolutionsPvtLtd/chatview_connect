@@ -13,6 +13,7 @@ class CreateChatScreen extends StatefulWidget {
 }
 
 class _CreateChatScreenState extends State<CreateChatScreen> {
+  final _chatController = ChatViewDbConnection.instance.getChatManager();
   final currentUser = ChatViewDbConnection.instance.currentUserId;
   ChatUser? currentChatUser;
   List<ChatUser> otherChatUsers = [];
@@ -22,7 +23,7 @@ class _CreateChatScreenState extends State<CreateChatScreen> {
     return Scaffold(
       appBar: AppBar(title: const Text('New Chat')),
       body: FutureBuilder(
-        future: ChatViewDbConnection.chat.getUsers(),
+        future: _chatController.getUsers(),
         builder: (_, snapshot) {
           final users = snapshot.data?.values.toList() ?? [];
           _separateUsers(users);

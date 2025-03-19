@@ -30,7 +30,7 @@ class ChatDetailScreen extends StatefulWidget {
 }
 
 class _ChatDetailScreenState extends State<ChatDetailScreen> {
-  ChatRoomManager? _chatController;
+  ChatManager? _chatController;
   ChatViewParticipantsDm? _chatRoomInfo;
   final _scrollController = ScrollController();
   final _initialMessageList = <Message>[];
@@ -197,13 +197,14 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
 
   @override
   void dispose() {
-    ChatViewDbConnection.chat.updateUserActiveStatus(UserActiveStatus.offline);
-    _chatController?.dispose();
+    _chatController
+      ?..updateUserActiveStatus(UserActiveStatus.offline)
+      ..dispose();
     super.dispose();
   }
 
   Future<void> _initChatRoom() async {
-    _chatController = await ChatViewDbConnection.instance.getChatManager(
+    _chatController = await ChatViewDbConnection.instance.getChatRoomManager(
       config: _config,
       chatRoomId: widget.chatRoomId,
       otherUsers: widget.otherUsers,
@@ -215,9 +216,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
       initialMessageList: _initialMessageList,
     );
     unawaited(
-      ChatViewDbConnection.chat.updateUserActiveStatus(
-        UserActiveStatus.online,
-      ),
+      _chatController?.updateUserActiveStatus(UserActiveStatus.online),
     );
     if (mounted) setState(() {});
   }

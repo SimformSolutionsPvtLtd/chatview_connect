@@ -47,7 +47,7 @@ final class ChatViewFireStoreDatabase implements DatabaseService {
   String _chatRoomCollectionPath(String chatId) {
     final collectionPath = '${_firestorePathConfig.chats}/$chatId';
     assert(
-      collectionPath.isValidFirestoreDocument,
+      collectionPath.isValidFirestoreDocumentName,
       'invalid Firestore document path provided',
     );
     return collectionPath;

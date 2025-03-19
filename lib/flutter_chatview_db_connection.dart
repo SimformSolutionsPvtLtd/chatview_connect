@@ -20,5 +20,5 @@ export 'src/enum.dart'
         RoleExtension,
         TypeWriterStatusExtension,
         UserActiveStatusExtension;
-export 'src/manager/chat_room/chat_room_manager.dart';
+export 'src/manager/chat/chat_manager.dart';
 export 'src/models/models.dart';

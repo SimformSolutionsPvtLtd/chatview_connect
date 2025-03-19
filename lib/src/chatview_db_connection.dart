@@ -4,7 +4,6 @@ import 'package:flutter_chatview_models/flutter_chatview_models.dart';
 import 'enum.dart';
 import 'extensions.dart';
 import 'manager/chat/chat_manager.dart';
-import 'manager/chat_room/chat_room_manager.dart';
 import 'models/config/chat_controller_config.dart';
 import 'models/config/chat_database_path_config.dart';
 import 'models/config/chat_user_model_config.dart';
@@ -13,8 +12,7 @@ import 'models/config/chat_view_firestore_path_config.dart';
 /// A singleton class provides different type of database's clouds services for
 /// chat views.
 ///
-/// provides methods to initialize and access the clouds service
-/// Example: [chat].
+/// provides methods to initialize and access the clouds service.
 final class ChatViewDbConnection {
   /// The main entry point for using the chat database connection in
   /// this package.
@@ -75,7 +73,6 @@ final class ChatViewDbConnection {
       _instance = ChatViewDbConnection._(databaseType);
       final service = DatabaseTypeServices.fromDataType(databaseType);
       _service = service;
-      _chatManagerInstance = ChatManager.fromService(service);
     }
     return _instance!;
   }
@@ -85,7 +82,6 @@ final class ChatViewDbConnection {
   final ChatViewDatabaseType _databaseType;
 
   static ChatViewDbConnection? _instance;
-  static ChatManager? _chatManagerInstance;
 
   static DatabaseTypeServices? _service;
 
@@ -131,7 +127,26 @@ final class ChatViewDbConnection {
   /// Returns current user's ID
   String? get currentUserId => _currentUserId;
 
-  /// Retrieves or initializes a [ChatRoomManager] based on the provided
+  /// Retrieves a new instance of [ChatManager] using the current database
+  /// service.
+  ///
+  /// This method initializes a [ChatManager] and provides access to
+  /// chat-related functionalities.
+  ///
+  /// **Returns:**
+  /// A new instance of [ChatManager].
+  ///
+  /// **Note:**
+  /// - This instance is meant for using methods like `updateUserActiveStatus`,
+  ///   `createChat`, `createGroupChat`, `getUsers`, `deleteChat`, and
+  ///   `getChats`, which do not depend on the chat room itself.
+  /// - While you can access chat room-related methods, you won’t be able to
+  ///   perform any operations. To fully utilize chat room functionalities,
+  ///   use the chat manager from
+  ///   `ChatViewDbConnection.instance.getChatRoomManager()` instead.
+  ChatManager getChatManager() => ChatManager.fromService(_service!);
+
+  /// Retrieves or initializes a [ChatManager] based on the provided
   /// parameters.
   ///
   /// **Usage:**
@@ -147,8 +162,8 @@ final class ChatViewDbConnection {
   ///
   /// **Required parameters for create a new chat room:**
   ///
-  /// - (optional): [createGroupChatOnMessageSend] Whether to create a group
-  /// chat when sending the first message.
+  /// - (optional): [createChatRoomOnMessageSend] Whether to create a one-to-one
+  /// or group chat when sending the first message.
   /// - (optional): [currentUser] The user initiating the chat.
   /// - (optional): [otherUsers] List of users participating in the chat.
   /// - (optional): [chatRoomType] The type of chat (one-to-one or group).
@@ -165,12 +180,21 @@ final class ChatViewDbConnection {
   /// provided.
   ///
   /// **Returns:**
-  /// A [Future] resolving to an initialized [ChatRoomManager].
-  Future<ChatRoomManager> getChatManager({
+  /// A [Future] resolving to an initialized [ChatManager].
+  ///
+  /// **Note**:
+  /// If [createChatRoomOnMessageSend] is set to `true`,
+  /// the following features will not work as the chat room is not created:
+  /// - Typing indicator
+  /// - Adding users to a group
+  /// - Removing users from a group
+  /// - Leaving a group
+  /// - Updating the group name
+  Future<ChatManager> getChatRoomManager({
     required List<Message> initialMessageList,
     required ScrollController scrollController,
     required ChatControllerConfig config,
-    bool createGroupChatOnMessageSend = false,
+    bool createChatRoomOnMessageSend = false,
     String? chatRoomId,
     ChatUser? currentUser,
     List<ChatUser>? otherUsers,
@@ -194,7 +218,7 @@ final class ChatViewDbConnection {
         chatRoomType: tempChatRoomType,
         scrollController: scrollController,
         initialMessageList: initialMessageList,
-        createGroupChatOnMessageSend: createGroupChatOnMessageSend,
+        createChatRoomOnMessageSend: createChatRoomOnMessageSend,
       );
     } else if (tempChatRoomId != null) {
       return _getChatManagerByChatRoomId(
@@ -211,7 +235,7 @@ final class ChatViewDbConnection {
     }
   }
 
-  /// Initializes and returns a [ChatRoomManager] for the specified chat room.
+  /// Initializes and returns a [ChatManager] for the specified chat room.
   ///
   /// From the given chat room, it retrieves the chat room participants
   /// (current user and other users) and sets up listeners for messages,
@@ -231,7 +255,7 @@ final class ChatViewDbConnection {
   /// **Behavior:**
   /// - Fetches the participants of the specified chat room.
   /// - Invokes the `chatRoomInfo` callback from [config], if provided.
-  /// - Creates a [ChatRoomManager] with the retrieved participants, chat
+  /// - Creates a [ChatManager] with the retrieved participants, chat
   ///   room configuration, and other provided parameters.
   ///
   /// **Note:**
@@ -239,12 +263,12 @@ final class ChatViewDbConnection {
   ///   indicators.
   ///
   /// **Returns:**
-  /// A [Future] resolving to an initialized [ChatRoomManager].
+  /// A [Future] resolving to an initialized [ChatManager].
   ///
   /// **Throws:**
   /// - An [Exception] if the `chatRoomId` is empty.
   /// - An [Exception] if no participants are found for the specified chat room.
-  Future<ChatRoomManager> _getChatManagerByChatRoomId({
+  Future<ChatManager> _getChatManagerByChatRoomId({
     required String chatRoomId,
     required List<Message> initialMessageList,
     required ScrollController scrollController,
@@ -255,7 +279,7 @@ final class ChatViewDbConnection {
         await _service?.database.getChatRoomParticipants(chatRoomId);
     if (chatRoomParticipants == null) throw Exception('No Users Found!');
     config.chatRoomInfo?.call(chatRoomParticipants);
-    return ChatRoomManager.fromChatRoomId(
+    return ChatManager.fromChatRoomId(
       config: config,
       chatRoomId: chatRoomId,
       scrollController: scrollController,
@@ -265,7 +289,7 @@ final class ChatViewDbConnection {
     );
   }
 
-  /// Initializes and returns a [ChatRoomManager] for a one-to-one or
+  /// Initializes and returns a [ChatManager] for a one-to-one or
   /// group chat with the specified users.
   ///
   /// - **For one-to-one chats:**
@@ -279,8 +303,6 @@ final class ChatViewDbConnection {
   ///     by combining participant names (e.g., `"User 1, User 2, ..."`).
   ///   - If [groupProfile] is provided, it will be set as the group's profile
   ///     picture.
-  ///   - If [createGroupChatOnMessageSend] is `true`, the group chat is
-  ///     created only when a message is sent.
   ///
   /// **Parameters:**
   ///
@@ -297,8 +319,8 @@ final class ChatViewDbConnection {
   /// (applicable for group chats).
   /// - (optional): [groupProfile] The profile picture URL for the group chat.
   /// (only applicable for group chats).
-  /// - (optional): [createGroupChatOnMessageSend] If `true`, the group chat
-  ///   is created only when a message is sent (default: `false`).
+  /// - (optional): [createChatRoomOnMessageSend] If `true`, the one-to-one or
+  /// group chat is created only when a message is sent (default: `false`).
   ///
   /// **Behavior:**
   /// - For one-to-one chats, it first checks if an existing chat room exists.
@@ -306,19 +328,19 @@ final class ChatViewDbConnection {
   /// parameters.
   ///
   /// **Returns:**
-  /// A [Future] resolving to an initialized [ChatRoomManager].
+  /// A [Future] resolving to an initialized [ChatManager].
   ///
   /// **Throws:**
   /// - An [Exception] if [otherUsers] is empty.
   /// - An [Exception] if chat initialization fails.
-  Future<ChatRoomManager> _getChatManagerByUsers({
+  Future<ChatManager> _getChatManagerByUsers({
     required ChatRoomType chatRoomType,
     required ChatUser currentUser,
     required List<ChatUser> otherUsers,
     required List<Message> initialMessageList,
     required ScrollController scrollController,
     required ChatControllerConfig config,
-    bool createGroupChatOnMessageSend = false,
+    bool createChatRoomOnMessageSend = false,
     String? groupName,
     String? groupProfile,
   }) async {
@@ -339,15 +361,22 @@ final class ChatViewDbConnection {
 
     String? chatRoomId;
 
-    if (chatRoomType.isGroup && !createGroupChatOnMessageSend) {
-      final groupInfo = otherUsers.getGroupInfo();
-      chatRoomId = await _service?.database.createGroupChat(
-        groupName: groupInfo.groupName,
-        participants: groupInfo.participants,
-      );
+    if (!createChatRoomOnMessageSend) {
+      switch (chatRoomType) {
+        case ChatRoomType.oneToOne:
+          chatRoomId = await _service?.database.createOneToOneUserChat(
+            otherUserId: otherUsers.first.id,
+          );
+        case ChatRoomType.group:
+          final groupInfo = otherUsers.createGroupInfo();
+          chatRoomId = await _service?.database.createGroupChat(
+            groupName: groupInfo.groupName,
+            participants: groupInfo.participants,
+          );
+      }
     }
 
-    return ChatRoomManager.fromUsers(
+    return ChatManager.fromUsers(
       config: config,
       groupName: groupName,
       otherUsers: otherUsers,
@@ -359,25 +388,6 @@ final class ChatViewDbConnection {
       initialMessageList: initialMessageList,
       service: DatabaseTypeServices.fromDataType(databaseType),
     );
-  }
-
-  /// Provides access to the [ChatManager] instance for managing chat
-  /// operations.
-  ///
-  /// The [ChatManager] class handles various chat-related functionalities,
-  /// including managing chat rooms, creating one-to-one and group chats,
-  /// retrieving users, and deleting chats.
-  static ChatManager get chat {
-    assert(
-      _instance != null,
-      '''
-      ChatViewDbConnection must be initialized.
-      Example: initialize ChatViewDbConnection for firebase backend
-      ///```dart
-      /// ChatViewDbConnection(ChatViewDatabaseType.firebase);
-      /// ```''',
-    );
-    return _chatManagerInstance!;
   }
 
   /// Gets the singleton instance of [ChatViewDbConnection].

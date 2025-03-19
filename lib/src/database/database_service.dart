@@ -330,7 +330,7 @@ abstract interface class DatabaseService {
     Map<String, dynamic>? chatRoomUserData,
   });
 
-  /// {@template flutter_chatview_db_connection.DatabaseService.updateCurrentUserStatus}
+  /// {@template flutter_chatview_db_connection.DatabaseService.updateUserActiveStatus}
   /// Updates the current user document with the current user status.
   ///
   /// **Parameters:**

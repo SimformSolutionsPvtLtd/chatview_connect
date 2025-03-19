@@ -144,7 +144,7 @@ class ChatRoomDm {
     };
   }
 
-  /// {@template flutter_chatview_db_connection.ChatRoomDm._getUsersProfilePictures}
+  /// {@template flutter_chatview_db_connection.ChatRoomDm.usersProfilePictures}
   /// Retrieves the profile pictures of users in the chat room as
   /// a list of URLs as strings.
   ///

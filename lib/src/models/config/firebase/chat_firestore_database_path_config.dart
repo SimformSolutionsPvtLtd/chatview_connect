@@ -1,4 +1,4 @@
-import '../../extensions.dart';
+import '../../../extensions.dart';
 
 /// {@template flutter_chatview_db_connection.ChatFirestoreDatabasePathConfig}
 /// Configuration class for defining database paths for chat-related data.
@@ -10,16 +10,18 @@ import '../../extensions.dart';
 /// ```dart
 /// ChatViewDbConnection(
 ///     ChatViewDatabaseType.firebase,
-///     databasePathConfig: ChatDatabasePathConfig(
-///         userCollectionPath: 'organizations/org123',
+///     cloudServiceConfig: FirebaseCloudConfig(
+///       databasePathConfig: FirestoreChatDatabasePathConfig(
+///         userCollectionPath: 'organizations/simform',
+///       ),
 ///     ),
-/// )
+/// );
 /// ```
 /// If [userCollectionPath] is not specified,
 /// the default top-level `users` collection is used.
 /// {@endtemplate}
-final class ChatFirestoreDatabasePathConfig {
-  /// Creates a new instance of [ChatFirestoreDatabasePathConfig].
+final class FirestoreChatDatabasePathConfig {
+  /// Creates a new instance of [FirestoreChatDatabasePathConfig].
   ///
   /// **Parameters:**
   /// - (optional) [userCollectionPath] The Firestore collection path for
@@ -27,7 +29,7 @@ final class ChatFirestoreDatabasePathConfig {
   ///   If omitted, defaults to the top-level `users` collection.
   ///
   /// {@macro flutter_chatview_db_connection.ChatFirestoreDatabasePathConfig.userCollectionPath}
-  ChatFirestoreDatabasePathConfig({this.userCollectionPath})
+  FirestoreChatDatabasePathConfig({this.userCollectionPath})
       : assert(
           userCollectionPath == null ||
               userCollectionPath.isValidFirestoreDocumentName,

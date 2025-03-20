@@ -5,17 +5,18 @@ import 'enum.dart';
 import 'extensions.dart';
 import 'manager/chat/chat_manager.dart';
 import 'models/config/chat_controller_config.dart';
-import 'models/config/chat_database_path_config.dart';
 import 'models/config/chat_user_model_config.dart';
-import 'models/config/chat_view_firestore_path_config.dart';
+import 'models/config/cloud_service_config.dart';
+import 'models/config/firebase/chat_firestore_database_path_config.dart';
+import 'models/config/firebase/firebase_config.dart';
+import 'models/config/firebase/firestore_chat_collection_name_config.dart';
 
 /// A singleton class provides different type of database's clouds services for
 /// chat views.
 ///
 /// provides methods to initialize and access the clouds service.
 final class ChatViewDbConnection {
-  /// The main entry point for using the chat database connection in
-  /// this package.
+  /// The main entry point for using the chat database connection.
   ///
   /// This class must be instantiated to access chat-related functionality.
   /// It serves as the core connection layer for handling chat related
@@ -31,13 +32,10 @@ final class ChatViewDbConnection {
   ///   - Supports dynamic key mappings for different data sources
   ///   (e.g., mapping `username` instead of `name`).
   ///
-  /// - (optional): [firestoreDatabasePathConfig] Defines the Firestore database
-  /// paths for retrieving users data.
-  ///   - If omitted, the default top-level `users` collection will be used.
-  ///
-  /// - (optional): [firestoreCollectionNameConfig] Allows customization of
-  /// Firestore collection names.
-  ///   - If a value is `null`, the default collection name will be used.
+  /// - (optional): [cloudServiceConfig] Configuration for cloud services
+  ///   such as Firebase.
+  ///   - If using Firebase, this allows specifying Firestore paths and
+  ///     collection names.
   ///
   /// **Example Usage in `main.dart`:**
   /// ```dart
@@ -48,28 +46,36 @@ final class ChatViewDbConnection {
   ///       nameKey: 'first_name',
   ///       profilePhotoKey: 'avatar',
   ///     ),
-  ///     firestoreCollectionNameConfig: ChatViewFireStoreCollectionNameConfig(
-  ///       users: 'app_users',
-  ///     ),
-  ///     databasePathConfig: ChatDatabasePathConfig(
-  ///       userCollectionPath: 'organizations/org123',
+  ///     cloudServiceConfig: FirebaseCloudConfig(
+  ///       databasePathConfig: FirestoreChatDatabasePathConfig(
+  ///         userCollectionPath: 'organizations/simform',
+  ///       ),
+  ///       collectionNameConfig: FirestoreChatCollectionNameConfig(
+  ///         users: 'app_users',
+  ///       ),
   ///     ),
   /// );
   /// ```
   factory ChatViewDbConnection(
     ChatViewDatabaseType databaseType, {
-    // TODO(YASH): Move this to separate class
     ChatUserModelConfig? chatUserModelConfig,
-    ChatFirestoreDatabasePathConfig? firestoreDatabasePathConfig,
-    ChatViewFireStoreCollectionNameConfig? firestoreCollectionNameConfig,
+    CloudServiceConfig? cloudServiceConfig,
   }) {
     if (_instance == null) {
-      _firestoreDatabasePathConfig =
-          firestoreDatabasePathConfig ?? ChatFirestoreDatabasePathConfig();
-      _chatUserModelConfig = chatUserModelConfig;
-      if (firestoreCollectionNameConfig != null) {
-        _firestoreCollectionNameConfig = firestoreCollectionNameConfig;
+      final cloudConfig = cloudServiceConfig;
+      switch (databaseType) {
+        case ChatViewDatabaseType.firebase
+            when cloudConfig is FirebaseCloudConfig:
+          if (cloudConfig.databasePathConfig case final config?) {
+            _firestoreDatabasePathConfig = config;
+          }
+          if (cloudConfig.collectionNameConfig case final config?) {
+            _firestoreCollectionNameConfig = config;
+          }
+        case ChatViewDatabaseType.firebase:
+          break;
       }
+      _chatUserModelConfig = chatUserModelConfig;
       _instance = ChatViewDbConnection._(databaseType);
       final service = DatabaseTypeServices.fromDataType(databaseType);
       _service = service;
@@ -87,14 +93,13 @@ final class ChatViewDbConnection {
 
   static String? _currentUserId;
 
-  static ChatFirestoreDatabasePathConfig _firestoreDatabasePathConfig =
-      ChatFirestoreDatabasePathConfig();
+  static FirestoreChatDatabasePathConfig? _firestoreDatabasePathConfig;
 
   /// Retrieves the current database path configuration for chat operations.
   ///
-  /// Returns a [ChatFirestoreDatabasePathConfig] object containing the paths
+  /// Returns a [FirestoreChatDatabasePathConfig] object containing the paths
   /// for user chats, chat collections, and optionally, user collections.
-  ChatFirestoreDatabasePathConfig get getFirestoreDatabasePathConfig =>
+  FirestoreChatDatabasePathConfig? get getFirestoreChatDatabasePathConfig =>
       _firestoreDatabasePathConfig;
 
   static ChatUserModelConfig? _chatUserModelConfig;
@@ -108,17 +113,17 @@ final class ChatViewDbConnection {
   /// meaning default keys (`id`, `name`, `profilePhoto`) will be used.
   ChatUserModelConfig? get getChatUserModelConfig => _chatUserModelConfig;
 
-  static ChatViewFireStoreCollectionNameConfig _firestoreCollectionNameConfig =
-      ChatViewFireStoreCollectionNameConfig();
+  static FirestoreChatCollectionNameConfig _firestoreCollectionNameConfig =
+      FirestoreChatCollectionNameConfig();
 
   /// Retrieves the Firestore collection name configuration.
   ///
-  /// Returns an instance of [ChatViewFireStoreCollectionNameConfig] containing
+  /// Returns an instance of [FirestoreChatCollectionNameConfig] containing
   /// the configured collection names, allowing customization of
   /// Firestore collection names.
   ///
   /// Users can override default collection names by providing custom values.
-  ChatViewFireStoreCollectionNameConfig get getFirestoreCollectionPathConfig =>
+  FirestoreChatCollectionNameConfig get getFirestoreChatCollectionNameConfig =>
       _firestoreCollectionNameConfig;
 
   /// The type of database that is being used.

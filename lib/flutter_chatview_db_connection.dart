@@ -21,4 +21,5 @@ export 'src/enum.dart'
         TypeWriterStatusExtension,
         UserActiveStatusExtension;
 export 'src/manager/chat/chat_manager.dart';
+export 'src/models/config/config.dart';
 export 'src/models/models.dart';

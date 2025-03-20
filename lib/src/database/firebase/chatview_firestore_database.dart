@@ -11,8 +11,8 @@ import '../../models/chat_room_metadata_model.dart';
 import '../../models/chat_room_user_dm.dart';
 import '../../models/chat_view_participants_dm.dart';
 import '../../models/config/add_message_config.dart';
-import '../../models/config/chat_database_path_config.dart';
-import '../../models/config/chat_view_firestore_path_config.dart';
+import '../../models/config/firebase/chat_firestore_database_path_config.dart';
+import '../../models/config/firebase/firestore_chat_collection_name_config.dart';
 import '../../models/message_dm.dart';
 import '../../models/user_chat_dm.dart';
 import '../../models/user_chats_conversation_dm.dart';
@@ -36,16 +36,16 @@ final class ChatViewFireStoreDatabase implements DatabaseService {
   static const String _membershipStatusTimestamp =
       'membership_status_timestamp';
 
-  ChatFirestoreDatabasePathConfig get _chatDatabaseConfig =>
-      ChatViewDbConnection.instance.getFirestoreDatabasePathConfig;
+  FirestoreChatDatabasePathConfig? get _chatDatabasePathConfig =>
+      ChatViewDbConnection.instance.getFirestoreChatDatabasePathConfig;
 
-  String? get _userCollection => _chatDatabaseConfig.userCollectionPath;
+  String? get _userCollection => _chatDatabasePathConfig?.userCollectionPath;
 
-  ChatViewFireStoreCollectionNameConfig get _firestorePathConfig =>
-      ChatViewDbConnection.instance.getFirestoreCollectionPathConfig;
+  FirestoreChatCollectionNameConfig get _chatCollectionNameConfig =>
+      ChatViewDbConnection.instance.getFirestoreChatCollectionNameConfig;
 
   String _chatRoomCollectionPath(String chatId) {
-    final collectionPath = '${_firestorePathConfig.chats}/$chatId';
+    final collectionPath = '${_chatCollectionNameConfig.chats}/$chatId';
     assert(
       collectionPath.isValidFirestoreDocumentName,
       'invalid Firestore document path provided',

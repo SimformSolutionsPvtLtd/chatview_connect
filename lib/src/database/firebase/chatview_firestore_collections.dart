@@ -5,7 +5,7 @@ import '../../chatview_db_connection.dart';
 import '../../extensions.dart';
 import '../../models/chat_room_dm.dart';
 import '../../models/chat_room_user_dm.dart';
-import '../../models/config/chat_view_firestore_path_config.dart';
+import '../../models/config/firebase/firestore_chat_collection_name_config.dart';
 import '../../models/user_chat_dm.dart';
 import '../../models/user_chats_conversation_dm.dart';
 import 'chatview_firestore_path.dart';
@@ -19,9 +19,8 @@ abstract final class ChatViewFireStoreCollections {
 
   static final _firestoreInstance = FirebaseFirestore.instance;
 
-  static ChatViewFireStoreCollectionNameConfig
-      get _chatViewFireStorePathConfig =>
-          ChatViewDbConnection.instance.getFirestoreCollectionPathConfig;
+  static FirestoreChatCollectionNameConfig get _chatCollectionNameConfig =>
+      ChatViewDbConnection.instance.getFirestoreChatCollectionNameConfig;
 
   /// Collection reference for messages.
   ///
@@ -36,7 +35,7 @@ abstract final class ChatViewFireStoreCollections {
   static CollectionReference<Message?> messageCollection([
     String? documentPath,
   ]) {
-    final messagesCollection = _chatViewFireStorePathConfig.messages;
+    final messagesCollection = _chatCollectionNameConfig.messages;
     final collectionRef = documentPath == null
         ? _firestoreInstance.collection(messagesCollection)
         : _firestoreInstance.doc(documentPath).collection(messagesCollection);
@@ -101,7 +100,7 @@ abstract final class ChatViewFireStoreCollections {
   static CollectionReference<ChatRoomDm?> chatCollection([
     String? documentPath,
   ]) {
-    final chatCollection = _chatViewFireStorePathConfig.chats;
+    final chatCollection = _chatCollectionNameConfig.chats;
 
     final collectionRef = documentPath == null
         ? _firestoreInstance.collection(chatCollection)
@@ -149,7 +148,7 @@ abstract final class ChatViewFireStoreCollections {
   static CollectionReference<ChatUser?> usersCollection([
     String? documentPath,
   ]) {
-    final usersCollection = _chatViewFireStorePathConfig.users;
+    final usersCollection = _chatCollectionNameConfig.users;
 
     final collectionRef = documentPath == null
         ? _firestoreInstance.collection(usersCollection)
@@ -247,7 +246,7 @@ abstract final class ChatViewFireStoreCollections {
     required String userId,
     String? documentPath,
   }) {
-    final userChatsCollection = _chatViewFireStorePathConfig.userChats;
+    final userChatsCollection = _chatCollectionNameConfig.userChats;
     final collection = documentPath == null
         ? _firestoreInstance.collection(userChatsCollection)
         : _firestoreInstance.doc(documentPath).collection(userChatsCollection);
@@ -290,7 +289,7 @@ abstract final class ChatViewFireStoreCollections {
   static CollectionReference<UserChatDm?> userChatCollection({
     String? documentPath,
   }) {
-    final userChatsCollection = _chatViewFireStorePathConfig.userChats;
+    final userChatsCollection = _chatCollectionNameConfig.userChats;
     final collection = documentPath == null
         ? _firestoreInstance.collection(userChatsCollection)
         : _firestoreInstance.doc(documentPath).collection(userChatsCollection);

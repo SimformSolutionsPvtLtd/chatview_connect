@@ -17,11 +17,13 @@ Future<void> main() async {
       nameKey: 'first_name',
       profilePhotoKey: 'avatar',
     ),
-    firestoreCollectionNameConfig: ChatViewFireStoreCollectionNameConfig(
-      users: 'app_users',
-    ),
-    firestoreDatabasePathConfig: ChatFirestoreDatabasePathConfig(
-      userCollectionPath: 'organizations/simform',
+    cloudServiceConfig: FirebaseCloudConfig(
+      databasePathConfig: FirestoreChatDatabasePathConfig(
+        userCollectionPath: 'organizations/simform',
+      ),
+      collectionNameConfig: FirestoreChatCollectionNameConfig(
+        users: 'app_users',
+      ),
     ),
   ).setCurrentUserId(userId: '2');
   runApp(const ChatViewDbConnectionExampleApp());

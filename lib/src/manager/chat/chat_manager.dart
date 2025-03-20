@@ -384,7 +384,7 @@ final class ChatManager extends ChatController {
   ///
   /// **Parameters:**
   /// - (required) [status] The current typing status of the user.
-  Future<void> updateCurrentUserTypingStatus(TypeWriterStatus status) async {
+  Future<void> onMessageTyping(TypeWriterStatus status) async {
     if (!_isInitialized) return;
     return _database.updateChatRoomUserMetadata(
       chatId: chatRoomId,

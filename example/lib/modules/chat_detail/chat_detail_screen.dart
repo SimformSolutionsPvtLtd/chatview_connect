@@ -126,7 +126,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
               defaultSendButtonColor: primaryColor,
               textFieldConfig: TextFieldConfiguration(
                 textStyle: const TextStyle(color: Colors.black),
-                onMessageTyping: chatController.updateCurrentUserTypingStatus,
+                onMessageTyping: chatController.onMessageTyping,
               ),
               voiceRecordingConfiguration: const VoiceRecordingConfiguration(
                 backgroundColor: Colors.white,

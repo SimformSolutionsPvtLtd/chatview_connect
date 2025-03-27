@@ -5,10 +5,10 @@
 /// the chat has already been created. For group chats,
 /// `userId` field will be empty.
 ///
-/// The `UserChatsConversationDm` class is essential for handling individual
+/// The [UserChatMetadata] class is essential for handling individual
 /// or group chat conversations.
-final class UserChatsConversationDm {
-  /// Creates a [UserChatsConversationDm] instance with the specified [userId].
+final class UserChatMetadata {
+  /// Creates a [UserChatMetadata] instance with the specified [userId].
   ///
   /// **Parameters:**
   /// - (required): [userId] The unique identifier of the user
@@ -17,13 +17,13 @@ final class UserChatsConversationDm {
   /// In a one-to-one chat, the `userId` uniquely identifies that
   /// the chat has already been created. For group chats,
   /// the `userId` will be empty.
-  const UserChatsConversationDm({this.userId});
+  const UserChatMetadata({this.userId});
 
-  /// Creates a [UserChatsConversationDm] instance from a JSON object.
+  /// Creates a [UserChatMetadata] instance from a JSON object.
   ///
   /// - [json]: A [Map] containing the chat conversation data.
-  factory UserChatsConversationDm.fromJson(Map<String, dynamic> json) {
-    return UserChatsConversationDm(userId: json['user_id'].toString());
+  factory UserChatMetadata.fromJson(Map<String, dynamic> json) {
+    return UserChatMetadata(userId: json['user_id'].toString());
   }
 
   /// The unique identifier of the other user associated with
@@ -33,7 +33,7 @@ final class UserChatsConversationDm {
   /// For group chats, this value is empty.
   final String? userId;
 
-  /// Converts the [UserChatsConversationDm] instance into a JSON object.
+  /// Converts the [UserChatMetadata] instance into a JSON object.
   ///
   /// Returns a [Map] with the `user_id` field.
   Map<String, dynamic> toJson() {
@@ -42,17 +42,17 @@ final class UserChatsConversationDm {
     };
   }
 
-  /// Creates a copy of the current [UserChatsConversationDm] with
+  /// Creates a copy of the current [UserChatMetadata] with
   /// updated fields.
   ///
   /// - [userId]: The new user ID.
   /// Defaults to the current [userId] if not provided.
   ///
-  /// Returns a new [UserChatsConversationDm] instance with the updated values.
-  UserChatsConversationDm copyWith({String? userId}) {
-    return UserChatsConversationDm(userId: userId ?? this.userId);
+  /// Returns a new [UserChatMetadata] instance with the updated values.
+  UserChatMetadata copyWith({String? userId}) {
+    return UserChatMetadata(userId: userId ?? this.userId);
   }
 
   @override
-  String toString() => 'UserChatsConversationDm(${toJson()})';
+  String toString() => 'UserChatMetadata(${toJson()})';
 }

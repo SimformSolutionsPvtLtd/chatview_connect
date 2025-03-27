@@ -13,9 +13,10 @@ class ChatRoomUserActivityTile extends StatelessWidget {
     super.key,
   });
 
-  final ChatController chatController;
+  final ChatManager chatController;
   final ChatRoomType chatRoomType;
-  final ValueListenable<Map<String, ChatRoomUserDm>> usersActivitiesNotifier;
+  final ValueListenable<Map<String, ChatRoomParticipant>>
+      usersActivitiesNotifier;
 
   @override
   Widget build(BuildContext context) {

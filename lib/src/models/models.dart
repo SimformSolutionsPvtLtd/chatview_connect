@@ -1,4 +1,4 @@
-export 'chat_room_metadata_model.dart';
-export 'chat_room_user_dm.dart';
-export 'chat_view_participants_dm.dart';
+export 'chat_room_display_metadata.dart';
+export 'chat_room_metadata.dart';
+export 'chat_room_participant.dart';
 export 'message_dm.dart';

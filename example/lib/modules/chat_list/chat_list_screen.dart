@@ -103,7 +103,7 @@ class _ChatListScreenState extends State<ChatListScreen> {
   void _onSelectUser(String userId) {
     setState(() {
       currentUserId = userId;
-      ChatViewDbConnection.instance.setCurrentUserId(userId: userId);
+      ChatViewDbConnection.instance.setCurrentUserId(userId);
     });
   }
 
@@ -127,7 +127,7 @@ class _ChatListScreenState extends State<ChatListScreen> {
 
   String _getLastMessagePreview({
     required Message lastMessage,
-    required List<ChatRoomUserDm> users,
+    required List<ChatRoomParticipant> users,
     int count = 0,
   }) {
     final reactedByUserId = lastMessage.update?['reaction']?.toString() ?? '';

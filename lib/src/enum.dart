@@ -8,7 +8,7 @@ import 'storage/storage_service.dart';
 import 'typedefs.dart';
 
 /// An enumeration of databases types.
-enum ChatViewDatabaseType {
+enum ChatViewCloudService {
   /// Indicates a Firebase Database.
   firebase;
 
@@ -17,33 +17,33 @@ enum ChatViewDatabaseType {
 }
 
 /// A strongly-typed extension that provides structured access to database
-/// and storage services based on the selected [ChatViewDatabaseType].
+/// and storage services based on the selected [ChatViewCloudService].
 ///
 /// This type ensures that appropriate implementations of [DatabaseService]
 /// and [StorageService] are used depending on the selected database type.
 ///
-/// **Constructors:**
-/// - [DatabaseTypeServices]: Initializes with a specified [DatabaseService]
+/// **Parameters:**
+/// - [CloudServices]: Initializes with a specified [DatabaseService]
 ///   and [StorageService].
-/// - [DatabaseTypeServices.fromDataType]: Factory constructor that instantiates
-///   the appropriate services based on the given [ChatViewDatabaseType].
+/// - [CloudServices.fromDataType]: Factory constructor that instantiates
+///   the appropriate services based on the given [ChatViewCloudService].
 ///
 /// **Getters:**
 /// - [database]: Retrieves the database service instance.
 /// - [storage]: Retrieves the storage service instance.
-extension type const DatabaseTypeServices._(DatabaseTypeServicesRecord record) {
-  /// Creates an instance of [DatabaseTypeServices] with the given
+extension type const CloudServices._(CloudServicesRecord record) {
+  /// Creates an instance of [CloudServices] with the given
   /// [DatabaseService] and [StorageService].
-  const DatabaseTypeServices({
+  const CloudServices({
     required DatabaseService database,
     required StorageService storage,
   }) : this._((database: database, storage: storage));
 
   /// Factory constructor that returns the appropriate implementation of
-  /// [DatabaseTypeServices] based on the provided [ChatViewDatabaseType].
-  factory DatabaseTypeServices.fromDataType(ChatViewDatabaseType type) {
+  /// [CloudServices] based on the provided [ChatViewCloudService].
+  factory CloudServices.fromType(ChatViewCloudService type) {
     return switch (type) {
-      ChatViewDatabaseType.firebase => DatabaseTypeServices(
+      ChatViewCloudService.firebase => CloudServices(
           database: ChatViewFireStoreDatabase(),
           storage: ChatViewFirebaseStorage(),
         ),

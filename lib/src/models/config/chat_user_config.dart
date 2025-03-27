@@ -1,6 +1,6 @@
 import 'package:flutter_chatview_models/flutter_chatview_models.dart';
 
-/// A configurable implementation of [ChatUserModelConfig] that allows
+/// A configurable implementation of [ChatUserConfig] that allows
 /// dynamic mapping of user properties when serializing and deserializing JSON.
 ///
 /// By default, user data is stored and retrieved using standard keys such as
@@ -9,12 +9,13 @@ import 'package:flutter_chatview_models/flutter_chatview_models.dart';
 /// (e.g., `username` instead of `name`).
 /// This class provides flexibility to define custom key mappings
 /// to correctly interpret user data from various sources.
-final class ChatUserModelConfig implements ChatUserModelConfigBase {
-  /// Creates a [ChatUserModelConfig] instance with optional key mappings.
+// TODO(YASH): Change base class name
+final class ChatUserConfig implements ChatUserModelConfigBase {
+  /// Creates a [ChatUserConfig] instance with optional key mappings.
   ///
   /// If a data source uses different keys (e.g., `username` instead of `name`),
   /// those keys can be specified here to ensure correct JSON parsing.
-  const ChatUserModelConfig({
+  const ChatUserConfig({
     this.idKey,
     this.nameKey,
     this.profilePhotoKey,

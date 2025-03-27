@@ -21,10 +21,10 @@ final class ChatViewFirebaseStorage implements StorageService {
       _firebaseStorage.child(ChatViewFirebaseStorageRefs.getVoiceRef(chatId));
 
   @override
-  Future<String?> uploadDoc({
+  Future<String?> uploadMedia({
     required Message message,
     required String chatId,
-    String? uploadPath,
+    String? path,
     String? fileName,
   }) async {
     switch (message.messageType) {
@@ -32,14 +32,14 @@ final class ChatViewFirebaseStorage implements StorageService {
         return _uploadFile(
           message: message,
           ref: _imageRef(chatId),
-          uploadPath: uploadPath,
+          uploadPath: path,
           fileName: fileName,
         );
       case MessageType.voice:
         return _uploadFile(
           message: message,
           ref: _voiceRef(chatId),
-          uploadPath: uploadPath,
+          uploadPath: path,
           fileName: fileName,
         );
       case MessageType.text || MessageType.custom:
@@ -48,12 +48,12 @@ final class ChatViewFirebaseStorage implements StorageService {
   }
 
   @override
-  Future<bool> deleteDoc(Message message) async {
+  Future<bool> deleteMedia(Message message) async {
     switch (message.messageType) {
       case MessageType.image:
-        return _deleteFile(message.message.fullPath);
+        return _deleteFile(message.message.firebaseStorageDocumentPath);
       case MessageType.voice:
-        return _deleteFile(message.message.fullPath);
+        return _deleteFile(message.message.firebaseStorageDocumentPath);
       case MessageType.text || MessageType.custom:
         return false;
     }
@@ -92,6 +92,9 @@ final class ChatViewFirebaseStorage implements StorageService {
     final name = fileName ?? _getFileName(message);
     final directoryPath = uploadPath == null ? name : '$uploadPath/$name';
     final fileRef = ref.child(directoryPath);
+    // TODO(YASH): audio_waveforms currently supports only Android & iOS.
+    //  On the web, only image upload is handled.
+    //  Update this once audio_waveforms adds web support.
     if (message.messageType.isImage && kIsWeb) {
       final bytes = await http.readBytes(Uri.parse(message.message));
       await fileRef.putData(bytes);
@@ -105,24 +108,23 @@ final class ChatViewFirebaseStorage implements StorageService {
     }
   }
 
-  Future<bool> _deleteFile(String? filePath) async {
-    if (filePath == null) {
+  Future<bool> _deleteFile(String? path) async {
+    if (path == null) {
       throw Exception('chatview: Unable to get path from message');
     }
-    final imageRef = _firebaseStorage.child(filePath);
-    await imageRef.delete();
+    await _firebaseStorage.child(path).delete();
     return true;
   }
 
   @override
-  Future<bool> deleteChatMedia(String chatId) async {
+  Future<bool> deleteAllMedia(String chatId) async {
     final values = await Future.wait([
       _imageRef(chatId)
           .listAll()
-          .then((value) => _deleteReferences(value.items)),
+          .then((value) => _deleteFromReferences(value.items)),
       _voiceRef(chatId)
           .listAll()
-          .then((value) => _deleteReferences(value.items)),
+          .then((value) => _deleteFromReferences(value.items)),
     ]);
 
     final isImagesDeleted = values.firstOrNull ?? true;
@@ -130,7 +132,7 @@ final class ChatViewFirebaseStorage implements StorageService {
     return isImagesDeleted && isVoicesDeleted;
   }
 
-  Future<bool> _deleteReferences(List<Reference> references) async {
+  Future<bool> _deleteFromReferences(List<Reference> references) async {
     if (references.isEmpty) return true;
     final messagesLength = references.length;
     await Future.wait([

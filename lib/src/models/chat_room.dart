@@ -2,7 +2,7 @@ import 'package:flutter_chatview_models/flutter_chatview_models.dart';
 
 import '../enum.dart';
 import '../extensions.dart';
-import 'chat_room_user_dm.dart';
+import 'chat_room_participant.dart';
 
 /// A class that represents a chat room, whether it's a one-to-one chat
 /// or a group chat. It holds the information about the chat ID,
@@ -11,10 +11,10 @@ import 'chat_room_user_dm.dart';
 /// messages. This class also provides methods to fetch profile pictures
 /// and the chat room name.
 ///
-/// The `ChatRoomDm` class is used to manage chat room data and
-/// simplify interactions with the chat room's properties and user details.
-class ChatRoomDm {
-  /// Creates a new `ChatRoomDm` instance with the specified properties.
+/// The [ChatRoom] class is used to manage chat room data and simplify
+/// interactions with the chat room's properties and user details.
+class ChatRoom {
+  /// Creates a new [ChatRoom] instance with the specified properties.
   ///
   /// The constructor requires the `chatRoomType` parameter,
   /// which determines if the chat room is a one-to-one chat or a group chat.
@@ -40,7 +40,7 @@ class ChatRoomDm {
   /// - (optional): [groupName] The name of the group
   /// (null for one-to-one chats).
   /// - (optional): [users] The list of users in the chat room.
-  const ChatRoomDm({
+  const ChatRoom({
     required this.chatId,
     required this.chatRoomType,
     this.unreadMessagesCount = 0,
@@ -51,14 +51,14 @@ class ChatRoomDm {
     this.users,
   });
 
-  /// Converts a JSON object to a `ChatRoomDm` instance.
+  /// Converts a JSON object to a [ChatRoom] instance.
   ///
   /// This method is used to parse the data when a chat room is fetched from
   /// the backend and convert it into a usable object.
   ///
-  /// Returns a `ChatRoomDm` instance populated with data from the JSON.
-  factory ChatRoomDm.fromJson(Map<String, dynamic> json) {
-    return ChatRoomDm(
+  /// Returns a [ChatRoom] instance populated with data from the JSON.
+  factory ChatRoom.fromJson(Map<String, dynamic> json) {
+    return ChatRoom(
       chatRoomType:
           ChatRoomTypeExtension.tryParse(json['chat_room_type'].toString()) ??
               ChatRoomType.oneToOne,
@@ -90,7 +90,7 @@ class ChatRoomDm {
   final Message? lastMessage;
 
   /// A list of users in the chat room.
-  final List<ChatRoomUserDm>? users;
+  final List<ChatRoomParticipant>? users;
 
   /// The unique identifier of the chat.
   final String chatId;
@@ -144,7 +144,7 @@ class ChatRoomDm {
     };
   }
 
-  /// {@template flutter_chatview_db_connection.ChatRoomDm.usersProfilePictures}
+  /// {@template flutter_chatview_db_connection.ChatRoom.usersProfilePictures}
   /// Retrieves the profile pictures of users in the chat room as
   /// a list of URLs as strings.
   ///
@@ -163,9 +163,9 @@ class ChatRoomDm {
     ];
   }
 
-  /// Converts the `ChatRoomDm` instance to a JSON object.
+  /// Converts the [ChatRoom] instance to a JSON object.
   ///
-  /// This method is used to serialize the `ChatRoomDm` instance when sending
+  /// This method is used to serialize the [ChatRoom] instance when sending
   /// data to the backend or saving it locally.
   ///
   /// Returns a `Map<String, dynamic>` representing the chat room's data.
@@ -196,7 +196,7 @@ class ChatRoomDm {
     return data;
   }
 
-  /// Creates and Returns a copy of the current `ChatRoomDm` instance
+  /// Creates and Returns a copy of the current [ChatRoom] instance
   /// with updated fields.
   ///
   /// This method is useful when you want to update some properties of
@@ -204,18 +204,18 @@ class ChatRoomDm {
   ///
   /// It creates a new instance with the provided updates while keeping
   /// the existing values for other properties.
-  ChatRoomDm copyWith({
+  ChatRoom copyWith({
     String? chatId,
     ChatRoomType? chatRoomType,
     String? groupName,
     String? groupPhotoUrl,
     Message? lastMessage,
-    List<ChatRoomUserDm>? users,
+    List<ChatRoomParticipant>? users,
     int? unreadMessagesCount,
     String? chatRoomCreateBy,
     bool forceNullValue = false,
   }) {
-    return ChatRoomDm(
+    return ChatRoom(
       unreadMessagesCount: unreadMessagesCount ?? this.unreadMessagesCount,
       chatId: chatId ?? this.chatId,
       chatRoomType: chatRoomType ?? this.chatRoomType,
@@ -232,5 +232,5 @@ class ChatRoomDm {
   }
 
   @override
-  String toString() => '''ChatRoomDm(${toJson()})''';
+  String toString() => '''ChatRoom(${toJson()})''';
 }

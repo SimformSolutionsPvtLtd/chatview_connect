@@ -6,8 +6,8 @@ import '../enum.dart';
 import '../extensions.dart';
 
 /// A data model representing a user in a chat room.
-class ChatRoomUserDm {
-  /// Constructs a [ChatRoomUserDm] instance.
+class ChatRoomParticipant {
+  /// Constructs a [ChatRoomParticipant] instance.
   ///
   /// **Parameters:**
   /// - (required): [userId] is the unique identifier of the user.
@@ -22,7 +22,7 @@ class ChatRoomUserDm {
   /// - (required): [membershipStatusTimestamp] records the timestamp of
   /// the last membership status change, helping track when a user joined,
   /// left, or was removed.
-  const ChatRoomUserDm({
+  const ChatRoomParticipant({
     required this.role,
     required this.userId,
     required this.chatUser,
@@ -32,14 +32,14 @@ class ChatRoomUserDm {
     this.typingStatus = TypeWriterStatus.typed,
   });
 
-  /// Creates a [ChatRoomUserDm] instance from a JSON map.
+  /// Creates a [ChatRoomParticipant] instance from a JSON map.
   ///
   /// **Parameters:**
   /// - (required): [json] is a map containing the serialized data.
   ///
   /// Throws an error if required fields are missing or
   /// if data types do not match expectations.
-  factory ChatRoomUserDm.fromJson(Map<String, dynamic> json) {
+  factory ChatRoomParticipant.fromJson(Map<String, dynamic> json) {
     final chatUserData = json['chat_user'];
     final createAtJson = json[_membershipStatusTimestamp];
     final createAt = createAtJson is Timestamp
@@ -47,11 +47,11 @@ class ChatRoomUserDm {
         : createAtJson;
     json[_membershipStatusTimestamp] = createAt;
 
-    return ChatRoomUserDm(
+    return ChatRoomParticipant(
       chatUser: chatUserData is Map<String, dynamic>
           ? ChatUser.fromJson(
               chatUserData,
-              config: ChatViewDbConnection.instance.getChatUserModelConfig,
+              config: ChatViewDbConnection.instance.getChatUserConfig,
             )
           : null,
       userId: json['user_id']?.toString() ?? '',
@@ -108,7 +108,7 @@ class ChatRoomUserDm {
   /// If `null`, the exact time of the status change is unknown.
   final DateTime? membershipStatusTimestamp;
 
-  /// Converts the [ChatRoomUserDm] instance to a JSON map.
+  /// Converts the [ChatRoomParticipant] instance to a JSON map.
   ///
   /// **Note**: The [chatUser], [userActiveStatus] field is not included in
   /// `toJson` because it serves as an aggregation of multiple data streams.
@@ -142,7 +142,7 @@ class ChatRoomUserDm {
     return data;
   }
 
-  /// Creates a copy of the current [ChatRoomUserDm] instance with
+  /// Creates a copy of the current [ChatRoomParticipant] instance with
   /// updated fields.
   ///
   /// Any field not provided will retain its current value.
@@ -159,8 +159,8 @@ class ChatRoomUserDm {
   /// of the last membership status change. If `null`, the existing
   /// timestamp is retained.
   ///
-  /// Returns a new [ChatRoomUserDm] instance with the specified updates.
-  ChatRoomUserDm copyWith({
+  /// Returns a new [ChatRoomParticipant] instance with the specified updates.
+  ChatRoomParticipant copyWith({
     Role? role,
     String? userId,
     ChatUser? chatUser,
@@ -170,7 +170,7 @@ class ChatRoomUserDm {
     DateTime? membershipStatusTimestamp,
     bool forceNullValue = false,
   }) {
-    return ChatRoomUserDm(
+    return ChatRoomParticipant(
       role: role ?? this.role,
       userId: userId ?? this.userId,
       chatUser: forceNullValue ? chatUser : chatUser ?? this.chatUser,
@@ -186,5 +186,5 @@ class ChatRoomUserDm {
   }
 
   @override
-  String toString() => 'ChatRoomUserDm(${toJson()})';
+  String toString() => 'ChatRoomParticipant(${toJson()})';
 }

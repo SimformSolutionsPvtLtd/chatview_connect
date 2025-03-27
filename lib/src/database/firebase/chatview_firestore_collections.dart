@@ -3,11 +3,12 @@ import 'package:flutter_chatview_models/flutter_chatview_models.dart';
 
 import '../../chatview_db_connection.dart';
 import '../../extensions.dart';
-import '../../models/chat_room_dm.dart';
-import '../../models/chat_room_user_dm.dart';
+import '../../models/chat_room.dart';
+import '../../models/chat_room_participant.dart';
+import '../../models/config/chat_user_config.dart';
 import '../../models/config/firebase/firestore_chat_collection_name_config.dart';
-import '../../models/user_chat_dm.dart';
-import '../../models/user_chats_conversation_dm.dart';
+import '../../models/user_chat_metadata.dart';
+import '../../models/user_metadata.dart';
 import 'chatview_firestore_path.dart';
 
 /// Provides Firestore collections.
@@ -21,6 +22,9 @@ abstract final class ChatViewFireStoreCollections {
 
   static FirestoreChatCollectionNameConfig get _chatCollectionNameConfig =>
       ChatViewDbConnection.instance.getFirestoreChatCollectionNameConfig;
+
+  static ChatUserConfig? get _chatUserConfig =>
+      ChatViewDbConnection.instance.getChatUserConfig;
 
   /// Collection reference for messages.
   ///
@@ -97,7 +101,7 @@ abstract final class ChatViewFireStoreCollections {
   /// the same path will be used to retrieve chat rooms.
   ///
   /// Example: 'organizations/simform/chats'
-  static CollectionReference<ChatRoomDm?> chatCollection([
+  static CollectionReference<ChatRoom?> chatCollection([
     String? documentPath,
   ]) {
     final chatCollection = _chatCollectionNameConfig.chats;
@@ -112,21 +116,21 @@ abstract final class ChatViewFireStoreCollections {
     );
   }
 
-  static ChatRoomDm? _chatFromFirestore(
+  static ChatRoom? _chatFromFirestore(
     DocumentSnapshot<Map<String, dynamic>> snapshot,
     SnapshotOptions? options,
   ) {
     final data = snapshot.data();
     if (data == null) return null;
     try {
-      return ChatRoomDm.fromJson(data).copyWith(chatId: snapshot.id);
+      return ChatRoom.fromJson(data).copyWith(chatId: snapshot.id);
     } catch (_) {
       return null;
     }
   }
 
   static Map<String, dynamic> _chatToFirestore(
-    ChatRoomDm? chat,
+    ChatRoom? chat,
     SetOptions? options,
   ) {
     // `includeChatId` is set to false to exclude `chat_id` from the JSON,
@@ -145,7 +149,7 @@ abstract final class ChatViewFireStoreCollections {
   /// same path used to retrieve the users.
   ///
   /// Example: 'users/user1'
-  static CollectionReference<ChatUser?> usersCollection([
+  static CollectionReference<ChatUser?> userCollection([
     String? documentPath,
   ]) {
     final usersCollection = _chatCollectionNameConfig.users;
@@ -167,10 +171,7 @@ abstract final class ChatViewFireStoreCollections {
     final data = snapshot.data() ?? {};
     if (data.isEmpty) return null;
     try {
-      return ChatUser.fromJson(
-        data,
-        config: ChatViewDbConnection.instance.getChatUserModelConfig,
-      );
+      return ChatUser.fromJson(data, config: _chatUserConfig);
     } catch (_) {
       return null;
     }
@@ -180,10 +181,7 @@ abstract final class ChatViewFireStoreCollections {
     ChatUser? user,
     SetOptions? options,
   ) {
-    return user?.toJson(
-          config: ChatViewDbConnection.instance.getChatUserModelConfig,
-        ) ??
-        {};
+    return user?.toJson(config: _chatUserConfig) ?? {};
   }
 
   /// Collection reference for user in chat room collection.
@@ -196,7 +194,7 @@ abstract final class ChatViewFireStoreCollections {
   /// and same path used to retrieve the users.
   ///
   /// Example: 'chat/room123/messages/users'
-  static CollectionReference<ChatRoomUserDm?> chatUsersCollection([
+  static CollectionReference<ChatRoomParticipant?> chatParticipantsCollection([
     String? documentPath,
   ]) {
     const chatUsersCollection = ChatViewFireStorePath.users;
@@ -206,23 +204,23 @@ abstract final class ChatViewFireStoreCollections {
         : _firestoreInstance.doc(documentPath).collection(chatUsersCollection);
 
     return chatUsersCollectionRef.withConverter(
-      fromFirestore: _chatUserFromFirestore,
-      toFirestore: _chatUserToFirestore,
+      fromFirestore: _chatParticipantsFromFirestore,
+      toFirestore: _chatParticipantsToFirestore,
     );
   }
 
-  static ChatRoomUserDm? _chatUserFromFirestore(
+  static ChatRoomParticipant? _chatParticipantsFromFirestore(
     DocumentSnapshot<Map<String, dynamic>> snapshot,
     SnapshotOptions? options,
   ) {
     final data = snapshot.data();
     return data == null
         ? null
-        : ChatRoomUserDm.fromJson(data).copyWith(userId: snapshot.id);
+        : ChatRoomParticipant.fromJson(data).copyWith(userId: snapshot.id);
   }
 
-  static Map<String, dynamic> _chatUserToFirestore(
-    ChatRoomUserDm? user,
+  static Map<String, dynamic> _chatParticipantsToFirestore(
+    ChatRoomParticipant? user,
     SetOptions? options,
   ) {
     // `includeUserId` is set to false to exclude `user_id` from the JSON,
@@ -241,8 +239,7 @@ abstract final class ChatViewFireStoreCollections {
   /// and same path used to retrieve the user chats.
   ///
   /// Example: 'user_chats/user1/chats/chat1'
-  static CollectionReference<UserChatsConversationDm?>
-      userChatsConversationCollection({
+  static CollectionReference<UserChatMetadata?> userConversationsCollection({
     required String userId,
     String? documentPath,
   }) {
@@ -254,23 +251,21 @@ abstract final class ChatViewFireStoreCollections {
         .doc(userId)
         .collection(ChatViewFireStorePath.chats)
         .withConverter(
-          fromFirestore: _userChatsConvFromFirestore,
-          toFirestore: _userChatsConvToFirestore,
+          fromFirestore: _userConvFromFirestore,
+          toFirestore: _userConvToFirestore,
         );
   }
 
-  static UserChatsConversationDm? _userChatsConvFromFirestore(
+  static UserChatMetadata? _userConvFromFirestore(
     DocumentSnapshot<Map<String, dynamic>> snapshot,
     SnapshotOptions? options,
   ) {
     final data = snapshot.data();
-    return data?.isEmpty ?? true
-        ? null
-        : UserChatsConversationDm.fromJson(data!);
+    return data?.isEmpty ?? true ? null : UserChatMetadata.fromJson(data!);
   }
 
-  static Map<String, dynamic> _userChatsConvToFirestore(
-    UserChatsConversationDm? userChatsConv,
+  static Map<String, dynamic> _userConvToFirestore(
+    UserChatMetadata? userChatsConv,
     SetOptions? options,
   ) {
     return userChatsConv?.toJson() ?? {};
@@ -286,7 +281,7 @@ abstract final class ChatViewFireStoreCollections {
   /// and same path used to retrieve the user chats.
   ///
   /// Example: 'user_chats/user1'
-  static CollectionReference<UserChatDm?> userChatCollection({
+  static CollectionReference<UserMetadata?> userChatCollection({
     String? documentPath,
   }) {
     final userChatsCollection = _chatCollectionNameConfig.userChats;
@@ -299,16 +294,16 @@ abstract final class ChatViewFireStoreCollections {
     );
   }
 
-  static UserChatDm? _userChatFromFirestore(
+  static UserMetadata? _userChatFromFirestore(
     DocumentSnapshot<Map<String, dynamic>> snapshot,
     SnapshotOptions? options,
   ) {
     final data = snapshot.data() ?? {};
-    return data.isEmpty ? null : UserChatDm.fromJson(data);
+    return data.isEmpty ? null : UserMetadata.fromJson(data);
   }
 
   static Map<String, dynamic> _userChatToFirestore(
-    UserChatDm? userChat,
+    UserMetadata? userChat,
     SetOptions? options,
   ) {
     return userChat?.toJson() ?? {};

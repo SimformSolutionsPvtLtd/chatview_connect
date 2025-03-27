@@ -1,6 +1,6 @@
 import '../cloud_service_config.dart';
-import 'chat_firestore_database_path_config.dart';
 import 'firestore_chat_collection_name_config.dart';
+import 'firestore_chat_database_path_config.dart';
 
 /// A configuration class for Firebase integration.
 ///

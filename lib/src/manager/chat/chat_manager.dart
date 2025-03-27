@@ -9,12 +9,13 @@ import '../../chatview_db_connection.dart';
 import '../../database/database_service.dart';
 import '../../enum.dart';
 import '../../extensions.dart';
-import '../../models/chat_room_dm.dart';
-import '../../models/chat_room_metadata_model.dart';
-import '../../models/chat_room_user_dm.dart';
-import '../../models/chat_view_participants_dm.dart';
-import '../../models/config/add_message_config.dart';
+import '../../models/chat_room.dart';
+import '../../models/chat_room_display_metadata.dart';
+import '../../models/chat_room_metadata.dart';
+import '../../models/chat_room_participant.dart';
 import '../../models/config/chat_controller_config.dart';
+import '../../models/config/firebase/firebase_storage_config.dart';
+import '../../models/config/message_ops_config.dart';
 import '../../storage/storage_service.dart';
 
 /// A class responsible for managing the connection to
@@ -22,8 +23,7 @@ import '../../storage/storage_service.dart';
 final class ChatManager extends ChatController {
   // Created this factory constructor to provide chat list related methods
   // along with chat room methods.
-  /// Creates an instance of [ChatManager] from a given
-  /// [DatabaseTypeServices] service.
+  /// Creates an instance of [ChatManager] from a given [CloudServices] service.
   ///
   /// This factory method initializes a new chat manager with
   /// default values and connects it to the provided database service.
@@ -42,7 +42,7 @@ final class ChatManager extends ChatController {
   ///
   /// For chat room-related operations, use
   /// `ChatViewDbConnection.instance.getChatRoomManager(...)`.
-  factory ChatManager.fromService(DatabaseTypeServices service) {
+  factory ChatManager.fromService(CloudServices service) {
     return ChatManager._(
       otherUsers: [],
       initialMessageList: [],
@@ -60,14 +60,12 @@ final class ChatManager extends ChatController {
   /// its participants and messages need to be loaded.
   ///
   /// **Parameters:**
-  /// - (required): [chatRoomId] The unique identifier of the chat room.
-  /// - (required): [initialMessageList] A list of initial messages to display
-  /// in the chat.
+  /// - (required): [id] The unique identifier of the chat room.
   /// - (required): [scrollController] A [ScrollController] to manage scrolling
   /// behavior.
-  /// - (required): [service] An instance of [DatabaseTypeServices] that
-  /// provides database and storage services.
-  /// - (required): [chatRoomParticipants] Contains details about the current
+  /// - (required): [service] An instance of [CloudServices] that provides
+  /// database and storage services.
+  /// - (required): [participants] Contains details about the current
   /// user and other participants in the chat.
   /// - (required): [config] A [ChatControllerConfig] instance that defines
   ///   chat settings such as message listening, user activity tracking, and
@@ -77,24 +75,22 @@ final class ChatManager extends ChatController {
   /// A fully initialized [ChatManager] instance with the provided
   /// chat room details.
   factory ChatManager.fromChatRoomId({
-    required String chatRoomId,
-    required List<Message> initialMessageList,
+    required String id,
+    required CloudServices service,
     required ScrollController scrollController,
-    required DatabaseTypeServices service,
-    required ChatViewParticipantsDm chatRoomParticipants,
+    required ChatRoomMetadata participants,
     required ChatControllerConfig config,
   }) {
     return ChatManager._(
       storage: service.storage,
       database: service.database,
       scrollController: scrollController,
-      initialMessageList: initialMessageList,
-      currentUser: chatRoomParticipants.currentUser,
-      otherUsers: chatRoomParticipants.otherUsers,
+      currentUser: participants.currentUser,
+      otherUsers: participants.otherUsers,
     )
       .._config = config
-      .._chatRoomId = chatRoomId
-      .._currentChatRoomInfo = chatRoomParticipants
+      .._chatRoomId = id
+      .._currentChatRoomMetadata = participants
       .._isChatRoomCreated = true
       .._init();
   }
@@ -112,12 +108,10 @@ final class ChatManager extends ChatController {
   /// chat.
   /// - (required): [otherUsers] A list of users who will participate in
   /// the chat.
-  /// - (required): [initialMessageList] A list of initial messages to display
-  /// in the chat.
   /// - (required): [scrollController] A [ScrollController] to manage scrolling
   /// behavior.
-  /// - (required): [service] An instance of [DatabaseTypeServices] that
-  /// provides database and storage services.
+  /// - (required): [service] An instance of [CloudServices] that provides
+  /// database and storage services.
   /// - (required): [config] A [ChatControllerConfig] instance that defines
   ///   chat settings such as message listening, user activity tracking, and
   ///   metadata updates.
@@ -137,19 +131,18 @@ final class ChatManager extends ChatController {
   ///
   /// **Returns:**
   /// A fully initialized [ChatManager] instance.
-  factory ChatManager.fromUsers({
-    required ChatRoomType chatRoomType,
+  factory ChatManager.fromParticipants({
     required ChatUser currentUser,
+    required CloudServices service,
+    required ChatRoomType chatRoomType,
     required List<ChatUser> otherUsers,
-    required List<Message> initialMessageList,
     required ScrollController scrollController,
-    required DatabaseTypeServices service,
     required ChatControllerConfig config,
     String? chatRoomId,
     String? groupName,
     String? groupProfile,
   }) {
-    final chatRoomParticipants = ChatViewParticipantsDm(
+    final chatRoomParticipants = ChatRoomMetadata(
       chatRoomType: chatRoomType,
       currentUser: currentUser,
       otherUsers: otherUsers,
@@ -161,14 +154,13 @@ final class ChatManager extends ChatController {
       storage: service.storage,
       database: service.database,
       scrollController: scrollController,
-      initialMessageList: initialMessageList,
       currentUser: currentUser,
       otherUsers: otherUsers,
     )
       .._config = config
-      .._config?.chatRoomInfo?.call(chatRoomParticipants)
+      .._config?.chatRoomMetadata?.call(chatRoomParticipants)
       .._chatRoomId = chatRoomId ?? const Uuid().v8()
-      .._currentChatRoomInfo = chatRoomParticipants
+      .._currentChatRoomMetadata = chatRoomParticipants
       .._isChatRoomCreated = chatRoomId != null
       .._init();
   }
@@ -176,21 +168,29 @@ final class ChatManager extends ChatController {
   ChatManager._({
     required DatabaseService database,
     required StorageService storage,
-    required super.initialMessageList,
     required super.scrollController,
     required super.otherUsers,
     required super.currentUser,
+    super.initialMessageList = const [],
   })  : _storage = storage,
         _database = database;
 
   final StorageService _storage;
   final DatabaseService _database;
 
+  static const FirebaseStorageConfig _storageConfig = FirebaseStorageConfig(
+    syncImage: true,
+    // TODO(Yash): Update this once the chatview supports
+    //  the network voice message URL on UI.
+    syncVoice: false,
+  );
+
   StreamSubscription<List<Message>>? _messagesStream;
-  StreamSubscription<Map<String, ChatRoomUserDm>>? _chatRoomUserStream;
-  StreamSubscription<ChatRoomMetadata>? _chatRoomStreamController;
+  StreamSubscription<Map<String, ChatRoomParticipant>>?
+      _chatRoomParticipantsStream;
+  StreamSubscription<ChatRoomDisplayMetadata>? _chatRoomDisplayMetadataStream;
   ChatControllerConfig? _config;
-  ChatViewParticipantsDm? _currentChatRoomInfo;
+  ChatRoomMetadata? _currentChatRoomMetadata;
 
   String? _chatRoomId;
 
@@ -198,14 +198,14 @@ final class ChatManager extends ChatController {
   bool _isChatRoomCreated = false;
 
   bool get _isInitialized =>
-      _chatRoomUserStream != null || _messagesStream != null;
+      _chatRoomParticipantsStream != null || _messagesStream != null;
 
-  ChatRoomType? get _chatRoomType => _currentChatRoomInfo?.chatRoomType;
+  ChatRoomType? get _chatRoomType => _currentChatRoomMetadata?.chatRoomType;
 
   String get _currentUserId {
-    final userId = ChatViewDbConnection.instance.currentUserId;
-    assert(userId?.isNotEmpty ?? false, "Current User ID can't be empty!");
-    return userId!;
+    final userId = ChatViewDbConnection.instance.currentUserId ?? '';
+    assert(userId.isNotEmpty, "Current User ID can't be empty!");
+    return userId;
   }
 
   /// The unique identifier for the chat room.
@@ -233,13 +233,13 @@ final class ChatManager extends ChatController {
 
     final syncOtherUsersInfo = _config?.syncOtherUsersInfo ?? true;
 
-    final chatViewParticipants = _currentChatRoomInfo;
+    final chatViewParticipants = _currentChatRoomMetadata;
     if (chatViewParticipants == null) return;
     final chatRoomType = chatViewParticipants.chatRoomType;
-    if (_config?.onChatRoomMetadataChanges
+    if (_config?.onChatRoomDisplayMetadataChange
         case final metadataChangesCallback?) {
-      _chatRoomStreamController = _database
-          .getChatRoomMetadataStream(
+      _chatRoomDisplayMetadataStream = _database
+          .getChatRoomDisplayMetadataStream(
             chatId: chatRoomId,
             chatRoomType: chatRoomType,
             userId: chatRoomType.isOneToOne
@@ -249,22 +249,22 @@ final class ChatManager extends ChatController {
           .listen(metadataChangesCallback);
     }
 
-    _chatRoomUserStream = _database
+    _chatRoomParticipantsStream = _database
         .getChatRoomUsersMetadataStream(
           userId: _currentUserId,
           chatId: chatRoomId,
           observeUserInfoChanges: syncOtherUsersInfo,
         )
         .listen(
-          (users) => _listenChatRoomUsersActivityStream(
+          (users) => _listenChatRoomUsersActivity(
             users: users,
             syncOtherUsersInfo: syncOtherUsersInfo,
-            userActivityChangeCallback: _config?.onUsersActivityChanges,
+            onUserActivityChanges: _config?.onUsersActivityChange,
           ),
         );
 
     (chatRoomType.isGroup
-            ? _database.userAddedInGroupChatTimestamp(
+            ? _database.getUserMembershipTimestamp(
                 chatId: chatRoomId,
                 userId: _currentUserId,
               )
@@ -277,7 +277,7 @@ final class ChatManager extends ChatController {
               chatId: chatRoomId,
               sortBy: MessageSortBy.createAt,
               sortOrder: MessageSortOrder.asc,
-              startFromDateTime: startMessageTimestamp,
+              from: startMessageTimestamp,
             )
             .listen(_listenMessages);
       },
@@ -300,9 +300,8 @@ final class ChatManager extends ChatController {
     String message,
     ReplyMessage replyMessage,
     MessageType messageType,
-  ) async {
-    if (_isChatRoomCreated && !_isInitialized) return null;
-
+  ) {
+    if (_isChatRoomCreated && !_isInitialized) return Future.value();
     return onSendTapFromMessage(
       Message(
         id: const Uuid().v8(),
@@ -330,25 +329,22 @@ final class ChatManager extends ChatController {
   Future<Message?> onSendTapFromMessage(Message messageDm) async {
     if (_isChatRoomCreated && !_isInitialized) return null;
 
-    final chatRoomId = _chatRoomId;
-    if (chatRoomId == null) throw Exception("ChatRoom ID Can't be null");
-
     if (_isChatRoomCreated) {
       addMessage(messageDm);
     } else {
-      final chatViewParticipants = _currentChatRoomInfo;
-      if (chatViewParticipants == null) return null;
-      final chatRoomType = chatViewParticipants.chatRoomType;
+      final chatRoomMetadata = _currentChatRoomMetadata;
+      if (chatRoomMetadata == null) return null;
+      final chatRoomType = chatRoomMetadata.chatRoomType;
       addMessage(messageDm);
       switch (chatRoomType) {
         case ChatRoomType.oneToOne:
-          await _database.createOneToOneUserChat(
+          await _database.createOneToOneChat(
             userId: _currentUserId,
             chatRoomId: chatRoomId,
-            otherUserId: chatViewParticipants.otherUsers.first.id,
+            otherUserId: chatRoomMetadata.otherUsers.first.id,
           );
         case ChatRoomType.group:
-          final users = chatViewParticipants.otherUsers;
+          final users = chatRoomMetadata.otherUsers;
           final usersLength = users.length;
           final lastLength = usersLength - 1;
           final groupNameBuffer = StringBuffer();
@@ -363,8 +359,7 @@ final class ChatManager extends ChatController {
             userId: _currentUserId,
             chatRoomId: chatRoomId,
             participants: userIds,
-            groupName:
-                chatViewParticipants.groupName ?? groupNameBuffer.toString(),
+            groupName: chatRoomMetadata.groupName ?? groupNameBuffer.toString(),
           );
       }
       _init();
@@ -375,16 +370,16 @@ final class ChatManager extends ChatController {
       chatId: chatRoomId,
       message: messageDm,
       useAutoGeneratedId: false,
-      addMessageConfig: AddMessageConfig(
-        uploadImageToStorage: true,
-        // TODO(Yash): Update this once the chatview supports
-        //  the network voice message URL on UI.
-        uploadVoiceToStorage: false,
-        uploadDocument: (message, {fileName, uploadPath}) => _storage.uploadDoc(
+      messageOpsConfig: MessageOpsConfig(
+        syncImageWithStorage: _storageConfig.syncImage,
+        syncVoiceWithStorage: _storageConfig.syncVoice,
+        onDeleteMedia: _storage.deleteMedia,
+        onUploadMedia: (message, {fileName, uploadPath}) =>
+            _storage.uploadMedia(
           message: message,
           chatId: chatRoomId,
           fileName: fileName,
-          uploadPath: uploadPath,
+          path: uploadPath,
         ),
       ),
     );
@@ -394,8 +389,8 @@ final class ChatManager extends ChatController {
   ///
   /// **Parameters:**
   /// - (required) [status] The current typing status of the user.
-  Future<void> onMessageTyping(TypeWriterStatus status) async {
-    if (!_isInitialized) return;
+  Future<void> onMessageTyping(TypeWriterStatus status) {
+    if (!_isInitialized) return Future.value();
     return _database.updateChatRoomUserMetadata(
       userId: _currentUserId,
       chatId: chatRoomId,
@@ -407,13 +402,13 @@ final class ChatManager extends ChatController {
   ///
   /// **Parameters:**
   /// - (required): [message] The message whose status needs to be updated.
-  Future<void> onMessageRead(Message message) async {
-    if (!_isInitialized) return;
+  Future<void> onMessageRead(Message message) {
+    if (!_isInitialized) return Future.value();
     return _database.updateMessage(
       userId: _currentUserId,
       chatId: chatRoomId,
       message: message,
-      messageStatus: message.status,
+      status: message.status,
     );
   }
 
@@ -421,38 +416,24 @@ final class ChatManager extends ChatController {
   ///
   /// **Parameters:**
   /// - (required): [message] The message that is being unsent.
-  Future<bool> onUnsendTap(Message message) async {
-    if (!_isInitialized) return false;
-
-    final initialMessageList = this.initialMessageList;
-
-    final length = initialMessageList.length;
-
-    final lastMessage = length > 0 ? initialMessageList[length - 1] : null;
-
-    final isDeleted = await _database.deleteMessage(
+  Future<bool> onUnsendTap(Message message) {
+    if (!_isInitialized) return Future.value(false);
+    return _database.deleteMessage(
       chatId: chatRoomId,
       message: message,
-      deleteImageFromStorage: true,
-      deleteVoiceFromStorage: false,
-      onDeleteDocument: _storage.deleteDoc,
-    );
-
-    final isLastMessage = message.id == lastMessage?.id;
-
-    if (isLastMessage && isDeleted) {
-      final secondLastMessage =
-          length > 1 ? initialMessageList[length - 2] : null;
-
-      if (!(secondLastMessage == null && (_chatRoomType?.isGroup ?? false))) {
-        return _database.updateChatRoom(
+      messageConfig: MessageOpsConfig(
+        syncImageWithStorage: _storageConfig.syncImage,
+        syncVoiceWithStorage: _storageConfig.syncVoice,
+        onDeleteMedia: _storage.deleteMedia,
+        onUploadMedia: (message, {fileName, uploadPath}) =>
+            _storage.uploadMedia(
+          message: message,
           chatId: chatRoomId,
-          lastMessage: secondLastMessage,
-        );
-      }
-    }
-
-    return isDeleted;
+          fileName: fileName,
+          path: uploadPath,
+        ),
+      ),
+    );
   }
 
   /// Updates the reaction of a user on a message with the selected emoji.
@@ -460,14 +441,14 @@ final class ChatManager extends ChatController {
   /// **Parameters:**
   /// - (required): [message] The message to which the user is reacting.
   /// - (required): [emoji] The emoji representing the user's reaction.
-  Future<void> userReactionCallback(Message message, String emoji) async {
-    if (!_isInitialized) return;
+  Future<void> userReactionCallback(Message message, String emoji) {
+    if (!_isInitialized) return Future.value();
     final userId = _currentUserId;
     return _database.updateMessage(
       userId: userId,
       message: message,
       chatId: chatRoomId,
-      userReaction: (userId: userId, emoji: emoji),
+      reaction: (userId: userId, emoji: emoji),
     );
   }
 
@@ -480,8 +461,8 @@ final class ChatManager extends ChatController {
   Future<bool> updateGroupChat({
     String? groupName,
     String? groupProfilePic,
-  }) async {
-    if (!_isInitialized) return false;
+  }) {
+    if (!_isInitialized) return Future.value(false);
     return _database.updateGroupChat(
       chatId: chatRoomId,
       groupName: groupName,
@@ -494,8 +475,8 @@ final class ChatManager extends ChatController {
     required String userId,
     required Role role,
     required bool includeAllChatHistory,
-  }) async {
-    if (!_isInitialized) return false;
+  }) {
+    if (!_isInitialized) return Future.value(false);
     return _database.addUserInGroup(
       role: role,
       userId: userId,
@@ -514,15 +495,14 @@ final class ChatManager extends ChatController {
   /// if the user was successfully removed, otherwise `false`.
   Future<bool> removeUserFromGroup({
     required String userId,
-    bool deleteGroupIfSingleUser = true,
-  }) async {
-    if (!_isInitialized) return false;
+  }) {
+    if (!_isInitialized) return Future.value(false);
     return _database.removeUserFromGroup(
       chatId: chatRoomId,
       removeUserId: userId,
       userId: _currentUserId,
-      deleteGroupIfSingleUser: deleteGroupIfSingleUser,
-      deleteChatDocsFromStorage: _storage.deleteChatMedia,
+      deleteGroupIfSingleUser: true,
+      deleteChatMedia: _storage.deleteAllMedia,
     );
   }
 
@@ -531,39 +511,39 @@ final class ChatManager extends ChatController {
   ///
   /// Returns a [Future] that resolves to `true`
   /// if the user successfully left the group, otherwise `false`.
-  Future<bool> leaveFromGroup() async {
-    if (!_isInitialized) return false;
+  Future<bool> leaveFromGroup() {
+    if (!_isInitialized) return Future.value(false);
     final currentUserId = _currentUserId;
     return _database.removeUserFromGroup(
       userId: currentUserId,
       chatId: chatRoomId,
       removeUserId: currentUserId,
       deleteGroupIfSingleUser: true,
-      deleteChatDocsFromStorage: _storage.deleteChatMedia,
+      deleteChatMedia: _storage.deleteAllMedia,
     );
   }
 
-  void _listenChatRoomUsersActivityStream({
-    required Map<String, ChatRoomUserDm> users,
+  void _listenChatRoomUsersActivity({
+    required Map<String, ChatRoomParticipant> users,
     required bool syncOtherUsersInfo,
-    ValueSetter<Map<String, ChatRoomUserDm>>? userActivityChangeCallback,
+    ValueSetter<Map<String, ChatRoomParticipant>>? onUserActivityChanges,
   }) {
-    if (syncOtherUsersInfo) _listenChatRoomUsersInfoChanges(users);
-    _listenChatRoomUsersActivities(users);
-    if (userActivityChangeCallback case final callback?) callback(users);
+    if (syncOtherUsersInfo) _handleUsersMetadataChanges(users);
+    _handleUserTypingStatus(users);
+    if (onUserActivityChanges case final callback?) callback(users);
   }
 
   // TODO(YASH): Typing indicators are only handled for one-to-one chats
   //  because ChatView doesn't support showing profile pictures for multiple
   //  users typing in group chats.
-  void _listenChatRoomUsersActivities(Map<String, ChatRoomUserDm> users) {
+  void _handleUserTypingStatus(Map<String, ChatRoomParticipant> users) {
     final isOneToOneChat = _chatRoomType?.isOneToOne ?? true;
     if (isOneToOneChat) {
       setTypingIndicator = users.values.first.typingStatus.isTyping;
     }
   }
 
-  void _listenChatRoomUsersInfoChanges(Map<String, ChatRoomUserDm> users) {
+  void _handleUsersMetadataChanges(Map<String, ChatRoomParticipant> users) {
     final chatUsers = users.values.toList();
     final usersLength = chatUsers.length;
 
@@ -572,7 +552,7 @@ final class ChatManager extends ChatController {
       if (chatUser == null) continue;
       updateOtherUser(chatUser);
     }
-    // TODO(YASH): Rebuild chatview once the user details udapted.
+    // TODO(YASH): Rebuild chatview once the user details updated.
   }
 
   // TODO(YASH): Use unmodifiable list for better performance
@@ -588,8 +568,8 @@ final class ChatManager extends ChatController {
         userId: _currentUserId,
       );
 
-  /// {@macro flutter_chatview_db_connection.DatabaseService.getChats}
-  Stream<List<ChatRoomDm>> getChats({
+  /// {@macro flutter_chatview_db_connection.DatabaseService.getChatsStream}
+  Stream<List<ChatRoom>> getChats({
     ChatSortBy sortBy = ChatSortBy.newestFirst,
     bool includeUnreadMessagesCount = true,
     bool includeEmptyChats = true,
@@ -603,8 +583,8 @@ final class ChatManager extends ChatController {
         limit: limit,
       );
 
-  /// {@macro flutter_chatview_db_connection.DatabaseService.createOneToOneUserChat}
-  Future<String?> createChat(String userId) => _database.createOneToOneUserChat(
+  /// {@macro flutter_chatview_db_connection.DatabaseService.createOneToOneChat}
+  Future<String?> createChat(String userId) => _database.createOneToOneChat(
         userId: _currentUserId,
         otherUserId: userId,
       );
@@ -662,7 +642,7 @@ final class ChatManager extends ChatController {
   Future<bool> deleteChat(String chatId) {
     return _database.deleteChat(
       chatId: chatId,
-      deleteMediaFromStorage: _storage.deleteChatMedia,
+      deleteMedia: _storage.deleteAllMedia,
     );
   }
 
@@ -675,15 +655,15 @@ final class ChatManager extends ChatController {
   @override
   void dispose() {
     _chatRoomId = null;
-    _chatRoomStreamController?.cancel();
-    _chatRoomStreamController = null;
-    _chatRoomUserStream?.cancel();
-    _chatRoomUserStream = null;
+    _chatRoomDisplayMetadataStream?.cancel();
+    _chatRoomDisplayMetadataStream = null;
+    _chatRoomParticipantsStream?.cancel();
+    _chatRoomParticipantsStream = null;
     _messagesStream?.cancel();
     _messagesStream = null;
     _config = null;
     _isChatRoomCreated = false;
-    _currentChatRoomInfo = null;
+    _currentChatRoomMetadata = null;
     super.dispose();
   }
 }

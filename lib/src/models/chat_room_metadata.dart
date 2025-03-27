@@ -2,7 +2,7 @@ import 'package:flutter_chatview_models/flutter_chatview_models.dart';
 
 import '../enum.dart';
 import '../extensions.dart';
-import 'chat_room_metadata_model.dart';
+import 'chat_room_display_metadata.dart';
 
 /// A data model representing the participants in a chat room.
 ///
@@ -11,8 +11,8 @@ import 'chat_room_metadata_model.dart';
 /// the other participants in the chat. It also includes details about
 /// the chat room type (whether it’s a one-to-one or a group chat),
 /// along with the group name and photo (if applicable).
-final class ChatViewParticipantsDm {
-  /// Constructs a new [ChatViewParticipantsDm] instance with
+final class ChatRoomMetadata {
+  /// Constructs a new [ChatRoomMetadata] instance with
   /// the specified parameters.
   ///
   /// This constructor requires the `chatRoomType`, `currentUser`,
@@ -31,7 +31,7 @@ final class ChatViewParticipantsDm {
   /// (null for one-to-one chats).
   /// - (optional): [groupPhotoUrl] The URL of the group photo
   /// (null for one-to-one chats).
-  const ChatViewParticipantsDm({
+  const ChatRoomMetadata({
     required this.chatRoomType,
     required this.currentUser,
     required this.otherUsers,
@@ -58,7 +58,7 @@ final class ChatViewParticipantsDm {
   /// For one-to-one chats, this is `null`.
   final String? groupPhotoUrl;
 
-  /// {@template flutter_chatview_db_connection.ChatViewParticipantsDm.usersProfilePictures}
+  /// {@template flutter_chatview_db_connection.ChatRoomMetadata.usersProfilePictures}
   /// Retrieves the profile pictures of users in the chat room as
   /// a list of URLs as strings.
   ///
@@ -91,7 +91,7 @@ final class ChatViewParticipantsDm {
   ///   - The `chatName` is the group name. If unavailable, a comma-separated
   ///   list of user names is used.
   ///   - The `chatProfilePhoto` is the group photo URL, if available.
-  ChatRoomMetadata get metadata {
+  ChatRoomDisplayMetadata get metadata {
     final (chatName, chatProfile) = switch (chatRoomType) {
       ChatRoomType.oneToOne => (
           otherUsers.firstOrNull?.name ?? 'Unknown User',
@@ -102,10 +102,13 @@ final class ChatViewParticipantsDm {
           groupPhotoUrl,
         ),
     };
-    return ChatRoomMetadata(chatName: chatName, chatProfilePhoto: chatProfile);
+    return ChatRoomDisplayMetadata(
+      chatName: chatName,
+      chatProfilePhoto: chatProfile,
+    );
   }
 
-  /// Creates a copy of the current [ChatViewParticipantsDm] instance
+  /// Creates a copy of the current [ChatRoomMetadata] instance
   /// with updated fields.
   ///
   /// Any field not provided will retain its current value.
@@ -121,16 +124,16 @@ final class ChatViewParticipantsDm {
   /// - (optional) [groupPhotoUrl] The updated group photo URL
   /// (only applicable for group chats).
   ///
-  /// Returns a new [ChatViewParticipantsDm] instance with the
+  /// Returns a new [ChatRoomMetadata] instance with the
   /// specified updates.
-  ChatViewParticipantsDm copyWith({
+  ChatRoomMetadata copyWith({
     ChatUser? currentUser,
     List<ChatUser>? otherUsers,
     ChatRoomType? chatRoomType,
     String? groupName,
     String? groupPhotoUrl,
   }) {
-    return ChatViewParticipantsDm(
+    return ChatRoomMetadata(
       currentUser: currentUser ?? this.currentUser,
       otherUsers: otherUsers ?? this.otherUsers,
       chatRoomType: chatRoomType ?? this.chatRoomType,

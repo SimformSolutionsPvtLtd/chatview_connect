@@ -4,41 +4,41 @@ import 'package:flutter_chatview_models/flutter_chatview_models.dart';
 abstract interface class StorageService {
   const StorageService._();
 
-  /// Uploads an image or voice document from a [Message] to Cloud Storage.
+  /// Uploads an image or voice media from a [Message] to Cloud Storage.
   ///
   /// The file is stored in the specified directory path with a generated
   /// or provided file name.
   ///
-  /// Once the upload is successful, the method returns the document's URL.
+  /// Once the upload is successful, the method returns the media's URL.
   ///
   /// **Parameters:**
-  /// - (required): [message] Containing the document to upload.
+  /// - (required): [message] Containing the media to upload.
   /// - (required): [chatId] The unique identifier of the chat where the
-  /// document belongs.
-  /// - (optional): [uploadPath] Specifies the directory path in Cloud Storage
+  /// media belongs.
+  /// - (optional): [path] Specifies the directory path in Cloud Storage
   /// where the file will be stored.
-  /// - (optional): [fileName] Specifies the name of the document file.
+  /// - (optional): [fileName] Specifies the name of the media file.
   /// (including the file's extension)
   ///
   /// **Returns:** A [Future] that resolves to the download URL of the uploaded
-  /// document, or `null` if the upload fails.
+  /// media, or `null` if the upload fails.
   ///
   /// {@macro flutter_chatview_db_connection.StorageService.getFileName}
-  Future<String?> uploadDoc({
+  Future<String?> uploadMedia({
     required Message message,
     required String chatId,
-    String? uploadPath,
+    String? path,
     String? fileName,
   });
 
-  /// Deletes a document from Cloud Storage.
+  /// Deletes a media from Cloud Storage.
   ///
   /// **Parameters:**
-  /// - (required): The [Message] containing the document to be deleted.
+  /// - (required): The [Message] containing the media to be deleted.
   ///
   /// **Returns:** A [Future] that resolves to `true`
-  /// if the document is successfully deleted, otherwise `false`.
-  Future<bool> deleteDoc(Message message);
+  /// if the media is successfully deleted, otherwise `false`.
+  Future<bool> deleteMedia(Message message);
 
   /// Deletes all documents related to the specified chat, including any images
   /// or voice messages shared within the chat.
@@ -48,5 +48,5 @@ abstract interface class StorageService {
   /// will be deleted.
   ///
   /// Returns a true/false indicating whether the deletion was successful.
-  Future<bool> deleteChatMedia(String chatId);
+  Future<bool> deleteAllMedia(String chatId);
 }

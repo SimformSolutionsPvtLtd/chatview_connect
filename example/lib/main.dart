@@ -11,8 +11,8 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   ChatViewDbConnection(
-    ChatViewDatabaseType.firebase,
-    chatUserModelConfig: const ChatUserModelConfig(
+    ChatViewCloudService.firebase,
+    chatUserConfig: const ChatUserConfig(
       idKey: 'user_id',
       nameKey: 'first_name',
       profilePhotoKey: 'avatar',
@@ -25,6 +25,6 @@ Future<void> main() async {
         users: 'app_users',
       ),
     ),
-  ).setCurrentUserId(userId: '2');
+  ).setCurrentUserId('2');
   runApp(const ChatViewDbConnectionExampleApp());
 }

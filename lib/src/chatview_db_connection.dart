@@ -5,11 +5,11 @@ import 'enum.dart';
 import 'extensions.dart';
 import 'manager/chat/chat_manager.dart';
 import 'models/config/chat_controller_config.dart';
-import 'models/config/chat_user_model_config.dart';
+import 'models/config/chat_user_config.dart';
 import 'models/config/cloud_service_config.dart';
-import 'models/config/firebase/chat_firestore_database_path_config.dart';
-import 'models/config/firebase/firebase_config.dart';
+import 'models/config/firebase/firebase_cloud_config.dart';
 import 'models/config/firebase/firestore_chat_collection_name_config.dart';
+import 'models/config/firebase/firestore_chat_database_path_config.dart';
 
 /// A singleton class provides different type of database's clouds services for
 /// chat views.
@@ -22,10 +22,10 @@ final class ChatViewDbConnection {
   /// It serves as the core connection layer for handling chat related
   /// operations across different cloud providers.
   ///
-  /// - (required): [databaseType] specifies the type of cloud database service
-  /// to be used. (e.g., Firebase) to be used for chat.
+  /// - (required): [cloudServiceType] specifies the type of cloud database
+  /// service to be used. (e.g., Firebase) to be used for chat.
   ///
-  /// - (optional): [chatUserModelConfig] Customizes the serialization and
+  /// - (optional): [chatUserConfig] Customizes the serialization and
   ///   deserialization of user data.
   ///   - By default, user data is stored and retrieved using standard keys
   ///   like `id`, `name`, and `profilePhoto`.
@@ -40,8 +40,8 @@ final class ChatViewDbConnection {
   /// **Example Usage in `main.dart`:**
   /// ```dart
   /// ChatViewDbConnection(
-  ///     ChatViewDatabaseType.firebase,
-  ///     chatUserModelConfig: const ChatUserModelConfig(
+  ///     ChatViewCloudService.firebase,
+  ///     chatUserConfig: const ChatUserConfig(
   ///       idKey: 'user_id',
   ///       nameKey: 'first_name',
   ///       profilePhotoKey: 'avatar',
@@ -57,52 +57,38 @@ final class ChatViewDbConnection {
   /// );
   /// ```
   factory ChatViewDbConnection(
-    ChatViewDatabaseType databaseType, {
-    ChatUserModelConfig? chatUserModelConfig,
+    ChatViewCloudService cloudServiceType, {
+    ChatUserConfig? chatUserConfig,
     CloudServiceConfig? cloudServiceConfig,
   }) {
     if (_instance == null) {
-      final cloudConfig = cloudServiceConfig;
-      switch (databaseType) {
-        case ChatViewDatabaseType.firebase
-            when cloudConfig is FirebaseCloudConfig:
-          if (cloudConfig.databasePathConfig case final config?) {
-            _firestoreDatabasePathConfig = config;
-          }
-          if (cloudConfig.collectionNameConfig case final config?) {
-            _firestoreCollectionNameConfig = config;
-          }
-        case ChatViewDatabaseType.firebase:
-          break;
-      }
-      _chatUserModelConfig = chatUserModelConfig;
-      _instance = ChatViewDbConnection._(databaseType);
-      final service = DatabaseTypeServices.fromDataType(databaseType);
+      final cloudConfig = switch (cloudServiceType) {
+        ChatViewCloudService.firebase
+            when cloudServiceConfig is FirebaseCloudConfig =>
+          cloudServiceConfig,
+        ChatViewCloudService.firebase => null,
+      };
+      _chatUserConfig = chatUserConfig;
+      _instance = ChatViewDbConnection._(cloudServiceType, cloudConfig);
+      final service = CloudServices.fromType(cloudServiceType);
       _service = service;
     }
     return _instance!;
   }
 
-  const ChatViewDbConnection._(this._databaseType);
+  const ChatViewDbConnection._(this._cloudServiceType, this._cloudConfig);
 
-  final ChatViewDatabaseType _databaseType;
+  final ChatViewCloudService _cloudServiceType;
+
+  final CloudServiceConfig? _cloudConfig;
 
   static ChatViewDbConnection? _instance;
 
-  static DatabaseTypeServices? _service;
+  static CloudServices? _service;
 
   static String? _currentUserId;
 
-  static FirestoreChatDatabasePathConfig? _firestoreDatabasePathConfig;
-
-  /// Retrieves the current database path configuration for chat operations.
-  ///
-  /// Returns a [FirestoreChatDatabasePathConfig] object containing the paths
-  /// for user chats, chat collections, and optionally, user collections.
-  FirestoreChatDatabasePathConfig? get getFirestoreChatDatabasePathConfig =>
-      _firestoreDatabasePathConfig;
-
-  static ChatUserModelConfig? _chatUserModelConfig;
+  static ChatUserConfig? _chatUserConfig;
 
   /// Retrieves the current chat user model configuration.
   ///
@@ -111,9 +97,18 @@ final class ChatViewDbConnection {
   ///
   /// If no configuration has been set, this will return `null`,
   /// meaning default keys (`id`, `name`, `profilePhoto`) will be used.
-  ChatUserModelConfig? get getChatUserModelConfig => _chatUserModelConfig;
+  ChatUserConfig? get getChatUserConfig => _chatUserConfig;
 
-  static FirestoreChatCollectionNameConfig _firestoreCollectionNameConfig =
+  /// Retrieves the current database path configuration for chat operations.
+  ///
+  /// Returns a [FirestoreChatDatabasePathConfig] object containing the paths
+  /// for user chats, chat collections, and optionally, user collections.
+  FirestoreChatDatabasePathConfig? get getFirestoreChatDatabasePathConfig =>
+      _cloudConfig is FirebaseCloudConfig
+          ? _cloudConfig.databasePathConfig
+          : null;
+
+  static final _defaultChatCollectionNameConfig =
       FirestoreChatCollectionNameConfig();
 
   /// Retrieves the Firestore collection name configuration.
@@ -123,11 +118,15 @@ final class ChatViewDbConnection {
   /// Firestore collection names.
   ///
   /// Users can override default collection names by providing custom values.
-  FirestoreChatCollectionNameConfig get getFirestoreChatCollectionNameConfig =>
-      _firestoreCollectionNameConfig;
+  FirestoreChatCollectionNameConfig get getFirestoreChatCollectionNameConfig {
+    final collectionNameConfig = _cloudConfig is FirebaseCloudConfig
+        ? _cloudConfig.collectionNameConfig
+        : null;
+    return collectionNameConfig ?? _defaultChatCollectionNameConfig;
+  }
 
   /// The type of database that is being used.
-  ChatViewDatabaseType get databaseType => _databaseType;
+  ChatViewCloudService get cloudServiceType => _cloudServiceType;
 
   /// Returns current user's ID
   String? get currentUserId => _currentUserId;
@@ -149,7 +148,18 @@ final class ChatViewDbConnection {
   ///   perform any operations. To fully utilize chat room functionalities,
   ///   use the chat manager from
   ///   `ChatViewDbConnection.instance.getChatRoomManager()` instead.
-  ChatManager getChatManager() => ChatManager.fromService(_service!);
+  ChatManager getChatManager() {
+    assert(
+      _service != null,
+      '''
+      ChatViewDbConnection must be initialized. 
+      Example: initialize ChatViewDbConnection for firebase backend
+      ///```dart
+      /// ChatViewDbConnection(ChatViewCloudService.firebase);
+      /// ```''',
+    );
+    return ChatManager.fromService(_service!);
+  }
 
   /// Retrieves or initializes a [ChatManager] based on the provided
   /// parameters.
@@ -160,13 +170,11 @@ final class ChatViewDbConnection {
   /// - Or provide **[chatRoomId]** to retrieve an existing chat room.
   ///
   /// **Required Parameters:**
-  /// - (required): [initialMessageList] List of initial messages to display.
   /// - (required): [scrollController] Controller for managing chat scroll
   /// behavior.
   /// - (required): [config] Chat configuration settings.
   ///
   /// **Required parameters for create a new chat room:**
-  ///
   /// - (optional): [createChatRoomOnMessageSend] Whether to create a one-to-one
   /// or group chat when sending the first message.
   /// - (optional): [currentUser] The user initiating the chat.
@@ -196,7 +204,6 @@ final class ChatViewDbConnection {
   /// - Leaving a group
   /// - Updating the group name
   Future<ChatManager> getChatRoomManager({
-    required List<Message> initialMessageList,
     required ScrollController scrollController,
     required ChatControllerConfig config,
     bool createChatRoomOnMessageSend = false,
@@ -222,13 +229,11 @@ final class ChatViewDbConnection {
         currentUser: tempCurrentUser,
         chatRoomType: tempChatRoomType,
         scrollController: scrollController,
-        initialMessageList: initialMessageList,
         createChatRoomOnMessageSend: createChatRoomOnMessageSend,
       );
     } else if (tempChatRoomId != null) {
       return _getChatManagerByChatRoomId(
         chatRoomId: tempChatRoomId,
-        initialMessageList: initialMessageList,
         scrollController: scrollController,
         config: config,
       );
@@ -249,8 +254,6 @@ final class ChatViewDbConnection {
   /// **Parameters:**
   /// - (required): [chatRoomId] The unique identifier of the chat room
   ///   to initialize.
-  /// - (required): [initialMessageList] A list of initial messages to
-  ///   display in the chat.
   /// - (optional): [scrollController] A [ScrollController] for managing
   ///   scroll behavior within the chat.
   /// - (optional): [config]:A [ChatControllerConfig] instance that
@@ -275,24 +278,24 @@ final class ChatViewDbConnection {
   /// - An [Exception] if no participants are found for the specified chat room.
   Future<ChatManager> _getChatManagerByChatRoomId({
     required String chatRoomId,
-    required List<Message> initialMessageList,
     required ScrollController scrollController,
     required ChatControllerConfig config,
   }) async {
     final userId = _currentUserId ?? '';
     if (userId.isEmpty) throw Exception("Current User ID can't be empty!");
     if (chatRoomId.isEmpty) throw Exception("Chat Room ID can't be empty!");
-    final chatRoomParticipants = await _service?.database
-        .getChatRoomParticipants(chatId: chatRoomId, userId: userId);
+    final chatRoomParticipants = await _service?.database.getChatRoomMetadata(
+      chatId: chatRoomId,
+      userId: userId,
+    );
     if (chatRoomParticipants == null) throw Exception('No Users Found!');
-    config.chatRoomInfo?.call(chatRoomParticipants);
+    config.chatRoomMetadata?.call(chatRoomParticipants);
     return ChatManager.fromChatRoomId(
       config: config,
-      chatRoomId: chatRoomId,
+      id: chatRoomId,
       scrollController: scrollController,
-      initialMessageList: initialMessageList,
-      chatRoomParticipants: chatRoomParticipants,
-      service: DatabaseTypeServices.fromDataType(databaseType),
+      participants: chatRoomParticipants,
+      service: CloudServices.fromType(cloudServiceType),
     );
   }
 
@@ -317,7 +320,6 @@ final class ChatViewDbConnection {
   /// group.
   /// - (required): [currentUser] The user initiating or joining the chat.
   /// - (required): [otherUsers] A list of users participating in the chat.
-  /// - (required): [initialMessageList] A list of initial messages to display.
   /// - (required): [scrollController] Manages scroll behavior within the chat.
   /// - (required): [config] A [ChatControllerConfig] instance that defines
   /// settings for message listening, user activity tracking, and metadata
@@ -344,7 +346,6 @@ final class ChatViewDbConnection {
     required ChatRoomType chatRoomType,
     required ChatUser currentUser,
     required List<ChatUser> otherUsers,
-    required List<Message> initialMessageList,
     required ScrollController scrollController,
     required ChatControllerConfig config,
     bool createChatRoomOnMessageSend = false,
@@ -355,7 +356,7 @@ final class ChatViewDbConnection {
     if (userId.isEmpty) throw Exception("Current User ID can't be empty!");
     if (otherUsers.isEmpty) throw Exception("Other Users can't be empty!");
     if (chatRoomType.isOneToOne) {
-      final chatRoomID = await _service?.database.isOneToOneChatExists(
+      final chatRoomID = await _service?.database.findOneToOneChatRoom(
         userId: userId,
         otherUserId: otherUsers.first.id,
       );
@@ -364,7 +365,6 @@ final class ChatViewDbConnection {
           config: config,
           chatRoomId: chatRoomId,
           scrollController: scrollController,
-          initialMessageList: initialMessageList,
         );
       }
     }
@@ -374,7 +374,7 @@ final class ChatViewDbConnection {
     if (!createChatRoomOnMessageSend) {
       switch (chatRoomType) {
         case ChatRoomType.oneToOne:
-          chatRoomId = await _service?.database.createOneToOneUserChat(
+          chatRoomId = await _service?.database.createOneToOneChat(
             userId: userId,
             otherUserId: otherUsers.first.id,
           );
@@ -388,7 +388,7 @@ final class ChatViewDbConnection {
       }
     }
 
-    return ChatManager.fromUsers(
+    return ChatManager.fromParticipants(
       config: config,
       groupName: groupName,
       otherUsers: otherUsers,
@@ -397,8 +397,7 @@ final class ChatViewDbConnection {
       groupProfile: groupProfile,
       chatRoomType: chatRoomType,
       scrollController: scrollController,
-      initialMessageList: initialMessageList,
-      service: DatabaseTypeServices.fromDataType(databaseType),
+      service: CloudServices.fromType(cloudServiceType),
     );
   }
 
@@ -407,7 +406,7 @@ final class ChatViewDbConnection {
   /// *Note: Ensures the instance is initialized before accessing it.
   /// Example:
   /// ``` dart
-  /// ChatViewDbConnection(ChatViewDatabaseType.firebase);
+  /// ChatViewDbConnection(ChatViewCloudService.firebase);
   /// ```
   static ChatViewDbConnection get instance {
     assert(
@@ -416,14 +415,14 @@ final class ChatViewDbConnection {
       ChatViewDbConnection must be initialized. 
       Example: initialize ChatViewDbConnection for firebase backend
       ///```dart
-      /// ChatViewDbConnection(ChatViewDatabaseType.firebase);
+      /// ChatViewDbConnection(ChatViewCloudService.firebase);
       /// ```''',
     );
     return _instance!;
   }
 
   /// To set current user's ID
-  void setCurrentUserId({required String userId}) {
+  void setCurrentUserId(String userId) {
     assert(userId.isNotEmpty, "User ID can't be empty!");
     _currentUserId = userId;
   }

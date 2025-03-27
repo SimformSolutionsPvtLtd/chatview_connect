@@ -31,21 +31,20 @@ class ChatDetailScreen extends StatefulWidget {
 
 class _ChatDetailScreenState extends State<ChatDetailScreen> {
   ChatManager? _chatController;
-  ChatViewParticipantsDm? _chatRoomInfo;
+  ChatRoomMetadata? _chatRoomMetadata;
   final _scrollController = ScrollController();
-  final _initialMessageList = <Message>[];
 
   late final _config = ChatControllerConfig(
     syncOtherUsersInfo: true,
-    chatRoomInfo: (chatRoom) => _chatRoomInfo = chatRoom,
-    onUsersActivityChanges: _listenUsersActivityChanges,
-    onChatRoomMetadataChanges: _listenChatRoomMetadataChanges,
+    onUsersActivityChange: _listenUsersActivityChanges,
+    chatRoomMetadata: (metadata) => _chatRoomMetadata = metadata,
+    onChatRoomDisplayMetadataChange: _listenChatRoomDisplayMetadataChanges,
   );
 
-  final ValueNotifier<Map<String, ChatRoomUserDm>> _usersActivitiesNotifier =
-      ValueNotifier({});
+  final ValueNotifier<Map<String, ChatRoomParticipant>>
+      _usersActivitiesNotifier = ValueNotifier({});
 
-  final ValueNotifier<ChatRoomMetadata?> _chatRoomMetadataNotifier =
+  final ValueNotifier<ChatRoomDisplayMetadata?> _displayMetadataNotifier =
       ValueNotifier(null);
 
   @override
@@ -85,14 +84,16 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
               flashingCircleBrightColor: primaryColor,
             ),
             appBar: ValueListenableBuilder(
-              valueListenable: _chatRoomMetadataNotifier,
+              valueListenable: _displayMetadataNotifier,
               builder: (_, chatRoomMetadata, __) {
-                final metadata = chatRoomMetadata ?? _chatRoomInfo?.metadata;
+                final metadata =
+                    chatRoomMetadata ?? _chatRoomMetadata?.metadata;
                 return ChatDetailScreenAppBar(
                   chatName: metadata?.chatName ?? 'Unknown',
                   chatProfileUrl: metadata?.chatProfilePhoto,
-                  usersProfileURLs: _chatRoomInfo?.usersProfilePictures ?? [],
-                  actions: (_chatRoomInfo?.chatRoomType.isGroup ?? false)
+                  usersProfileURLs:
+                      _chatRoomMetadata?.usersProfilePictures ?? [],
+                  actions: (_chatRoomMetadata?.chatRoomType.isGroup ?? false)
                       ? [
                           IconButton(
                             onPressed: chatController.leaveFromGroup,
@@ -111,8 +112,8 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
                   descriptionWidget: ChatRoomUserActivityTile(
                     usersActivitiesNotifier: _usersActivitiesNotifier,
                     chatController: chatController,
-                    chatRoomType:
-                        _chatRoomInfo?.chatRoomType ?? ChatRoomType.oneToOne,
+                    chatRoomType: _chatRoomMetadata?.chatRoomType ??
+                        ChatRoomType.oneToOne,
                   ),
                 );
               },
@@ -213,7 +214,6 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
       chatRoomType: widget.chatRoomType,
       scrollController: _scrollController,
       groupProfile: widget.groupChatProfile,
-      initialMessageList: _initialMessageList,
     );
     unawaited(
       _chatController?.updateUserActiveStatus(UserActiveStatus.online),
@@ -222,12 +222,12 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
   }
 
   void _listenUsersActivityChanges(
-    Map<String, ChatRoomUserDm> usersActivities,
+    Map<String, ChatRoomParticipant> usersActivities,
   ) {
     _usersActivitiesNotifier.value = Map.of(usersActivities);
   }
 
-  void _listenChatRoomMetadataChanges(ChatRoomMetadata metadata) {
-    _chatRoomMetadataNotifier.value = metadata;
+  void _listenChatRoomDisplayMetadataChanges(ChatRoomDisplayMetadata metadata) {
+    _displayMetadataNotifier.value = metadata;
   }
 }

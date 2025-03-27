@@ -9,8 +9,8 @@
 ///
 /// The properties dynamically determine the appropriate values based
 /// on the chat type.
-class ChatRoomMetadata {
-  /// Creates an instance of [ChatRoomMetadata].
+class ChatRoomDisplayMetadata {
+  /// Creates an instance of [ChatRoomDisplayMetadata].
   ///
   /// **Parameters:**
   /// - (required): [chatName] represents the name of the chat.
@@ -20,7 +20,7 @@ class ChatRoomMetadata {
   /// - (optional): [chatProfilePhoto] represents the chat profile picture URL.
   ///   - In one-to-one chats, this is the profile picture of the other user.
   ///   - In group chats, this is the group photo URL, if available.
-  const ChatRoomMetadata({
+  const ChatRoomDisplayMetadata({
     required this.chatName,
     this.chatProfilePhoto,
   });
@@ -44,7 +44,7 @@ class ChatRoomMetadata {
 
   @override
   String toString() => '''
-  GroupChatMetadataModel(
+  ChatRoomDisplayMetadata(
     'chatName': $chatName,
     'chatProfilePhoto': $chatProfilePhoto,
   )''';

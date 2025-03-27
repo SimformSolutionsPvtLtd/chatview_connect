@@ -2,14 +2,14 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_chatview_models/flutter_chatview_models.dart';
 
 import 'enum.dart';
-import 'models/chat_room_dm.dart';
-import 'models/chat_room_user_dm.dart';
+import 'models/chat_room.dart';
+import 'models/chat_room_participant.dart';
 import 'typedefs.dart';
 
 /// Extension methods for the `String` class.
 extension StringExtension on String {
   /// To get image's directory path from the Firebase's Download URL
-  String? get fullPath {
+  String? get firebaseStorageDocumentPath {
     return split('o/')
         .lastOrNull
         ?.split('?')
@@ -147,8 +147,10 @@ extension CollectionReferenceExtension<T> on CollectionReference<T> {
   }
 }
 
-/// An extension on [DateTime] to provide a safe comparison method.
-extension DateTimeCompareExtension on DateTime? {
+/// Extension methods for nullable [DateTime] objects.
+///
+/// Provides utility methods for comparing nullable [DateTime] instances.
+extension NullableDateTimeExtension on DateTime? {
   /// Checks if [lastMessageTimestamp] is before the current
   /// DateTime instance.
   ///
@@ -158,14 +160,17 @@ extension DateTimeCompareExtension on DateTime? {
     return dateTime != null && lastMessageTimestamp?.compareTo(dateTime) == -1;
   }
 
-  /// Compares two nullable [DateTime] objects.
+  /// Compares this nullable [DateTime] with another nullable [other].
   ///
-  /// - Returns `0` if both are `null`.
-  /// - Returns `-1` if `this` is `null` and `b` is not.
-  /// - Returns `1` if `b` is `null` and `this` is not.
-  /// - Otherwise, delegates to [DateTime.compareTo].
-  int compareTimestamp(DateTime? b) {
+  /// Returns:
+  /// - `0` if both dates are null or occur at the same moment.
+  /// - A negative value if this date is null (considered earlier)
+  /// or occurs before [other].
+  /// - A positive value if [other] is null (considered later)
+  /// or occurs after this date.
+  int compareWith(DateTime? other) {
     final a = this;
+    final b = other;
     if (a == null && b == null) {
       return 0;
     } else if (a == null) {
@@ -178,14 +183,14 @@ extension DateTimeCompareExtension on DateTime? {
   }
 }
 
-/// An extension on `List<ChatRoomUserDm>` to join user names into
+/// An extension on `List<ChatRoomParticipant>` to join user names into
 /// a single string.
 ///
 /// Converts the list of chat room users into a string with names separated
 /// by a specified separator.
 ///
 /// Returns `null` if the list is empty or contains only users with empty names.
-extension ListOfChatRoomUserDmExtension on List<ChatRoomUserDm> {
+extension ListOfChatRoomParticipantExtension on List<ChatRoomParticipant> {
   /// Joins user names with a specified separator.
   ///
   /// - (optional): [separator] The string to separate names
@@ -272,37 +277,9 @@ extension DateTimeExtension on DateTime {
   }
 }
 
-/// Extension methods for nullable [DateTime] objects.
-///
-/// Provides utility methods for comparing nullable [DateTime] instances,
-/// ensuring safe comparisons even when one or both values are null.
-extension DateTimeNullableExtension on DateTime? {
-  /// Compares this nullable [DateTime] with another nullable [other].
-  ///
-  /// Returns:
-  /// - `0` if both dates are null or occur at the same moment.
-  /// - A negative value if this date is null (considered earlier)
-  /// or occurs before [other].
-  /// - A positive value if [other] is null (considered later)
-  /// or occurs after this date.
-  int compareWith(DateTime? other) {
-    final a = this;
-    final b = other;
-    if (a == null && b == null) {
-      return 0;
-    } else if (a == null) {
-      return -1;
-    } else if (b == null) {
-      return 1;
-    } else {
-      return a.compareTo(b);
-    }
-  }
-}
-
 /// Extension on [Message] to provide utility methods for
 /// comparing message creation timestamps.
-extension MessageExtension on Message? {
+extension NullablMessageExtension on Message? {
   /// Compares the creation timestamp of this message with another message.
   ///
   /// Returns:
@@ -331,16 +308,16 @@ extension MessageExtension on Message? {
   }
 }
 
-/// Extension methods for lists of nullable [ChatRoomDm] objects.
+/// Extension methods for lists of nullable [ChatRoom] objects.
 ///
 /// Provides utility methods to filter out null values and
 /// work with only non-null chat rooms.
-extension ChatRoomsListExtension on List<ChatRoomDm?> {
-  /// Returns a new list containing only non-null [ChatRoomDm] objects.
+extension ChatRoomsListExtension on List<ChatRoom?> {
+  /// Returns a new list containing only non-null [ChatRoom] objects.
   ///
   /// This method filters out any `null` values from the list, ensuring that
   /// operations on the resulting list can be performed without null checks.
-  List<ChatRoomDm> get toNonEmpty {
+  List<ChatRoom> get toNonEmpty {
     final chatsLength = length;
     return [
       for (var i = 0; i < chatsLength; i++)

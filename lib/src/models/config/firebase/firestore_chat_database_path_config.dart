@@ -1,6 +1,6 @@
-import '../extensions.dart';
+import '../../../extensions.dart';
 
-/// {@template flutter_chatview_db_connection.ChatDatabasePathConfig}
+/// {@template flutter_chatview_db_connection.FirestoreChatDatabasePathConfig}
 /// Configuration class for defining database paths for chat-related data.
 ///
 /// This class allows customization of Firestore database paths for
@@ -9,32 +9,34 @@ import '../extensions.dart';
 /// ### Example Usage:
 /// ```dart
 /// ChatViewDbConnection(
-///     ChatViewDatabaseType.firebase,
-///     databasePathConfig: ChatDatabasePathConfig(
-///         userCollectionPath: 'organizations/org123',
+///     ChatViewCloudService.firebase,
+///     cloudServiceConfig: FirebaseCloudConfig(
+///       databasePathConfig: FirestoreChatDatabasePathConfig(
+///         userCollectionPath: 'organizations/simform',
+///       ),
 ///     ),
-/// )
+/// );
 /// ```
 /// If [userCollectionPath] is not specified,
 /// the default top-level `users` collection is used.
 /// {@endtemplate}
-final class ChatDatabasePathConfig {
-  /// Creates a new instance of [ChatDatabasePathConfig].
+final class FirestoreChatDatabasePathConfig {
+  /// Creates a new instance of [FirestoreChatDatabasePathConfig].
   ///
   /// **Parameters:**
-  /// - (optional): [userCollectionPath] The Firestore collection path
-  /// for storing user data.
+  /// - (optional) [userCollectionPath] The Firestore collection path for
+  /// storing user data.
   ///   If omitted, defaults to the top-level `users` collection.
   ///
-  /// {@macro flutter_chatview_db_connection.ChatDatabasePathConfig.userCollectionPath}
-  ChatDatabasePathConfig({this.userCollectionPath})
+  /// {@macro flutter_chatview_db_connection.FirestoreChatDatabasePathConfig.userCollectionPath}
+  FirestoreChatDatabasePathConfig({this.userCollectionPath})
       : assert(
           userCollectionPath == null ||
-              userCollectionPath.isValidFirestoreCollectionName,
+              userCollectionPath.isValidFirestoreDocumentName,
           'Chat Collection Path should not have the nested collection',
         );
 
-  /// {@template flutter_chatview_db_connection.ChatDatabasePathConfig.userCollectionPath}
+  /// {@template flutter_chatview_db_connection.FirestoreChatDatabasePathConfig.userCollectionPath}
   /// The collection path where user data is stored.
   ///
   /// If the 'users' collection is nested within other collections, specify

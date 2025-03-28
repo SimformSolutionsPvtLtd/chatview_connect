@@ -249,7 +249,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
   }) {
     return PopupMenuButton(
       child: const Icon(Icons.more_horiz_outlined),
-      onSelected: (operation) => onSelected,
+      onSelected: (operation) => onSelected?.call(operation),
       itemBuilder: (_) => roomType.isOneToOne
           ? [
               PopupMenuItem(
@@ -303,11 +303,11 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
           role: Role.admin,
           userId: randomUser.id,
           includeAllChatHistory: true,
+          startDate: DateTime(2020, 12, 1),
         );
         break;
       case ChatOperation.removeUser:
         await controller.removeUserFromGroup(userId: randomUser.id);
-        if (mounted) Navigator.maybePop(context);
         break;
       case ChatOperation.leaveGroup:
         await controller.leaveFromGroup();

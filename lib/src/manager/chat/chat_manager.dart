@@ -501,14 +501,16 @@ final class ChatManager extends ChatController {
     required String userId,
     required Role role,
     required bool includeAllChatHistory,
+    DateTime? startDate,
   }) {
     if (!_isInitialized) return Future.value(false);
     return _database.addUserInGroup(
       role: role,
       userId: userId,
       chatId: chatRoomId,
-      retry: ChatViewDBConnectionConstants.defaultRetry,
+      startDate: startDate,
       includeAllChatHistory: includeAllChatHistory,
+      retry: ChatViewDBConnectionConstants.defaultRetry,
     );
   }
 

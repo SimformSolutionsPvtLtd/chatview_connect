@@ -529,6 +529,8 @@ abstract interface class DatabaseService {
   /// - (required): [role] The role assigned to the user in the group chat.
   /// - (required): [includeAllChatHistory]  Determines whether the user
   ///   should have access to all previous chat history in the group.
+  /// - (optional): [startDate] The date from which the user should have
+  ///   access to chat history. This will work weather the if [includeAllChatHistory] is `false`.
   ///
   /// Returns a [Future] that resolves to `true` if the user was successfully
   /// added, otherwise `false`.
@@ -539,6 +541,7 @@ abstract interface class DatabaseService {
     required String userId,
     required Role role,
     required bool includeAllChatHistory,
+    DateTime? startDate,
   });
 
   /// {@template flutter_chatview_db_connection.DatabaseService.removeUserFromGroup}

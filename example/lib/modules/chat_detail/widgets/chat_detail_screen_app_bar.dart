@@ -38,7 +38,7 @@ class ChatDetailScreenAppBar extends StatelessWidget {
               child: chatProfileUrl == null
                   ? UserStackedProfile(usersProfileURLs: usersProfileURLs)
                   : ChatUserAvatar(
-                      profileURL: usersProfileURLs.firstOrNull,
+                      profileURL: chatProfileUrl,
                       status: oneToOneUserStatus,
                     ),
             ),

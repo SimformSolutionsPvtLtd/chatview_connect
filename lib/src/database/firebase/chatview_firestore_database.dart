@@ -1333,6 +1333,7 @@ final class ChatViewFireStoreDatabase implements DatabaseService {
     required String userId,
     required Role role,
     required bool includeAllChatHistory,
+    DateTime? startDate,
   }) async {
     final isUserExist = await _doesUserExists(userId);
     if (!isUserExist) throw Exception('User ID ($userId) not exists');
@@ -1358,18 +1359,31 @@ final class ChatViewFireStoreDatabase implements DatabaseService {
 
       if (memberStatus == MembershipStatus.member) return true;
 
+      DateTime? membershipStatusTime =
+          includeAllChatHistory ? null : DateTime.now();
+
+      if (startDate?.isNow ?? false) {
+        membershipStatusTime = DateTime.now();
+      }
+
       await updateChatRoomUserMetadata(
         retry: 0,
         userId: userId,
         chatId: chatId,
-        membershipStatus: MembershipStatus.member,
+        chatRoomUserData: {
+          _membershipStatus: MembershipStatus.member.name,
+          _membershipStatusTimestamp: membershipStatusTime == null
+              ? null
+              : membershipStatusTime.isNow
+                  ? FieldValue.serverTimestamp()
+                  : Timestamp.fromDate(membershipStatusTime),
+        },
         ifDataNotFound: () => ChatRoomParticipant(
           role: role,
           chatUser: null,
           userId: userId,
           membershipStatus: MembershipStatus.member,
-          membershipStatusTimestamp:
-              includeAllChatHistory ? null : DateTime.now(),
+          membershipStatusTimestamp: membershipStatusTime,
         ),
       );
 
@@ -1385,6 +1399,7 @@ final class ChatViewFireStoreDatabase implements DatabaseService {
         chatId: chatId,
         userId: userId,
         role: role,
+        startDate: startDate,
         includeAllChatHistory: includeAllChatHistory,
       );
     }

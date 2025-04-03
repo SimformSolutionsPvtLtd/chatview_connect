@@ -12,6 +12,8 @@ abstract interface class StorageService {
   /// Once the upload is successful, the method returns the media's URL.
   ///
   /// **Parameters:**
+  /// - (required): [retry] The number of times to retry the upload in case of
+  /// failure.
   /// - (required): [message] Containing the media to upload.
   /// - (required): [chatId] The unique identifier of the chat where the
   /// media belongs.
@@ -25,6 +27,7 @@ abstract interface class StorageService {
   ///
   /// {@macro flutter_chatview_db_connection.StorageService.getFileName}
   Future<String?> uploadMedia({
+    required int retry,
     required Message message,
     required String chatId,
     String? path,

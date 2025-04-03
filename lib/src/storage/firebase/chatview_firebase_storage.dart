@@ -22,6 +22,7 @@ final class ChatViewFirebaseStorage implements StorageService {
 
   @override
   Future<String?> uploadMedia({
+    required int retry,
     required Message message,
     required String chatId,
     String? path,
@@ -30,6 +31,7 @@ final class ChatViewFirebaseStorage implements StorageService {
     switch (message.messageType) {
       case MessageType.image:
         return _uploadFile(
+          retry: retry,
           message: message,
           ref: _imageRef(chatId),
           uploadPath: path,
@@ -37,6 +39,7 @@ final class ChatViewFirebaseStorage implements StorageService {
         );
       case MessageType.voice:
         return _uploadFile(
+          retry: retry,
           message: message,
           ref: _voiceRef(chatId),
           uploadPath: path,
@@ -83,28 +86,41 @@ final class ChatViewFirebaseStorage implements StorageService {
   }
 
   Future<String?> _uploadFile({
+    required int retry,
     required Message message,
     required Reference ref,
     String? filePath,
     String? uploadPath,
     String? fileName,
   }) async {
-    final name = fileName ?? _getFileName(message);
-    final directoryPath = uploadPath == null ? name : '$uploadPath/$name';
-    final fileRef = ref.child(directoryPath);
-    // TODO(YASH): audio_waveforms currently supports only Android & iOS.
-    //  On the web, only image upload is handled.
-    //  Update this once audio_waveforms adds web support.
-    if (message.messageType.isImage && kIsWeb) {
-      final bytes = await http.readBytes(Uri.parse(message.message));
-      await fileRef.putData(bytes);
-      return fileRef.getDownloadURL();
-    } else {
-      final file = File(filePath ?? message.message);
-      final isFileExist = file.existsSync();
-      if (!isFileExist) throw Exception('File Not Exist!');
-      await fileRef.putFile(file);
-      return fileRef.getDownloadURL();
+    try {
+      final name = fileName ?? _getFileName(message);
+      final directoryPath = uploadPath == null ? name : '$uploadPath/$name';
+      final fileRef = ref.child(directoryPath);
+      // TODO(YASH): audio_waveforms currently supports only Android & iOS.
+      //  On the web, only image upload is handled.
+      //  Update this once audio_waveforms adds web support.
+      if (message.messageType.isImage && kIsWeb) {
+        final bytes = await http.readBytes(Uri.parse(message.message));
+        await fileRef.putData(bytes);
+        return fileRef.getDownloadURL();
+      } else {
+        final file = File(filePath ?? message.message);
+        final isFileExist = file.existsSync();
+        if (!isFileExist) throw Exception('File Not Exist!');
+        await fileRef.putFile(file);
+        return fileRef.getDownloadURL();
+      }
+    } catch (_) {
+      if (retry == 0) rethrow;
+      return _uploadFile(
+        retry: --retry,
+        ref: ref,
+        message: message,
+        filePath: filePath,
+        uploadPath: uploadPath,
+        fileName: fileName,
+      );
     }
   }
 

@@ -68,7 +68,7 @@ abstract final class ChatViewFireStoreCollections {
           : updateAtJson;
       data[_updateAt] = updateAt;
       return Message.fromJson(data).copyWith(id: snapshot.id);
-    } catch (_) {
+    } on FormatException catch (_) {
       return null;
     }
   }
@@ -124,7 +124,7 @@ abstract final class ChatViewFireStoreCollections {
     if (data == null) return null;
     try {
       return ChatRoom.fromJson(data).copyWith(chatId: snapshot.id);
-    } catch (_) {
+    } on FormatException catch (_) {
       return null;
     }
   }
@@ -172,7 +172,7 @@ abstract final class ChatViewFireStoreCollections {
     if (data.isEmpty) return null;
     try {
       return ChatUser.fromJson(data, config: _chatUserConfig);
-    } catch (_) {
+    } on FormatException catch (_) {
       return null;
     }
   }

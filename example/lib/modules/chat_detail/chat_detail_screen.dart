@@ -96,7 +96,14 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
                   actions: (_chatRoomMetadata?.chatRoomType.isGroup ?? false)
                       ? [
                           IconButton(
-                            onPressed: chatController.leaveFromGroup,
+                            onPressed: () {
+                              chatController.leaveFromGroup().then(
+                                (_) {
+                                  if (!context.mounted) return;
+                                  Navigator.maybePop(context);
+                                },
+                              );
+                            },
                             icon: const Icon(Icons.remove),
                           ),
                           IconButton(

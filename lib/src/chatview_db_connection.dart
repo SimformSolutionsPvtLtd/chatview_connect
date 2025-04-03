@@ -1,6 +1,7 @@
 import 'package:flutter/widgets.dart';
 import 'package:flutter_chatview_models/flutter_chatview_models.dart';
 
+import 'chatview_db_connection_constants.dart';
 import 'enum.dart';
 import 'extensions.dart';
 import 'manager/chat/chat_manager.dart';
@@ -285,8 +286,9 @@ final class ChatViewDbConnection {
     if (userId.isEmpty) throw Exception("Current User ID can't be empty!");
     if (chatRoomId.isEmpty) throw Exception("Chat Room ID can't be empty!");
     final chatRoomParticipants = await _service?.database.getChatRoomMetadata(
-      chatId: chatRoomId,
       userId: userId,
+      chatId: chatRoomId,
+      retry: ChatViewDBConnectionConstants.defaultRetry,
     );
     if (chatRoomParticipants == null) throw Exception('No Users Found!');
     config.chatRoomMetadata?.call(chatRoomParticipants);
@@ -359,6 +361,7 @@ final class ChatViewDbConnection {
       final chatRoomID = await _service?.database.findOneToOneChatRoom(
         userId: userId,
         otherUserId: otherUsers.first.id,
+        retry: ChatViewDBConnectionConstants.defaultRetry,
       );
       if (chatRoomID case final chatRoomId?) {
         return _getChatManagerByChatRoomId(

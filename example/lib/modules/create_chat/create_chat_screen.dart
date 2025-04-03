@@ -52,6 +52,7 @@ class _CreateChatScreenState extends State<CreateChatScreen> {
                       MaterialPageRoute(
                         builder: (_) => ChatDetailScreen(
                           otherUsers: [user],
+                          groupChatName: 'Test Group',
                           currentUser: currentChatUser,
                           chatRoomType: ChatRoomType.oneToOne,
                         ),

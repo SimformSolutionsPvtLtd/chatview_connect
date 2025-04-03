@@ -1,5 +1,6 @@
 import 'package:chatview/chatview.dart';
 import 'package:collection/collection.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_chatview_db_connection/flutter_chatview_db_connection.dart';
 
@@ -52,6 +53,10 @@ class _ChatListScreenState extends State<ChatListScreen> {
             },
           ),
           const SizedBox(width: 12),
+          IconButton(
+            onPressed: FirebaseAuth.instance.signOut,
+            icon: const Icon(Icons.logout),
+          ),
         ],
       ),
       body: StreamBuilder(

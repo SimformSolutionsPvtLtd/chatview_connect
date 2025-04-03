@@ -17,14 +17,29 @@ Future<void> main() async {
       nameKey: 'first_name',
       profilePhotoKey: 'avatar',
     ),
-    cloudServiceConfig: FirebaseCloudConfig(
-      databasePathConfig: FirestoreChatDatabasePathConfig(
-        userCollectionPath: 'organizations/simform',
-      ),
-      collectionNameConfig: FirestoreChatCollectionNameConfig(
-        users: 'app_users',
-      ),
-    ),
-  ).setCurrentUserId('2');
+    // Configuration for customizing Firebase Firestore paths and
+    // collection names used by ChatViewDbConnection.
+    //
+    // Example:
+    // cloudServiceConfig: FirebaseCloudConfig(
+    //   databasePathConfig: FirestoreChatDatabasePathConfig(
+    //     userCollectionPath: 'organizations/simform',
+    //   ),
+    //   collectionNameConfig: FirestoreChatCollectionNameConfig(
+    //     users: 'app_users',
+    //   ),
+    // ),
+  );
+
+  // Sets the current user ID for the ChatViewDbConnection instance
+  // based on the authenticated user.
+  //
+  // This ensures that all future chat-related operations are scoped
+  // to the currently logged-in user (e.g., fetching user-specific
+  // chat rooms or messages).
+  //
+  // It should be called after confirming a valid user is logged in
+  // For example, on Firebase through `FirebaseAuth.instance.authStateChanges()`
+  ChatViewDbConnection.instance.setCurrentUserId('1');
   runApp(const ChatViewDbConnectionExampleApp());
 }

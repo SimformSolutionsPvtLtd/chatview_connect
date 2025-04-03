@@ -1,11 +1,25 @@
 import 'dart:async';
+import 'dart:math';
 
 import 'package:chatview/chatview.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_chatview_db_connection/flutter_chatview_db_connection.dart';
 
+import '../../values/messages_data.dart';
 import 'widgets/chat_detail_screen_app_bar.dart';
 import 'widgets/chat_room_user_acitivity_tile.dart';
+
+enum ChatOperation {
+  addDemoMessage('Add Demo Message'),
+  updateGroupName('Update Group Name'),
+  addUser('Add User'),
+  removeUser('Remove User'),
+  leaveGroup('Leave');
+
+  const ChatOperation(this.name);
+
+  final String name;
+}
 
 class ChatDetailScreen extends StatefulWidget {
   const ChatDetailScreen({
@@ -67,55 +81,41 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
               child: RepaintBoundary(child: CircularProgressIndicator()),
             );
           }
+          final randomUser = chatController.otherUsers.elementAt(
+            Random().nextInt(chatController.otherUsers.length),
+          );
           return ChatView(
             chatController: chatController,
             chatViewState: ChatViewState.hasMessages,
+            featureActiveConfig: const FeatureActiveConfig(
+              enableScrollToBottomButton: true,
+            ),
             chatBackgroundConfig: ChatBackgroundConfiguration(
               backgroundColor: cardColor,
             ),
-            onSendTap: chatController.onSendTap,
-            loadingWidget: const RepaintBoundary(
-              child: CircularProgressIndicator(),
-            ),
-            typeIndicatorConfig: TypeIndicatorConfiguration(
-              indicatorSize: 6,
-              indicatorSpacing: 2,
-              flashingCircleDarkColor: cardColor,
-              flashingCircleBrightColor: primaryColor,
-            ),
             appBar: ValueListenableBuilder(
               valueListenable: _displayMetadataNotifier,
-              builder: (_, chatRoomMetadata, __) {
-                final metadata =
-                    chatRoomMetadata ?? _chatRoomMetadata?.metadata;
+              builder: (_, displayMetadata, __) {
+                final metadata = displayMetadata ?? _chatRoomMetadata?.metadata;
+                final roomType =
+                    _chatRoomMetadata?.chatRoomType ?? ChatRoomType.oneToOne;
                 return ChatDetailScreenAppBar(
+                  actions: [
+                    _getOperationsPopMenu(
+                      randomUser: randomUser,
+                      roomType: roomType,
+                      onSelected: (operation) => _onSelectOperation(
+                        operation: operation,
+                        controller: chatController,
+                        randomUser: randomUser,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                  ],
                   chatName: metadata?.chatName ?? 'Unknown',
                   chatProfileUrl: metadata?.chatProfilePhoto,
                   usersProfileURLs:
                       _chatRoomMetadata?.usersProfilePictures ?? [],
-                  actions: (_chatRoomMetadata?.chatRoomType.isGroup ?? false)
-                      ? [
-                          IconButton(
-                            onPressed: () {
-                              chatController.leaveFromGroup().then(
-                                (_) {
-                                  if (!context.mounted) return;
-                                  Navigator.maybePop(context);
-                                },
-                              );
-                            },
-                            icon: const Icon(Icons.remove),
-                          ),
-                          IconButton(
-                            onPressed: () => chatController.addUserInGroup(
-                              userId: '2',
-                              role: Role.admin,
-                              includeAllChatHistory: false,
-                            ),
-                            icon: const Icon(Icons.add),
-                          ),
-                        ]
-                      : [],
                   descriptionWidget: ChatRoomUserActivityTile(
                     usersActivitiesNotifier: _usersActivitiesNotifier,
                     chatController: chatController,
@@ -125,9 +125,34 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
                 );
               },
             ),
+            loadingWidget: const RepaintBoundary(
+              child: CircularProgressIndicator(),
+            ),
+            typeIndicatorConfig: TypeIndicatorConfiguration(
+              indicatorSize: 6,
+              indicatorSpacing: 2,
+              flashingCircleDarkColor: cardColor,
+              flashingCircleBrightColor: primaryColor,
+            ),
             profileCircleConfig: const ProfileCircleConfiguration(
               profileImageUrl: Constants.profileImage,
             ),
+            scrollToBottomButtonConfig: ScrollToBottomButtonConfig(
+              backgroundColor: Colors.white,
+              border: Border.fromBorderSide(
+                BorderSide(color: Colors.grey.shade300),
+              ),
+              icon: const Icon(
+                Icons.keyboard_arrow_down_rounded,
+                weight: 10,
+                size: 30,
+              ),
+            ),
+            repliedMessageConfig: RepliedMessageConfiguration(
+              backgroundColor: Colors.grey.shade300,
+              padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 14),
+            ),
+            onSendTap: chatController.onSendTap,
             sendMessageConfig: SendMessageConfiguration(
               replyTitleColor: primaryColor,
               replyDialogColor: cardColor,
@@ -170,32 +195,11 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
                 ),
               ),
             ),
-            featureActiveConfig: const FeatureActiveConfig(
-              enableOtherUserProfileAvatar: true,
-              lastSeenAgoBuilderVisibility: true,
-              receiptsBuilderVisibility: true,
-              enableScrollToBottomButton: true,
-            ),
             replyPopupConfig: ReplyPopupConfiguration(
               onUnsendTap: chatController.onUnsendTap,
             ),
             reactionPopupConfig: ReactionPopupConfiguration(
               userReactionCallback: chatController.userReactionCallback,
-            ),
-            scrollToBottomButtonConfig: ScrollToBottomButtonConfig(
-              backgroundColor: Colors.white,
-              border: Border.fromBorderSide(
-                BorderSide(color: Colors.grey.shade300),
-              ),
-              icon: const Icon(
-                Icons.keyboard_arrow_down_rounded,
-                weight: 10,
-                size: 30,
-              ),
-            ),
-            repliedMessageConfig: RepliedMessageConfiguration(
-              backgroundColor: Colors.grey.shade300,
-              padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 14),
             ),
           );
         },
@@ -236,5 +240,79 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
 
   void _listenChatRoomDisplayMetadataChanges(ChatRoomDisplayMetadata metadata) {
     _displayMetadataNotifier.value = metadata;
+  }
+
+  Widget _getOperationsPopMenu({
+    required ChatRoomType roomType,
+    required ChatUser randomUser,
+    void Function(ChatOperation)? onSelected,
+  }) {
+    return PopupMenuButton(
+      child: const Icon(Icons.more_horiz_outlined),
+      onSelected: (operation) => onSelected,
+      itemBuilder: (_) => roomType.isOneToOne
+          ? [
+              PopupMenuItem(
+                value: ChatOperation.addDemoMessage,
+                child: Text(ChatOperation.addDemoMessage.name),
+              ),
+            ]
+          : [
+              for (var i = 0; i < ChatOperation.values.length; i++)
+                if (ChatOperation.values[i] == ChatOperation.addUser ||
+                    ChatOperation.values[i] == ChatOperation.removeUser)
+                  PopupMenuItem(
+                    value: ChatOperation.values[i],
+                    child: Text(
+                      '${ChatOperation.values[i].name} - ${randomUser.name}',
+                    ),
+                  )
+                else
+                  PopupMenuItem(
+                    value: ChatOperation.values[i],
+                    child: Text(ChatOperation.values[i].name),
+                  ),
+            ],
+    );
+  }
+
+  Future<void> _onSelectOperation({
+    required ChatOperation operation,
+    required ChatManager controller,
+    required ChatUser randomUser,
+  }) async {
+    switch (operation) {
+      case ChatOperation.addDemoMessage:
+        final messages = MessagesData.getMessages(
+          controller.otherUsers.map((e) => e.id).toList(),
+        );
+        final messagesLength = messages.length;
+        await Future.wait([
+          for (var i = 0; i < messagesLength; i++)
+            controller.onSendTapFromMessage(messages[i]),
+        ]);
+        break;
+      case ChatOperation.updateGroupName:
+        await controller.updateGroupChat(
+          groupName: 'Group ${Random().nextInt(100)}',
+          groupProfilePic: Constants.profileImage,
+        );
+        break;
+      case ChatOperation.addUser:
+        await controller.addUserInGroup(
+          role: Role.admin,
+          userId: randomUser.id,
+          includeAllChatHistory: true,
+        );
+        break;
+      case ChatOperation.removeUser:
+        await controller.removeUserFromGroup(userId: randomUser.id);
+        if (mounted) Navigator.maybePop(context);
+        break;
+      case ChatOperation.leaveGroup:
+        await controller.leaveFromGroup();
+        if (mounted) Navigator.maybePop(context);
+        break;
+    }
   }
 }

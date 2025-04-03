@@ -385,6 +385,7 @@ final class ChatViewDbConnection {
           final groupInfo = otherUsers.createGroupInfo();
           chatRoomId = await _service?.database.createGroupChat(
             userId: userId,
+            groupProfilePic: groupProfile,
             groupName: groupInfo.groupName,
             participants: groupInfo.participants,
           );
@@ -429,4 +430,7 @@ final class ChatViewDbConnection {
     assert(userId.isNotEmpty, "User ID can't be empty!");
     _currentUserId = userId;
   }
+
+  /// Resets the current user ID by setting it to `null`.
+  void resetCurrentUserId() => _currentUserId = null;
 }

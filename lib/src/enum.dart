@@ -357,19 +357,29 @@ extension MembershipStatusExtension on MembershipStatus {
 /// Defines the types of exceptions that can occur when interacting with
 /// Cloud Firestore in Flutter.
 enum FirestoreExceptionType {
-  /// Represents a "not found" error,
+  /// Represents a **not found** error,
   /// typically when a document or collection does not exist.
   notFound,
 
-  /// Represents an unknown error type that is not explicitly handled.
-  unknown;
+  /// Represents an **unknown** error type that is not explicitly handled.
+  unknown,
 
+  /// Represents a **permission denied** error,
+  /// typically when a write operation is attempted but fails
+  /// due to Firestore security rules restrictions.
+  permissionDenied;
+}
+
+/// Provides an extension for converting Firestore error codes
+/// into [FirestoreExceptionType] values.
+extension FirestoreExceptionTypeExtension on FirestoreExceptionType {
   /// Converts a Firestore error code string into a corresponding
   /// [FirestoreExceptionType].
   ///
   /// Processes the input string by trimming, converting to lowercase, and
   /// mapping:
-  /// - 'not-found' to [FirestoreExceptionType.notFound].
+  /// - `not-found` to [FirestoreExceptionType.notFound].
+  /// - `permission-denied` → [FirestoreExceptionType.permissionDenied].
   /// - Any other value to [FirestoreExceptionType.unknown].
   ///
   /// - (required): [value] The Firestore error code as a string.
@@ -378,6 +388,8 @@ enum FirestoreExceptionType {
     final safeValue = value?.trim().toLowerCase() ?? '';
     if (safeValue == 'not-found') {
       return FirestoreExceptionType.notFound;
+    } else if (safeValue == 'permission-denied') {
+      return FirestoreExceptionType.permissionDenied;
     } else {
       return FirestoreExceptionType.unknown;
     }

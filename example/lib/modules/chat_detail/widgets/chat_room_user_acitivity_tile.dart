@@ -32,6 +32,8 @@ class ChatRoomUserActivityTile extends StatelessWidget {
             (index) {
               final user = otherUsers[index];
               final userActivity = usersActivity[user.id];
+              final typeStatus =
+                  userActivity?.typingStatus ?? TypeWriterStatus.typed;
               final status =
                   userActivity?.userActiveStatus ?? UserActiveStatus.offline;
               return switch (chatRoomType) {
@@ -45,9 +47,8 @@ class ChatRoomUserActivityTile extends StatelessWidget {
                     child: UserActivityTile(
                       userStatus: status,
                       userName: user.name,
+                      userTypeStatus: typeStatus,
                       isLast: index == otherUsersLastIndex,
-                      userTypeStatus:
-                          userActivity?.typingStatus ?? TypeWriterStatus.typed,
                     ),
                   ),
                 _ => const SizedBox.shrink(),

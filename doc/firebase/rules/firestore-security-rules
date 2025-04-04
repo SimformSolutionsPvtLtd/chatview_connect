@@ -1,0 +1,158 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // TODO: Update the path as per configured in chatview db connection
+  	function chatCollection() {
+      return 'chats';
+    }
+
+    // TODO: Update the path as per configured in chatview db connection
+    function usersCollection() {
+      return 'users';
+    }
+
+    // TODO: Update the path as per configured in chatview db connection
+    function messageCollection() {
+      return 'messages';
+    }
+
+    // TODO: Update the path as per configured in chatview db connection
+    function userChatsCollection() {
+      return 'user_chats';
+    }
+
+    function isValidChatCollection(collection) {
+      return collection == chatCollection();
+    }
+
+    function isValidUserCollection(collection) {
+      return collection == usersCollection();
+    }
+
+    function isValidMessageCollection(collection) {
+      return collection == messageCollection();
+    }
+
+    function isValidUserChatsCollection(collection) {
+      return collection == userChatsCollection();
+    }
+
+    function isSignedIn() {
+    	return request.auth != null;
+    }
+
+    function getChatRoomUserPath(userId, chatRoomID) {
+      return /databases/$(database)/documents/$(chatCollection())/$(chatRoomID)/users/$(userId);
+    }
+
+    function getChatPath(chatRoomID) {
+      return /databases/$(database)/documents/chats/$(chatRoomID);
+    }
+
+    function getUserPath(userId) {
+      return /databases/$(database)/documents/$(usersCollection())/$(userId);
+    }
+
+    match /{collection}/{userId} {
+      function isCurrentUser() {
+        return request.auth.uid == userId;
+      }
+
+      allow create, read: if isValidUserCollection(collection) && isSignedIn();
+      allow delete, update: if isValidUserCollection(collection) && isCurrentUser();
+    }
+
+    match /{collection}/{chatRoomID} {
+
+      function checkIsUserMember(userId) {
+      	let doc = get(getChatRoomUserPath(userId, chatRoomID));
+        return doc != null && (doc != null && doc.data.membership_status != "left");
+      }
+
+      function isUserExists() {
+        return isSignedIn() && exists(getUserPath(request.auth.uid));
+      }
+
+      function isUserInChatRoom() {
+        return isSignedIn() && exists(getChatRoomUserPath(request.auth.uid, chatRoomID));
+      }
+
+      function isChatRoomExist() {
+      	let doc = get(getChatPath(chatRoomID));
+      	return doc != null && (doc.data.chat_room_type == "oneToOne" || (doc.data.chat_room_type == "group"));
+      }
+
+      function isRoomCorrect() {
+      	let chatRoomType = request.resource.data.chat_room_type;
+        return chatRoomType is string && ("oneToOne" == chatRoomType || "group" == chatRoomType);
+      }
+
+      function allowUpdateChatRoom() {
+      	let doc = get(getChatPath(chatRoomID));
+        return doc == null ? false : (doc.data.chat_room_type == "group" ? checkIsUserMember(request.auth.uid) : true);
+      }
+
+      allow delete: if isValidChatCollection(collection) && isSignedIn();
+      allow create: if isValidChatCollection(collection) && isUserExists() && isRoomCorrect();
+      allow read: if isValidChatCollection(collection) && isUserInChatRoom();
+      allow update: if isValidChatCollection(collection) && isUserInChatRoom() && allowUpdateChatRoom();
+
+      match /{collection}/{messageId} {
+        function isValidMessage() {
+          let data = request.resource.data;
+          return ("sentBy" in data) && data.sentBy is string && ("createdAt" in data) && data.createdAt is timestamp;
+        }
+
+        function isValidUpdate() {
+        	let data = request.resource.data;
+        	return "update_at" in data || "status" in data || "update" in data;
+        }
+
+        allow create: if isValidMessageCollection(collection) && isSignedIn() && checkIsUserMember(request.auth.uid) && isValidMessage();
+        allow read: if isValidMessageCollection(collection) && isUserInChatRoom();
+        allow delete: if isValidMessageCollection(collection) && isUserInChatRoom() && checkIsUserMember(request.auth.uid);
+        allow update: if isValidMessageCollection(collection) && isUserInChatRoom() && checkIsUserMember(request.auth.uid) && isValidUpdate();
+      }
+
+      match /users/{userId} {
+      	function isInChatRoom() {
+        	return isSignedIn() && exists(getChatRoomUserPath(userId, chatRoomID));
+      	}
+
+        function allowUserCreation() {
+          let isUserExistsInChatRoom = exists(getChatRoomUserPath(userId, chatRoomID));
+          let isCurrentUserExistsInChatRoom = exists(getChatRoomUserPath(request.auth.uid, chatRoomID));
+          return isCurrentUserExistsInChatRoom ? checkIsUserMember(request.auth.uid) : request.auth.uid == userId;
+        }
+
+        allow delete: if (isUserInChatRoom() && checkIsUserMember(request.auth.uid)) || isInChatRoom();
+      	allow create: if isUserExists() && isChatRoomExist() && allowUserCreation();
+        allow update: if isUserInChatRoom() && checkIsUserMember(request.auth.uid);
+        allow read: if isUserInChatRoom();
+      }
+    }
+
+    match /{collection}/{userId} {
+
+      allow update: if isValidUserChatsCollection(collection) && request.auth.uid == userId;
+      allow read, write: if isValidUserChatsCollection(collection) && isSignedIn();
+
+      match /chats/{chatId} {
+
+        function isUserInChatRoom() {
+          return isSignedIn() && exists(getChatRoomUserPath(request.auth.uid, chatId));
+      	}
+
+      	function isUserExists() {
+      	  return exists(getChatRoomUserPath(userId, chatId));
+      	}
+
+      	allow read: if isSignedIn() && request.auth.uid == userId;
+        allow create, update, delete: if isUserExists();
+      }
+
+    }
+  }
+}

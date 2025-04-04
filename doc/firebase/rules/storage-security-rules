@@ -1,0 +1,34 @@
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    // TODO: Update the path as per configured in chatview db connection
+  	function chatCollection() {
+      return 'chats';
+    }
+
+   	function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function getChatRoomUserPath(userId, chatRoomID) {
+      return /databases/(default)/documents/$(chatCollection())/$(chatRoomID)/users/$(userId);
+    }
+
+    match /chats/{chatRoomID} {
+      function isUserMember() {
+      	let doc = firestore.get(getChatRoomUserPath(request.auth.uid, chatRoomID));
+      	return doc != null && doc.data.membership_status != "left"
+      }
+
+      match /{allPaths=**} {
+        allow read, write: if isSignedIn() && isUserMember();
+      }
+    }
+
+    match /{allPaths=**} {
+      allow read: if isSignedIn();
+    }
+  }
+}

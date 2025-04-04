@@ -23,7 +23,7 @@ class ChatRoomUserActivityTile extends StatelessWidget {
     return ValueListenableBuilder(
       valueListenable: usersActivitiesNotifier,
       builder: (_, usersActivity, __) {
-        final otherUsers = chatController.otherUsers;
+        final otherUsers = chatController.otherActiveUsers;
         final otherUsersLength = otherUsers.length;
         final otherUsersLastIndex = otherUsersLength - 1;
         return Row(

@@ -196,6 +196,17 @@ final class ChatManager extends ChatController {
 
   String? _chatRoomId;
 
+  late final Map<String, ChatUser> _otherActiveUsers = otherUsersMap;
+
+  /// Returns a list of other active users.
+  List<ChatUser> get otherActiveUsers {
+    try {
+      return _otherActiveUsers.values.toList();
+    } catch (_) {
+      return otherUsers;
+    }
+  }
+
   // This is for identifying that is chat room is created
   bool _isChatRoomCreated = false;
 
@@ -541,44 +552,6 @@ final class ChatManager extends ChatController {
     );
   }
 
-  void _listenChatRoomUsersActivity({
-    required Map<String, ChatRoomParticipant> users,
-    required bool syncOtherUsersInfo,
-    ValueSetter<Map<String, ChatRoomParticipant>>? onUserActivityChanges,
-  }) {
-    if (syncOtherUsersInfo) _handleUsersMetadataChanges(users);
-    _handleUserTypingStatus(users);
-    if (onUserActivityChanges case final callback?) callback(users);
-  }
-
-  // TODO(YASH): Typing indicators are only handled for one-to-one chats
-  //  because ChatView doesn't support showing profile pictures for multiple
-  //  users typing in group chats.
-  void _handleUserTypingStatus(Map<String, ChatRoomParticipant> users) {
-    final isOneToOneChat = _chatRoomType?.isOneToOne ?? true;
-    if (isOneToOneChat) {
-      setTypingIndicator = users.values.first.typingStatus.isTyping;
-    }
-  }
-
-  void _handleUsersMetadataChanges(Map<String, ChatRoomParticipant> users) {
-    final chatUsers = users.values.toList();
-    final usersLength = chatUsers.length;
-
-    for (var i = 0; i < usersLength; i++) {
-      final chatUser = chatUsers[i].chatUser;
-      if (chatUser == null) continue;
-      updateOtherUser(chatUser);
-    }
-    // TODO(YASH): Rebuild chatview once the user details updated.
-  }
-
-  // TODO(YASH): Use unmodifiable list for better performance
-  void _listenMessages(List<Message> messages) {
-    initialMessageList = messages;
-    messageStreamController.sink.add(messages);
-  }
-
   /// {@macro flutter_chatview_db_connection.DatabaseService.updateUserActiveStatus}.
   Future<bool> updateUserActiveStatus(UserActiveStatus status) =>
       _database.updateUserActiveStatus(
@@ -687,6 +660,72 @@ final class ChatManager extends ChatController {
     _config = null;
     _isChatRoomCreated = false;
     _currentChatRoomMetadata = null;
+    _otherActiveUsers.clear();
     super.dispose();
+  }
+
+  void _listenChatRoomUsersActivity({
+    required Map<String, ChatRoomParticipant> users,
+    required bool syncOtherUsersInfo,
+    ValueSetter<Map<String, ChatRoomParticipant>>? onUserActivityChanges,
+  }) {
+    if (syncOtherUsersInfo) {
+      _handleUsersMetadataChanges(users);
+    } else {
+      _updateActiveUsers(users);
+    }
+    _handleUserTypingStatus(users);
+    if (onUserActivityChanges case final callback?) callback(users);
+  }
+
+  // TODO(YASH): Typing indicators are only handled for one-to-one chats
+  //  because ChatView doesn't support showing profile pictures for multiple
+  //  users typing in group chats.
+  void _handleUserTypingStatus(Map<String, ChatRoomParticipant> users) {
+    final isOneToOneChat = _chatRoomType?.isOneToOne ?? true;
+    if (isOneToOneChat) {
+      setTypingIndicator = users.values.first.typingStatus.isTyping;
+    }
+  }
+
+  void _updateActiveUsers(Map<String, ChatRoomParticipant> users) {
+    final userValues = users.values.toList();
+    final usersLength = userValues.length;
+    for (var i = 0; i < usersLength; i++) {
+      final user = userValues[i];
+      final chatUser = user.chatUser;
+      if (chatUser == null) continue;
+      final isMember = user.membershipStatus?.isMember ?? true;
+      if (isMember) {
+        _otherActiveUsers[chatUser.id] = chatUser;
+      } else {
+        _otherActiveUsers.remove(chatUser.id);
+      }
+    }
+    // TODO(YASH): Rebuild chatview once the user details updated.
+  }
+
+  void _handleUsersMetadataChanges(Map<String, ChatRoomParticipant> users) {
+    final chatUsers = users.values.toList();
+    final usersLength = chatUsers.length;
+
+    for (var i = 0; i < usersLength; i++) {
+      final user = chatUsers[i];
+      final chatUser = user.chatUser;
+      if (chatUser == null) continue;
+      updateOtherUser(chatUser);
+      final isMember = user.membershipStatus?.isMember ?? true;
+      if (isMember) {
+        _otherActiveUsers[chatUser.id] = chatUser;
+      } else {
+        _otherActiveUsers.remove(chatUser.id);
+      }
+    }
+    // TODO(YASH): Rebuild chatview once the user details updated.
+  }
+
+  void _listenMessages(List<Message> messages) {
+    initialMessageList = messages;
+    messageStreamController.sink.add(messages);
   }
 }

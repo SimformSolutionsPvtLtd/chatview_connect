@@ -9,8 +9,7 @@ import 'package:flutter_chatview_models/flutter_chatview_models.dart';
 /// (e.g., `username` instead of `name`).
 /// This class provides flexibility to define custom key mappings
 /// to correctly interpret user data from various sources.
-// TODO(YASH): Change base class name
-final class ChatUserConfig implements ChatUserModelConfigBase {
+final class ChatUserConfig implements ChatUserConfigBase {
   /// Creates a [ChatUserConfig] instance with optional key mappings.
   ///
   /// If a data source uses different keys (e.g., `username` instead of `name`),

@@ -90,7 +90,16 @@ class _ChatListScreenState extends State<ChatListScreen> {
                           users: users,
                         ),
                   onTap: () => _navigateToChatDetailScreen(chatId),
-                  onTapMore: () => _chatController.deleteChat(chatId),
+                  trailing: PopupMenuButton(
+                    child: const Icon(Icons.more_horiz_outlined),
+                    onSelected: (_) => _chatController.deleteChat(chatId),
+                    itemBuilder: (_) => [
+                      const PopupMenuItem(
+                        value: 'delete',
+                        child: Text('Delete Chat'),
+                      ),
+                    ],
+                  ),
                 );
               },
             );

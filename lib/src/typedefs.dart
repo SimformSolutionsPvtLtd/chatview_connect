@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_chatview_models/flutter_chatview_models.dart';
 
 import 'database/database_service.dart';
@@ -66,3 +67,8 @@ typedef UserInfoWithStatusRecord = ({
 /// - (required): `participants` A map of user IDs to their assigned [Role] in
 /// the group.
 typedef GroupInfoRecord = ({String groupName, Map<String, Role> participants});
+
+/// Maps a [QuerySnapshot] of [Message] objects to a custom type [T].
+///
+/// Useful for transforming Firestore query results into your desired data structure.
+typedef MessageQueryMapper<T> = T Function(QuerySnapshot<Message?> docSnapshot);

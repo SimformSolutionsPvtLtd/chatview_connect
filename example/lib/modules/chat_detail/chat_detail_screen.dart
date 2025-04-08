@@ -14,7 +14,7 @@ enum ChatOperation {
   updateGroupName('Update Group Name'),
   addUser('Add User'),
   removeUser('Remove User'),
-  leaveGroup('Leave');
+  leaveGroup('Leave Group');
 
   const ChatOperation(this.name);
 

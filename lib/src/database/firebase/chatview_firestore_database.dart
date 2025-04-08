@@ -104,7 +104,6 @@ final class ChatViewFireStoreDatabase implements DatabaseService {
     }
   }
 
-  // TODO(YASH): Follow DRY Principle for below two methods
   @override
   Stream<List<MessageDm>> getMessagesStreamWithSnapshot({
     required String chatId,
@@ -114,19 +113,15 @@ final class ChatViewFireStoreDatabase implements DatabaseService {
     DocumentSnapshot<Message?>? startAfterDocument,
     DateTime? from,
   }) {
-    final messageCollectionRef = _messageCollectionRef(chatId).toMessageQuery(
-      sortBy: sortBy,
-      sortOrder: sortOrder,
+    return _getMessageStreamBase<List<MessageDm>>(
+      from: from,
       limit: limit,
+      sortBy: sortBy,
+      chatId: chatId,
+      sortOrder: sortOrder,
       startAfterDocument: startAfterDocument,
-      whereFieldName: _createdAt,
-      whereFieldIsGreaterThanOrEqualTo: from,
+      mapper: _getMessagesDmFromSnapshot,
     );
-
-    return messageCollectionRef
-        .snapshots()
-        .distinct()
-        .map(_getMessagesDmFromSnapshot);
   }
 
   @override
@@ -138,17 +133,14 @@ final class ChatViewFireStoreDatabase implements DatabaseService {
     DocumentSnapshot<Message?>? startAfterDocument,
     DateTime? from,
   }) {
-    final messageCollectionRef = _messageCollectionRef(chatId).toMessageQuery(
+    return _getMessageStreamBase<List<Message>>(
+      from: from,
       limit: limit,
       sortBy: sortBy,
+      chatId: chatId,
       sortOrder: sortOrder,
-      whereFieldName: _createdAt,
       startAfterDocument: startAfterDocument,
-      whereFieldIsGreaterThanOrEqualTo: from,
-    );
-
-    return messageCollectionRef.snapshots().distinct().map(
-      (docSnapshot) {
+      mapper: (docSnapshot) {
         final messages = docSnapshot.docs;
         final messagesLength = messages.length;
         return [
@@ -166,14 +158,12 @@ final class ChatViewFireStoreDatabase implements DatabaseService {
     required MessageSortOrder sortOrder,
     int? limit,
   }) {
-    final messageCollectionRef = _messageCollectionRef(chatId).toMessageQuery(
+    return _getMessageStreamBase<Map<Message, DocumentType>>(
+      limit: limit,
+      chatId: chatId,
       sortBy: sortBy,
       sortOrder: sortOrder,
-      limit: limit,
-    );
-
-    return messageCollectionRef.snapshots().distinct().map(
-      (docSnapshot) {
+      mapper: (docSnapshot) {
         final messagesChanges = docSnapshot.docChanges;
         final messagesChangesLength = messagesChanges.length;
         final messages = <Message, DocumentType>{};
@@ -187,6 +177,55 @@ final class ChatViewFireStoreDatabase implements DatabaseService {
         return messages;
       },
     );
+  }
+
+  @override
+  Stream<int> getUnreadMessagesCount({
+    required String chatId,
+    required String userId,
+    DateTime? from,
+  }) {
+    return _getMessageStreamBase(
+      from: from,
+      chatId: chatId,
+      sortBy: MessageSortBy.none,
+      sortOrder: MessageSortOrder.desc,
+      mapper: (docSnapshot) {
+        final docs = docSnapshot.docs;
+        final docsLength = docs.length;
+        var count = 0;
+        for (var i = 0; i < docsLength; i++) {
+          final message = docs[i].data();
+          if (message == null ||
+              message.sentBy == userId ||
+              message.status.isRead) {
+            continue;
+          }
+          count++;
+        }
+        return count;
+      },
+    );
+  }
+
+  Stream<T> _getMessageStreamBase<T>({
+    required String chatId,
+    required MessageSortBy sortBy,
+    required MessageSortOrder sortOrder,
+    required MessageQueryMapper<T> mapper,
+    int? limit,
+    DocumentSnapshot<Message?>? startAfterDocument,
+    DateTime? from,
+  }) {
+    final messageCollectionRef = _messageCollectionRef(chatId).toMessageQuery(
+      sortBy: sortBy,
+      sortOrder: sortOrder,
+      limit: limit,
+      startAfterDocument: startAfterDocument,
+      whereFieldName: _createdAt,
+      whereFieldIsGreaterThanOrEqualTo: from,
+    );
+    return messageCollectionRef.snapshots().distinct().map<T>(mapper);
   }
 
   @override
@@ -672,38 +711,6 @@ final class ChatViewFireStoreDatabase implements DatabaseService {
 
     await Future.wait(chatRoomUsersInfoFutures);
     return chatRoomParticipants.values.toList();
-  }
-
-  @override
-  Stream<int> getUnreadMessagesCount({
-    required String chatId,
-    required String userId,
-    DateTime? from,
-  }) {
-    final chatRoomCollectionRef = _messageCollectionRef(chatId).toMessageQuery(
-      sortBy: MessageSortBy.none,
-      sortOrder: MessageSortOrder.desc,
-      whereFieldName: _createdAt,
-      whereFieldIsGreaterThanOrEqualTo: from?.toIso8601String(),
-    );
-
-    return chatRoomCollectionRef.snapshots().map(
-      (messageSnapshot) {
-        final docs = messageSnapshot.docs;
-        final docsLength = docs.length;
-        var count = 0;
-        for (var i = 0; i < docsLength; i++) {
-          final message = docs[i].data();
-          if (message == null ||
-              message.sentBy == userId ||
-              message.status.isRead) {
-            continue;
-          }
-          count++;
-        }
-        return count;
-      },
-    );
   }
 
   @override

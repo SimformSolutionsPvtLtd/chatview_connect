@@ -14,6 +14,7 @@ class ChatListItem extends StatelessWidget {
     this.description,
     this.onTap,
     this.onTapMore,
+    this.trailing,
     super.key,
   });
 
@@ -25,6 +26,7 @@ class ChatListItem extends StatelessWidget {
   final List<String> usersProfileURLs;
   final UserActiveStatus? oneToOneUserStatus;
   final int unreadMessageCount;
+  final Widget? trailing;
 
   @override
   Widget build(BuildContext context) {
@@ -70,10 +72,14 @@ class ChatListItem extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(width: 12),
-                      GestureDetector(
-                        onTap: onTapMore,
-                        child: const Icon(Icons.more_horiz_rounded, size: 18),
-                      ),
+                      trailing ??
+                          GestureDetector(
+                            onTap: onTapMore,
+                            child: const Icon(
+                              Icons.more_horiz_rounded,
+                              size: 18,
+                            ),
+                          ),
                     ],
                   ),
                   if (description?.isNotEmpty ?? false) ...[

@@ -529,8 +529,9 @@ abstract interface class DatabaseService {
   /// - (required): [role] The role assigned to the user in the group chat.
   /// - (required): [includeAllChatHistory]  Determines whether the user
   ///   should have access to all previous chat history in the group.
-  /// - (optional): [startDate] The date from which the user should have
-  ///   access to chat history. This will work weather the if [includeAllChatHistory] is `false`.
+  /// - (optional): [startDate] The date from which the user should have access
+  ///   to chat history. This is applicable whether [includeAllChatHistory] is
+  ///   set to `true` or `false`.
   ///
   /// Returns a [Future] that resolves to `true` if the user was successfully
   /// added, otherwise `false`.

@@ -1,6 +1,6 @@
 # ChatView DB Connection
 
-[![chatview_db_connection](https://img.shields.io/pub/v/chatview_db_connection?label=chatview_db_connection)](https://pub.dev/packages/chatview_db_connection)
+[![Build](https://github.com/SimformSolutionsPvtLtd/chatview_db_connection/actions/workflows/flutter.yaml/badge.svg?branch=master)](https://github.com/SimformSolutionsPvtLtd/chatview_db_connection/actions) [![chatview_db_connection](https://img.shields.io/pub/v/chatview_db_connection?label=chatview_db_connection)](https://pub.dev/packages/chatview_db_connection)
 
 `chatview_db_connection` is a specialized wrapper for [`chatview`][chatViewPackage]
 package providing seamless integration with Database & Storage for your flutter chat app.

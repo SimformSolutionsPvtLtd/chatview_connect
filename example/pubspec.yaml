@@ -19,7 +19,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 version: 1.0.0+1
 
 environment:
-  sdk: '>=3.2.3 <4.0.0'
+  sdk: '>=3.4.0 <4.0.0'
 
 # Dependencies specify other packages that your package needs in order to work.
 # To automatically upgrade your package dependencies to the latest versions
@@ -35,9 +35,9 @@ dependencies:
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.2
-  firebase_core: 3.9.0
-  cloud_firestore: 5.6.0
-  uuid: ^4.4.0
+  firebase_core: ^3.13.0
+  cloud_firestore: ^5.6.7
+  uuid: ^4.5.1
   # TODO(YASH): Use pub.dev version once this package is released with centralised repository support
   chatview:
     git:

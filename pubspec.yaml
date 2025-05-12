@@ -4,12 +4,11 @@ version: 0.0.1
 issue_tracker: https://github.com/SimformSolutionsPvtLtd/chatview_connect/issues
 homepage: https://github.com/SimformSolutionsPvtLtd/chatview_connect
 topics:
-  - chat
   - chatview
   - firebase
-  - plug and play
-  - backend integration
-  - chat backend
+  - chat-backend
+  - plug-and-play
+  - backend-integration
 
 platforms:
   android:

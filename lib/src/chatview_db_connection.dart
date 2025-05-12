@@ -1,5 +1,5 @@
+import 'package:chatview_models/chatview_models.dart';
 import 'package:flutter/widgets.dart';
-import 'package:flutter_chatview_models/flutter_chatview_models.dart';
 
 import 'chatview_db_connection_constants.dart';
 import 'enum.dart';

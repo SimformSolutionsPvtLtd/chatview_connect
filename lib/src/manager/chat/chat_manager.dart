@@ -1,9 +1,9 @@
 import 'dart:async';
 import 'dart:collection';
 
+import 'package:chatview_models/chatview_models.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/widgets.dart';
-import 'package:flutter_chatview_models/flutter_chatview_models.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../chatview_db_connection.dart';
@@ -480,7 +480,7 @@ final class ChatManager extends ChatController {
     );
   }
 
-  /// {@macro flutter_chatview_db_connection.DatabaseService.updateGroupChat}
+  /// {@macro chatview_db_connection.DatabaseService.updateGroupChat}
   ///
   /// **Note:**
   /// - This method does **not** restrict updates based on whether the
@@ -499,7 +499,7 @@ final class ChatManager extends ChatController {
     );
   }
 
-  /// {@macro flutter_chatview_db_connection.DatabaseService.addUserInGroup}
+  /// {@macro chatview_db_connection.DatabaseService.addUserInGroup}
   Future<bool> addUserInGroup({
     required String userId,
     required Role role,
@@ -557,7 +557,7 @@ final class ChatManager extends ChatController {
     );
   }
 
-  /// {@macro flutter_chatview_db_connection.DatabaseService.updateUserActiveStatus}.
+  /// {@macro chatview_db_connection.DatabaseService.updateUserActiveStatus}.
   Future<bool> updateUserActiveStatus(UserActiveStatus status) =>
       _database.updateUserActiveStatus(
         userStatus: status,
@@ -565,7 +565,7 @@ final class ChatManager extends ChatController {
         retry: ChatViewDBConnectionConstants.defaultRetry,
       );
 
-  /// {@macro flutter_chatview_db_connection.DatabaseService.getChatsStream}
+  /// {@macro chatview_db_connection.DatabaseService.getChatsStream}
   Stream<List<ChatRoom>> getChats({
     ChatSortBy sortBy = ChatSortBy.newestFirst,
     bool includeUnreadMessagesCount = true,
@@ -580,7 +580,7 @@ final class ChatManager extends ChatController {
         limit: limit,
       );
 
-  /// {@macro flutter_chatview_db_connection.DatabaseService.createOneToOneChat}
+  /// {@macro chatview_db_connection.DatabaseService.createOneToOneChat}
   Future<String?> createChat(String userId) => _database.createOneToOneChat(
         userId: _currentUserId,
         otherUserId: userId,

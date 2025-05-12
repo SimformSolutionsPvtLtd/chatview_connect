@@ -59,7 +59,7 @@ and it will be automatically reflected in the PR.
   [file a bug or feature report][GitHub issues], so that we can discuss what direction to follow.
 - [Fork the project][fork guide] on GitHub.
 - Clone the forked repository to your local development machine
-  (e.g. `git clone git@github.com:<YOUR_GITHUB_USER>/flutter_chatview_db_connection.git`).
+  (e.g. `git clone git@github.com:<YOUR_GITHUB_USER>/chatview_db_connection.git`).
 
 ### Performing changes
 
@@ -88,7 +88,7 @@ void deprecatedFeature() {}
 
 ### Open a pull request
 
-Go to the [pull request page of Flutter ChatView DB Connection][PRs] and in the top
+Go to the [pull request page of ChatView DB Connection][PRs] and in the top
 of the page it will ask you if you want to open a pull request from your newly created branch.
 
 The title of the pull request should start with a [conventional commit] type.
@@ -121,7 +121,7 @@ Examples of PR titles:
 
 ## Maintainers
 
-These instructions are for the maintainers of Flutter ChatView DB Connection.
+These instructions are for the maintainers of ChatView DB Connection.
 
 ### Merging a pull request
 
@@ -145,9 +145,9 @@ There are a few things to think about when doing a release:
   There should be migration docs on each PR, if they haven't been copied to the commit message.
 - Create a PR containing the updated changelog and `pubspec.yaml` files.
 
-[GitHub issue]: https://github.com/SimformSolutionsPvtLtd/flutter_chatview_db_connection/issues/new
+[GitHub issue]: https://github.com/SimformSolutionsPvtLtd/chatview_db_connection/issues/new
 
-[GitHub issues]: https://github.com/SimformSolutionsPvtLtd/flutter_chatview_db_connection/issues/new
+[GitHub issues]: https://github.com/SimformSolutionsPvtLtd/chatview_db_connection/issues/new
 
 [style guide]: https://github.com/flutter/flutter/wiki/Style-guide-for-Flutter-repo
 
@@ -159,6 +159,6 @@ There are a few things to think about when doing a release:
 
 [fork guide]: https://guides.github.com/activities/forking/#fork
 
-[PRs]: https://github.com/SimformSolutionsPvtLtd/flutter_chatview_db_connection/pulls
+[PRs]: https://github.com/SimformSolutionsPvtLtd/chatview_db_connection/pulls
 
 [gitmoji]: https://gist.github.com/parmentf/035de27d6ed1dce0b36a

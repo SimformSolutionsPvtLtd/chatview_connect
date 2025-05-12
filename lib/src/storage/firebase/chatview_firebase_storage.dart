@@ -1,8 +1,8 @@
 import 'dart:io';
 
+import 'package:chatview_models/chatview_models.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter_chatview_models/flutter_chatview_models.dart';
 import 'package:http/http.dart' as http;
 import 'package:path/path.dart' as path;
 
@@ -62,7 +62,7 @@ final class ChatViewFirebaseStorage implements StorageService {
     }
   }
 
-  /// {@template flutter_chatview_db_connection.StorageService.getFileName}
+  /// {@template chatview_db_connection.StorageService.getFileName}
   /// by default it will follow below pattern from [Message].
   /// Example:
   /// ```dart

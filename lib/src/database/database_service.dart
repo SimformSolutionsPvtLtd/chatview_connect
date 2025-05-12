@@ -1,8 +1,8 @@
 import 'dart:async';
 
+import 'package:chatview_models/chatview_models.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter_chatview_models/flutter_chatview_models.dart';
 
 import '../enum.dart';
 import '../models/chat_room.dart';
@@ -273,7 +273,7 @@ abstract interface class DatabaseService {
   /// otherwise, the predefined message ID will be applied.
   ///
   /// - (required): [messageOpsConfig]
-  /// {@macro flutter_chatview_db_connection.MessageOpsConfig}
+  /// {@macro chatview_db_connection.MessageOpsConfig}
   Future<Message?> addMessage({
     required int retry,
     required String chatId,
@@ -292,7 +292,7 @@ abstract interface class DatabaseService {
   /// - (required): [message] specifies the [Message] to be delete
   /// from database.
   /// - (required): [messageConfig]
-  /// {@macro flutter_chatview_db_connection.MessageOpsConfig}
+  /// {@macro chatview_db_connection.MessageOpsConfig}
   Future<bool> deleteMessage({
     required int retry,
     required String chatId,
@@ -360,7 +360,7 @@ abstract interface class DatabaseService {
     ValueGetter<ChatRoomParticipant>? ifDataNotFound,
   });
 
-  /// {@template flutter_chatview_db_connection.DatabaseService.updateUserActiveStatus}
+  /// {@template chatview_db_connection.DatabaseService.updateUserActiveStatus}
   /// Updates the current user document with the current user status.
   ///
   /// **Parameters:**
@@ -376,7 +376,7 @@ abstract interface class DatabaseService {
     required UserActiveStatus userStatus,
   });
 
-  /// {@template flutter_chatview_db_connection.DatabaseService.getChatsStream}
+  /// {@template chatview_db_connection.DatabaseService.getChatsStream}
   /// Returns a stream of chat rooms,
   /// each containing a list of users (excluding the current user).
   ///
@@ -426,7 +426,7 @@ abstract interface class DatabaseService {
     int? limit,
   });
 
-  /// {@template flutter_chatview_db_connection.DatabaseService.createOneToOneChat}
+  /// {@template chatview_db_connection.DatabaseService.createOneToOneChat}
   /// Creates a one-to-one chat with the specified user.
   ///
   /// **Parameters:**
@@ -453,7 +453,7 @@ abstract interface class DatabaseService {
     String? chatRoomId,
   });
 
-  /// {@template flutter_chatview_db_connection.DatabaseService.createGroupChat}
+  /// {@template chatview_db_connection.DatabaseService.createGroupChat}
   /// Creates a new group chat with the specified details.
   ///
   /// **Parameters:**
@@ -485,7 +485,7 @@ abstract interface class DatabaseService {
     String? chatRoomId,
   });
 
-  /// {@template flutter_chatview_db_connection.DatabaseService.updateGroupChat}
+  /// {@template chatview_db_connection.DatabaseService.updateGroupChat}
   /// Updates an existing group chat.
   ///
   /// This method allows updating the group chat's name and profile picture.
@@ -509,7 +509,7 @@ abstract interface class DatabaseService {
     String? groupProfilePic,
   });
 
-  /// {@template flutter_chatview_db_connection.DatabaseService.addUserInGroup}
+  /// {@template chatview_db_connection.DatabaseService.addUserInGroup}
   /// Adds a user to the group chat with a specified role.
   /// This method updates the group's membership list and assigns the user
   /// a role.
@@ -545,7 +545,7 @@ abstract interface class DatabaseService {
     DateTime? startDate,
   });
 
-  /// {@template flutter_chatview_db_connection.DatabaseService.removeUserFromGroup}
+  /// {@template chatview_db_connection.DatabaseService.removeUserFromGroup}
   /// Removes a user from the group chat and updates their membership status.
   /// This method marks the user as removed but does not delete their
   /// past messages.
@@ -636,7 +636,7 @@ abstract interface class DatabaseService {
     String? userId,
   });
 
-  /// {@template flutter_chatview_db_connection.DatabaseService.getUserMembershipTimestamp}
+  /// {@template chatview_db_connection.DatabaseService.getUserMembershipTimestamp}
   /// Retrieves the timestamp of when a user was added to a group chat.
   /// This timestamp helps determine which messages should be displayed
   /// to the user based on their membership start time.

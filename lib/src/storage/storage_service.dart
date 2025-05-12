@@ -1,4 +1,4 @@
-import 'package:flutter_chatview_models/flutter_chatview_models.dart';
+import 'package:chatview_models/chatview_models.dart';
 
 /// Defined different methods to interact with a cloud storage service.
 abstract interface class StorageService {
@@ -25,7 +25,7 @@ abstract interface class StorageService {
   /// **Returns:** A [Future] that resolves to the download URL of the uploaded
   /// media, or `null` if the upload fails.
   ///
-  /// {@macro flutter_chatview_db_connection.StorageService.getFileName}
+  /// {@macro chatview_db_connection.StorageService.getFileName}
   Future<String?> uploadMedia({
     required int retry,
     required Message message,

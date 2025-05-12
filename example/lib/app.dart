@@ -8,7 +8,7 @@ class ChatViewDbConnectionExampleApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Chat View DB Connection Demo',
+      title: 'Chat View DB Connection Demo',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         useMaterial3: true,

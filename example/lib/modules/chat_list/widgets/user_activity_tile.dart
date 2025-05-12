@@ -1,6 +1,6 @@
 import 'package:chatview/chatview.dart';
+import 'package:chatview_db_connection/chatview_db_connection.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_chatview_db_connection/flutter_chatview_db_connection.dart';
 
 class UserActivityTile extends StatelessWidget {
   const UserActivityTile({

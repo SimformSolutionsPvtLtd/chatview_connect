@@ -1,4 +1,4 @@
-import 'package:flutter_chatview_models/flutter_chatview_models.dart';
+import 'package:chatview_models/chatview_models.dart';
 
 import '../enum.dart';
 import '../extensions.dart';
@@ -58,7 +58,7 @@ final class ChatRoomMetadata {
   /// For one-to-one chats, this is `null`.
   final String? groupPhotoUrl;
 
-  /// {@template flutter_chatview_db_connection.ChatRoomMetadata.usersProfilePictures}
+  /// {@template chatview_db_connection.ChatRoomMetadata.usersProfilePictures}
   /// Retrieves the profile pictures of users in the chat room as
   /// a list of URLs as strings.
   ///

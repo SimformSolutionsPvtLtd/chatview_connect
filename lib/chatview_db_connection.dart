@@ -1,6 +1,6 @@
-/// flutter_chatview_db_connection: Cloud-Powered ChatView Integration
+/// chatview_db_connection: Cloud-Powered ChatView Integration
 ///
-/// `flutter_chatview_db_connection` is your go-to solution for integrating
+/// `chatview_db_connection` is your go-to solution for integrating
 /// a fully functional, cloud-backed chat module into your Flutter applications.
 ///
 /// Currently, the package offers seamless integration with Firebase

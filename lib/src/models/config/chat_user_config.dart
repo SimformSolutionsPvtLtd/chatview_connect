@@ -1,4 +1,4 @@
-import 'package:flutter_chatview_models/flutter_chatview_models.dart';
+import 'package:chatview_models/chatview_models.dart';
 
 /// A configurable implementation of [ChatUserConfig] that allows
 /// dynamic mapping of user properties when serializing and deserializing JSON.

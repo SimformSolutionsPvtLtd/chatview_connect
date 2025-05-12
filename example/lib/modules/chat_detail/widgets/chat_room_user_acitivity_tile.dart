@@ -1,7 +1,7 @@
 import 'package:chatview/chatview.dart';
+import 'package:chatview_db_connection/chatview_db_connection.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_chatview_db_connection/flutter_chatview_db_connection.dart';
 
 import '../../chat_list/widgets/user_activity_tile.dart';
 

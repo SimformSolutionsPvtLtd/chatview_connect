@@ -1,5 +1,5 @@
-name: example
-description: "A new Flutter project."
+name: chatview_db_connection_example
+description: "Flutter project integrating chatview with chatview_db_connection package."
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
@@ -44,7 +44,7 @@ dependencies:
       url: https://github.com/SimformSolutionsPvtLtd/flutter_chatview
       ref: feature/use_centralised_repository_for_data_models
 
-  flutter_chatview_db_connection:
+  chatview_db_connection:
     path: ..
 
 dev_dependencies:

@@ -1,5 +1,5 @@
+import 'package:chatview_models/chatview_models.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter_chatview_models/flutter_chatview_models.dart';
 
 import '../../chatview_db_connection.dart';
 import '../../extensions.dart';

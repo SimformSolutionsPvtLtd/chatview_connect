@@ -1,9 +1,9 @@
-# Flutter ChatView DB Connection
+# ChatView DB Connection
 
-[![flutter_chatview_db_connection](https://img.shields.io/pub/v/flutter_chatview_db_connection?label=flutter_chatview_db_connection)](https://pub.dev/packages/flutter_chatview_db_connection)
+[![chatview_db_connection](https://img.shields.io/pub/v/chatview_db_connection?label=chatview_db_connection)](https://pub.dev/packages/chatview_db_connection)
 
-`flutter_chatview_db_connection` is a specialized wrapper for the [`chatview`][chatViewPackage]
-package that enables seamless integration with cloud services.
+`chatview_db_connection` is a specialized wrapper for [`chatview`][chatViewPackage]
+package providing seamless integration with Database & Storage for your flutter chat app.
 
 _Check out other amazing
 open-source [Flutter libraries](https://pub.dev/publishers/simform.com/packages)
@@ -30,7 +30,7 @@ Add dependency to `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  flutter_chatview_db_connection: <latest-version>
+  chatview_db_connection: <latest-version>
 ```
 
 ## 🔧 Setup
@@ -39,7 +39,7 @@ dependencies:
   haven’t) and connect it to your Flutter app
   using [this guide](https://firebase.google.com/docs/flutter/setup?platform=android).
 
-- Initialize `flutter_chatview_db_connection` just after the firebase initialization, specify your
+- Initialize `chatview_db_connection` just after the firebase initialization, specify your
   desired cloud service for use with [`chatview`][chatViewPackage].
 
     ```dart
@@ -55,7 +55,7 @@ dependencies:
 
 The `ChatController` from [`chatview`][chatViewPackage] has been replaced by `ChatManager`. It can
 be used for both **existing** and **new chat rooms**, depending on the parameters
-provided. [see full example here.](https://github.com/SimformSolutionsPvtLtd/flutter_chatview_db_connection/blob/master/example/lib/main.dart)
+provided. [see full example here.](https://github.com/SimformSolutionsPvtLtd/chatview_db_connection/blob/master/example/lib/main.dart)
 
 **Before:**
 
@@ -178,7 +178,7 @@ Widget build(BuildContext context) {
 These Firebase Security Rules define access control
 for both the [Firestore Database](https://firebase.google.com/docs/firestore/security/get-started)
 and [Firebase Storage](https://firebase.google.com/docs/storage/security), ensuring secure data
-handling and media uploads in a chat applications using `flutter_chatview_db_connection`. The rules
+handling and media uploads in a chat applications using `chatview_db_connection`. The rules
 enforce authentication, user permissions, and chat room membership validation to maintain secure
 access.
 
@@ -263,4 +263,4 @@ documentation.
 
 [chatViewPackage]: https://pub.dev/packages/chatview
 
-[chatViewModels]: https://pub.dev/packages/flutter_chatview_models
+[chatViewModels]: https://pub.dev/packages/chatview_models

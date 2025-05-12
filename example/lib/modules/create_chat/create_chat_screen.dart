@@ -1,6 +1,6 @@
 import 'package:chatview/chatview.dart';
+import 'package:chatview_db_connection/chatview_db_connection.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_chatview_db_connection/flutter_chatview_db_connection.dart';
 
 import '../chat_detail/chat_detail_screen.dart';
 import 'widgets/create_chat_tile.dart';

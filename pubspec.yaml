@@ -1,8 +1,15 @@
-name: flutter_chatview_db_connection
-description: "A new Flutter package project."
+name: chatview_db_connection
+description: "Specialized wrapper for chatview package providing seamless integration with Database & Storage for your flutter chat app."
 version: 0.0.1
-issue_tracker: https://github.com/SimformSolutionsPvtLtd/flutter_chatview_db_connection/issues
-homepage: https://github.com/SimformSolutionsPvtLtd/flutter_chatview_db_connection
+issue_tracker: https://github.com/SimformSolutionsPvtLtd/chatview_db_connection/issues
+homepage: https://github.com/SimformSolutionsPvtLtd/chatview_db_connection
+topics:
+  - chat
+  - chatview
+  - firebase
+  - plug and play
+  - backend integration
+  - chat backend
 
 environment:
   sdk: '>=3.3.0 <4.0.0'
@@ -15,9 +22,9 @@ dependencies:
     sdk: flutter
 
   # TODO(YASH): Use pub.dev version once this repo is published.
-  flutter_chatview_models:
+  chatview_models:
     git:
-      url: https://github.com/SimformSolutionsPvtLtd/flutter_chatview_models
+      url: https://github.com/SimformSolutionsPvtLtd/chatview_models
 
   http: ^1.3.0
   intl: ^0.20.0

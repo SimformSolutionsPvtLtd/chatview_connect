@@ -1,8 +1,8 @@
-import 'package:example/widgets/user_stacked_profile.dart';
+import 'package:chatview_db_connection/chatview_db_connection.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_chatview_db_connection/flutter_chatview_db_connection.dart';
 
 import '../../../widgets/chat_user_avatar.dart';
+import '../../../widgets/user_stacked_profile.dart';
 
 class ChatListItem extends StatelessWidget {
   const ChatListItem({

@@ -6,8 +6,8 @@ import 'package:flutter/foundation.dart';
 import 'package:rxdart/rxdart.dart';
 import 'package:uuid/uuid.dart';
 
-import '../../chatview_db_connection.dart';
-import '../../chatview_db_connection_constants.dart';
+import '../../chatview_connect.dart';
+import '../../chatview_connect_constants.dart';
 import '../../enum.dart';
 import '../../extensions.dart';
 import '../../models/chat_room.dart';
@@ -40,10 +40,10 @@ final class ChatViewFireStoreDatabase implements DatabaseService {
       'membership_status_timestamp';
 
   FirestoreChatDatabasePathConfig? get _chatDatabasePathConfig =>
-      ChatViewDbConnection.instance.getFirestoreChatDatabasePathConfig;
+      ChatViewConnect.instance.getFirestoreChatDatabasePathConfig;
 
   FirestoreChatCollectionNameConfig get _chatCollectionNameConfig =>
-      ChatViewDbConnection.instance.getFirestoreChatCollectionNameConfig;
+      ChatViewConnect.instance.getFirestoreChatCollectionNameConfig;
 
   String _chatRoomCollectionPath(String chatId) {
     final collectionPath = '${_chatCollectionNameConfig.chats}/$chatId';
@@ -307,7 +307,7 @@ final class ChatViewFireStoreDatabase implements DatabaseService {
     try {
       final isReactionRemoved = message.reaction.reactions.isEmpty;
       final updateData = <String, dynamic>{
-        if (status != null) _status: ChatViewDBConnectionConstants.emptyString,
+        if (status != null) _status: ChatViewConnectConstants.emptyString,
         if (reaction != null && !isReactionRemoved) _reaction: userId,
       };
 
@@ -348,7 +348,7 @@ final class ChatViewFireStoreDatabase implements DatabaseService {
     final collectionPath = _chatRoomCollectionPath(chatId);
 
     final currentChatID =
-        collectionPath.chatId ?? ChatViewDBConnectionConstants.emptyString;
+        collectionPath.chatId ?? ChatViewConnectConstants.emptyString;
 
     if (currentChatID.isEmpty) {
       return Stream.error('Chat ID not found from path: $collectionPath');
@@ -665,7 +665,7 @@ final class ChatViewFireStoreDatabase implements DatabaseService {
     final collectionPath = _chatRoomCollectionPath(chatId);
 
     final currentChatID =
-        collectionPath.chatId ?? ChatViewDBConnectionConstants.emptyString;
+        collectionPath.chatId ?? ChatViewConnectConstants.emptyString;
 
     if (currentChatID.isEmpty) {
       throw Exception('Chat ID not found from path: $collectionPath');
@@ -853,7 +853,7 @@ final class ChatViewFireStoreDatabase implements DatabaseService {
         final message = snapshot.docs.firstOrNull?.data();
         if (message == null) return Stream.value(null);
         final reactedByUserId = message.update?[_reaction]?.toString() ??
-            ChatViewDBConnectionConstants.emptyString;
+            ChatViewConnectConstants.emptyString;
         final showReactionMessage =
             message.sentBy == userId || reactedByUserId == userId;
         return showReactionMessage
@@ -963,7 +963,7 @@ final class ChatViewFireStoreDatabase implements DatabaseService {
             chatRoomType: ChatRoomType.oneToOne,
           ),
         ) ??
-        ChatViewDBConnectionConstants.emptyString;
+        ChatViewConnectConstants.emptyString;
 
     if (newChatId.isEmpty) return null;
 
@@ -1021,7 +1021,7 @@ final class ChatViewFireStoreDatabase implements DatabaseService {
             chatRoomType: ChatRoomType.group,
           ),
         ) ??
-        ChatViewDBConnectionConstants.emptyString;
+        ChatViewConnectConstants.emptyString;
 
     if (chatId.isEmpty) return null;
 

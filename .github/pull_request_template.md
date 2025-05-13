@@ -47,6 +47,6 @@ Closes #1234
 
 <!-- Links -->
 
-[Contributor Guide]: https://github.com/SimformSolutionsPvtLtd/chatview_db_connection/blob/master/CONTRIBUTING.md
+[Contributor Guide]: https://github.com/SimformSolutionsPvtLtd/chatview_connect/blob/master/CONTRIBUTING.md
 
 [Conventional Commit]: https://www.conventionalcommits.org

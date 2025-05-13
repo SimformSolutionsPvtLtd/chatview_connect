@@ -62,7 +62,7 @@ final class ChatViewFirebaseStorage implements StorageService {
     }
   }
 
-  /// {@template chatview_db_connection.StorageService.getFileName}
+  /// {@template chatview_connect.StorageService.getFileName}
   /// by default it will follow below pattern from [Message].
   /// Example:
   /// ```dart

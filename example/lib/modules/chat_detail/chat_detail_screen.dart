@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:math';
 
 import 'package:chatview/chatview.dart';
-import 'package:chatview_db_connection/chatview_db_connection.dart';
+import 'package:chatview_connect/chatview_connect.dart';
 import 'package:flutter/material.dart';
 
 import '../../values/messages_data.dart';
@@ -216,7 +216,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
   }
 
   Future<void> _initChatRoom() async {
-    _chatController = await ChatViewDbConnection.instance.getChatRoomManager(
+    _chatController = await ChatViewConnect.instance.getChatRoomManager(
       config: _config,
       chatRoomId: widget.chatRoomId,
       otherUsers: widget.otherUsers,

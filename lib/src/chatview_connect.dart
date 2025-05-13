@@ -1,7 +1,7 @@
 import 'package:chatview_models/chatview_models.dart';
 import 'package:flutter/widgets.dart';
 
-import 'chatview_db_connection_constants.dart';
+import 'chatview_connect_constants.dart';
 import 'enum.dart';
 import 'extensions.dart';
 import 'manager/chat/chat_manager.dart';
@@ -16,7 +16,7 @@ import 'models/config/firebase/firestore_chat_database_path_config.dart';
 /// chat views.
 ///
 /// provides methods to initialize and access the clouds service.
-final class ChatViewDbConnection {
+final class ChatViewConnect {
   /// The main entry point for using the chat database connection.
   ///
   /// This class must be instantiated to access chat-related functionality.
@@ -40,7 +40,7 @@ final class ChatViewDbConnection {
   ///
   /// **Example Usage in `main.dart`:**
   /// ```dart
-  /// ChatViewDbConnection.initialize(
+  /// ChatViewConnect.initialize(
   ///     ChatViewCloudService.firebase,
   ///     chatUserConfig: const ChatUserConfig(
   ///       idKey: 'user_id',
@@ -57,7 +57,7 @@ final class ChatViewDbConnection {
   ///     ),
   /// );
   /// ```
-  factory ChatViewDbConnection.initialize(
+  factory ChatViewConnect.initialize(
     ChatViewCloudService cloudServiceType, {
     ChatUserConfig? chatUserConfig,
     CloudServiceConfig? cloudServiceConfig,
@@ -70,20 +70,20 @@ final class ChatViewDbConnection {
         ChatViewCloudService.firebase => null,
       };
       _chatUserConfig = chatUserConfig;
-      _instance = ChatViewDbConnection._(cloudServiceType, cloudConfig);
+      _instance = ChatViewConnect._(cloudServiceType, cloudConfig);
       final service = CloudServices.fromType(cloudServiceType);
       _service = service;
     }
     return _instance!;
   }
 
-  const ChatViewDbConnection._(this._cloudServiceType, this._cloudConfig);
+  const ChatViewConnect._(this._cloudServiceType, this._cloudConfig);
 
   final ChatViewCloudService _cloudServiceType;
 
   final CloudServiceConfig? _cloudConfig;
 
-  static ChatViewDbConnection? _instance;
+  static ChatViewConnect? _instance;
 
   static CloudServices? _service;
 
@@ -148,15 +148,15 @@ final class ChatViewDbConnection {
   /// - While you can access chat room-related methods, you won’t be able to
   ///   perform any operations. To fully utilize chat room functionalities,
   ///   use the chat manager from
-  ///   `ChatViewDbConnection.instance.getChatRoomManager()` instead.
+  ///   `ChatViewConnect.instance.getChatRoomManager()` instead.
   ChatManager getChatManager() {
     assert(
       _service != null,
       '''
-      ChatViewDbConnection must be initialized. 
-      Example: initialize ChatViewDbConnection for firebase backend
+      ChatViewConnect must be initialized. 
+      Example: initialize ChatViewConnect for firebase backend
       ///```dart
-      /// ChatViewDbConnection.initialize(ChatViewCloudService.firebase);
+      /// ChatViewConnect.initialize(ChatViewCloudService.firebase);
       /// ```''',
     );
     return ChatManager.fromService(_service!);
@@ -289,7 +289,7 @@ final class ChatViewDbConnection {
     final chatRoomParticipants = await _service?.database.getChatRoomMetadata(
       userId: userId,
       chatId: chatRoomId,
-      retry: ChatViewDBConnectionConstants.defaultRetry,
+      retry: ChatViewConnectConstants.defaultRetry,
     );
     if (chatRoomParticipants == null) throw Exception('No Users Found!');
     config?.chatRoomMetadata?.call(chatRoomParticipants);
@@ -362,7 +362,7 @@ final class ChatViewDbConnection {
       final chatRoomID = await _service?.database.findOneToOneChatRoom(
         userId: userId,
         otherUserId: otherUsers.first.id,
-        retry: ChatViewDBConnectionConstants.defaultRetry,
+        retry: ChatViewConnectConstants.defaultRetry,
       );
       if (chatRoomID case final chatRoomId?) {
         return _getChatManagerByChatRoomId(
@@ -406,21 +406,21 @@ final class ChatViewDbConnection {
     );
   }
 
-  /// Gets the singleton instance of [ChatViewDbConnection].
+  /// Gets the singleton instance of [ChatViewConnect].
   ///
   /// *Note: Ensures the instance is initialized before accessing it.
   /// Example:
   /// ``` dart
-  /// ChatViewDbConnection.initialize(ChatViewCloudService.firebase);
+  /// ChatViewConnect.initialize(ChatViewCloudService.firebase);
   /// ```
-  static ChatViewDbConnection get instance {
+  static ChatViewConnect get instance {
     assert(
       _instance != null,
       '''
-      ChatViewDbConnection must be initialized. 
-      Example: initialize ChatViewDbConnection for firebase backend
+      ChatViewConnect must be initialized. 
+      Example: initialize ChatViewConnect for firebase backend
       ///```dart
-      /// ChatViewDbConnection.initialize(ChatViewCloudService.firebase);
+      /// ChatViewConnect.initialize(ChatViewCloudService.firebase);
       /// ```''',
     );
     return _instance!;

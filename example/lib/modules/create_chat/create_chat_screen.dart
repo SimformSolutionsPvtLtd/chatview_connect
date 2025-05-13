@@ -1,5 +1,5 @@
 import 'package:chatview/chatview.dart';
-import 'package:chatview_db_connection/chatview_db_connection.dart';
+import 'package:chatview_connect/chatview_connect.dart';
 import 'package:flutter/material.dart';
 
 import '../chat_detail/chat_detail_screen.dart';
@@ -13,8 +13,8 @@ class CreateChatScreen extends StatefulWidget {
 }
 
 class _CreateChatScreenState extends State<CreateChatScreen> {
-  final _chatController = ChatViewDbConnection.instance.getChatManager();
-  final currentUser = ChatViewDbConnection.instance.currentUserId;
+  final _chatController = ChatViewConnect.instance.getChatManager();
+  final currentUser = ChatViewConnect.instance.currentUserId;
   ChatUser? currentChatUser;
   List<ChatUser> otherChatUsers = [];
 

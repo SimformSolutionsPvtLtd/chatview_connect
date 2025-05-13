@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:chatview_db_connection/chatview_db_connection.dart';
+import 'package:chatview_connect/chatview_connect.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 
@@ -10,7 +10,7 @@ import 'firebase_options.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-  ChatViewDbConnection.initialize(
+  ChatViewConnect.initialize(
     ChatViewCloudService.firebase,
     chatUserConfig: const ChatUserConfig(
       idKey: 'user_id',
@@ -18,7 +18,7 @@ Future<void> main() async {
       profilePhotoKey: 'avatar',
     ),
     // Configuration for customizing Firebase Firestore paths and
-    // collection names used by ChatViewDbConnection.
+    // collection names used by ChatViewConnect.
     //
     // Example:
     // cloudServiceConfig: FirebaseCloudConfig(
@@ -31,7 +31,7 @@ Future<void> main() async {
     // ),
   );
 
-  // Sets the current user ID for the ChatViewDbConnection instance
+  // Sets the current user ID for the ChatViewConnect instance
   // based on the authenticated user.
   //
   // This ensures that all future chat-related operations are scoped
@@ -40,6 +40,6 @@ Future<void> main() async {
   //
   // It should be called after confirming a valid user is logged in
   // For example, on Firebase through `FirebaseAuth.instance.authStateChanges()`
-  ChatViewDbConnection.instance.setCurrentUserId('1');
-  runApp(const ChatViewDbConnectionExampleApp());
+  ChatViewConnect.instance.setCurrentUserId('1');
+  runApp(const ChatViewConnectExampleApp());
 }

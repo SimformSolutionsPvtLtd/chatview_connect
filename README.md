@@ -1,8 +1,8 @@
-# ChatView DB Connection
+# ChatView Connect
 
-[![Build](https://github.com/SimformSolutionsPvtLtd/chatview_db_connection/actions/workflows/flutter.yaml/badge.svg?branch=master)](https://github.com/SimformSolutionsPvtLtd/chatview_db_connection/actions) [![chatview_db_connection](https://img.shields.io/pub/v/chatview_db_connection?label=chatview_db_connection)](https://pub.dev/packages/chatview_db_connection)
+[![Build](https://github.com/SimformSolutionsPvtLtd/chatview_connect/actions/workflows/flutter.yaml/badge.svg?branch=master)](https://github.com/SimformSolutionsPvtLtd/chatview_connect/actions) [![chatview_connect](https://img.shields.io/pub/v/chatview_connect?label=chatview_connect)](https://pub.dev/packages/chatview_connect)
 
-`chatview_db_connection` is a specialized wrapper for [`chatview`][chatViewPackage]
+`chatview_connect` is a specialized wrapper for [`chatview`][chatViewPackage]
 package providing seamless integration with Database & Storage for your flutter chat app.
 
 _Check out other amazing
@@ -30,7 +30,7 @@ Add dependency to `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  chatview_db_connection: <latest-version>
+  chatview_connect: <latest-version>
 ```
 
 ## 🔧 Setup
@@ -39,23 +39,23 @@ dependencies:
   haven’t) and connect it to your Flutter app
   using [this guide](https://firebase.google.com/docs/flutter/setup?platform=android).
 
-- Initialize `chatview_db_connection` just after the firebase initialization, specify your
+- Initialize `chatview_connect` just after the firebase initialization, specify your
   desired cloud service for use with [`chatview`][chatViewPackage].
 
     ```dart
-    ChatViewDbConnection(ChatViewCloudService.firebase);
+    ChatViewConnect(ChatViewCloudService.firebase);
     ````
 
 - Set Current User:
     ```dart
-    ChatViewDbConnection.instance.setCurrentUserId('current_user_id'); 
+    ChatViewConnect.instance.setCurrentUserId('current_user_id'); 
     ````
 
 ## 🏗 Using with [ChatView][chatViewPackage]
 
 The `ChatController` from [`chatview`][chatViewPackage] has been replaced by `ChatManager`. It can
 be used for both **existing** and **new chat rooms**, depending on the parameters
-provided. [see full example here.](https://github.com/SimformSolutionsPvtLtd/chatview_db_connection/blob/master/example/lib/main.dart)
+provided. [see full example here.](https://github.com/SimformSolutionsPvtLtd/chatview_connect/blob/master/example/lib/main.dart)
 
 **Before:**
 
@@ -74,7 +74,7 @@ ChatController _chatController = ChatController(
   corresponding `ChatManager`.
 
 ````dart
-ChatManager _chatController = await ChatViewDbConnection.instance.getChatManager(
+ChatManager _chatController = await ChatViewConnect.instance.getChatManager(
   // You can get `chatRoomId` from `createChat`, `createGroupChat`, or `getChats`
   chatRoomId: 'chat_room_id',
   scrollController: ScrollController(),
@@ -140,7 +140,7 @@ Widget build(BuildContext context) {
   using the method below. **Note:** This instance does not support chat room-specific methods.
 
     ```dart
-    ChatManager _chatController = ChatViewDbConnection.instance.getChatManager();
+    ChatManager _chatController = ChatViewConnect.instance.getChatManager();
     
     @override
     Widget build(BuildContext context) {
@@ -178,7 +178,7 @@ Widget build(BuildContext context) {
 These Firebase Security Rules define access control
 for both the [Firestore Database](https://firebase.google.com/docs/firestore/security/get-started)
 and [Firebase Storage](https://firebase.google.com/docs/storage/security), ensuring secure data
-handling and media uploads in a chat applications using `chatview_db_connection`. The rules
+handling and media uploads in a chat applications using `chatview_connect`. The rules
 enforce authentication, user permissions, and chat room membership validation to maintain secure
 access.
 
@@ -193,13 +193,13 @@ documentation.
 
 ## ⚙️ Optional Configuration
 
-#### Properties of `ChatViewDbConnection`:
+#### Properties of `ChatViewConnect`:
 
 - `chatUserConfig`: Use this if your user collection documents have field keys that differ from
   those in the default `ChatUser` model.
 
     ```dart
-    ChatViewDbConnection(
+    ChatViewConnect(
       ChatViewCloudService.firebase,
       chatUserModelConfig: const ChatUserModelConfig(
         idKey: 'user_id',
@@ -222,7 +222,7 @@ documentation.
       default.
 
         ```dart
-        ChatViewDbConnection(
+        ChatViewConnect(
           ChatViewCloudService.firebase,
           cloudServiceConfig: FirebaseCloudConfig(
             databasePathConfig: FirestoreChatDatabasePathConfig(

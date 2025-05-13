@@ -3,7 +3,7 @@ rules_version = '2';
 service firebase.storage {
   match /b/{bucket}/o {
 
-    // TODO: Update the path as per configured in chatview db connection
+    // TODO: Update the path as per configured in chatview_connect
   	function chatCollection() {
       return 'chats';
     }

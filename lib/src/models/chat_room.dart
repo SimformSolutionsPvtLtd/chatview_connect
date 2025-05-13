@@ -102,9 +102,19 @@ class ChatRoom {
 
   /// The number of unread messages in the chat room for the current user.
   ///
-  /// **Note:** In the `ChatViewDbConnection.connectionManager.getChats()`
-  /// method, if `includeUnreadMessagesCount` is set to `false`,
+  /// **Note:** In the below example, the `unreadMessagesCount` is set to `false`.
   /// `0` will be returned.
+  ///
+  /// ```dart
+  /// ChatManager chatManager = ChatViewConnect.instance.getChatManager();
+  ///
+  /// StreamBuilder(
+  ///  stream: chatManager.getChats(includeUnreadMessagesCount: false),
+  ///  builder: (context, snapshot) {
+  ///   ...
+  ///  }
+  /// ),
+  /// ```
   ///
   /// A value of `0` indicates that there are no unread messages.
   final int unreadMessagesCount;
@@ -144,7 +154,7 @@ class ChatRoom {
     };
   }
 
-  /// {@template chatview_db_connection.ChatRoom.usersProfilePictures}
+  /// {@template chatview_connect.ChatRoom.usersProfilePictures}
   /// Retrieves the profile pictures of users in the chat room as
   /// a list of URLs as strings.
   ///

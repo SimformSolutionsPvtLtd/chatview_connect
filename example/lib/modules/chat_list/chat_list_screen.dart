@@ -1,5 +1,6 @@
 import 'package:chatview/chatview.dart';
-import 'package:chatview_db_connection/chatview_db_connection.dart';
+import 'package:chatview_connect/chatview_connect.dart';
+// ignore: depend_on_referenced_packages
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 
@@ -15,9 +16,9 @@ class ChatListScreen extends StatefulWidget {
 }
 
 class _ChatListScreenState extends State<ChatListScreen> {
-  final _chatController = ChatViewDbConnection.instance.getChatManager();
+  final _chatController = ChatViewConnect.instance.getChatManager();
 
-  String? currentUserId = ChatViewDbConnection.instance.currentUserId;
+  String? currentUserId = ChatViewConnect.instance.currentUserId;
 
   @override
   Widget build(BuildContext context) {
@@ -112,7 +113,7 @@ class _ChatListScreenState extends State<ChatListScreen> {
   void _onSelectUser(String userId) {
     setState(() {
       currentUserId = userId;
-      ChatViewDbConnection.instance.setCurrentUserId(userId);
+      ChatViewConnect.instance.setCurrentUserId(userId);
     });
   }
 

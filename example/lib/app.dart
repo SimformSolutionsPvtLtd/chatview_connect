@@ -2,13 +2,13 @@ import 'package:flutter/material.dart';
 
 import 'modules/chat_list/chat_list_screen.dart';
 
-class ChatViewDbConnectionExampleApp extends StatelessWidget {
-  const ChatViewDbConnectionExampleApp({super.key});
+class ChatViewConnectExampleApp extends StatelessWidget {
+  const ChatViewConnectExampleApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Chat View DB Connection Demo',
+      title: 'Chat View Connect Demo',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         useMaterial3: true,

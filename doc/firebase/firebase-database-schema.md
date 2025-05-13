@@ -24,7 +24,7 @@ modifying the data.
 
 **Note:** If your Firestore database has a different path for the user collection, a different
 collection name, or different field keys for user details, configure the `cloudServiceConfig`.
-for Firebase, use the `FirebaseCloudConfig` class while initializing the `ChatViewDbConnection`
+for Firebase, use the `FirebaseCloudConfig` class while initializing the `ChatViewConnect`
 constructor.
 
 #### Chats Collection:

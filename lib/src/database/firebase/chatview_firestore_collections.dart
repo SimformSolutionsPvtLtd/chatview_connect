@@ -1,7 +1,7 @@
 import 'package:chatview_models/chatview_models.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-import '../../chatview_db_connection.dart';
+import '../../chatview_connect.dart';
 import '../../extensions.dart';
 import '../../models/chat_room.dart';
 import '../../models/chat_room_participant.dart';
@@ -21,10 +21,10 @@ abstract final class ChatViewFireStoreCollections {
   static final _firestoreInstance = FirebaseFirestore.instance;
 
   static FirestoreChatCollectionNameConfig get _chatCollectionNameConfig =>
-      ChatViewDbConnection.instance.getFirestoreChatCollectionNameConfig;
+      ChatViewConnect.instance.getFirestoreChatCollectionNameConfig;
 
   static ChatUserConfig? get _chatUserConfig =>
-      ChatViewDbConnection.instance.getChatUserConfig;
+      ChatViewConnect.instance.getChatUserConfig;
 
   /// Collection reference for messages.
   ///

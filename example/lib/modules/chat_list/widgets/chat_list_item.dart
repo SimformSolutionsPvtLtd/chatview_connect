@@ -1,4 +1,4 @@
-import 'package:chatview_db_connection/chatview_db_connection.dart';
+import 'package:chatview_connect/chatview_connect.dart';
 import 'package:flutter/material.dart';
 
 import '../../../widgets/chat_user_avatar.dart';

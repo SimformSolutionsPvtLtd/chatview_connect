@@ -25,7 +25,7 @@ abstract interface class StorageService {
   /// **Returns:** A [Future] that resolves to the download URL of the uploaded
   /// media, or `null` if the upload fails.
   ///
-  /// {@macro chatview_db_connection.StorageService.getFileName}
+  /// {@macro chatview_connect.StorageService.getFileName}
   Future<String?> uploadMedia({
     required int retry,
     required Message message,

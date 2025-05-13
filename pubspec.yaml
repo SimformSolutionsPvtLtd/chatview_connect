@@ -1,8 +1,8 @@
-name: chatview_db_connection
+name: chatview_connect
 description: "Specialized wrapper for chatview package providing seamless integration with Database & Storage for your flutter chat app."
 version: 0.0.1
-issue_tracker: https://github.com/SimformSolutionsPvtLtd/chatview_db_connection/issues
-homepage: https://github.com/SimformSolutionsPvtLtd/chatview_db_connection
+issue_tracker: https://github.com/SimformSolutionsPvtLtd/chatview_connect/issues
+homepage: https://github.com/SimformSolutionsPvtLtd/chatview_connect
 topics:
   - chat
   - chatview

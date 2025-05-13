@@ -3,22 +3,22 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // TODO: Update the path as per configured in chatview db connection
+    // TODO: Update the path as per configured in chatview_connect
   	function chatCollection() {
       return 'chats';
     }
 
-    // TODO: Update the path as per configured in chatview db connection
+    // TODO: Update the path as per configured in chatview_connect
     function usersCollection() {
       return 'users';
     }
 
-    // TODO: Update the path as per configured in chatview db connection
+    // TODO: Update the path as per configured in chatview_connect
     function messageCollection() {
       return 'messages';
     }
 
-    // TODO: Update the path as per configured in chatview db connection
+    // TODO: Update the path as per configured in chatview_connect
     function userChatsCollection() {
       return 'user_chats';
     }

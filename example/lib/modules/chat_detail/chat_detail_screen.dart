@@ -294,8 +294,10 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
         break;
       case ChatOperation.updateGroupName:
         await controller.updateGroupChat(
-          groupName: 'Group ${Random().nextInt(100)}',
-          groupProfilePic: Constants.profileImage,
+          displayMetadata: ChatRoomDisplayMetadata(
+            chatName: 'Group ${Random().nextInt(100)}',
+            chatProfilePhoto: Constants.profileImage,
+          ),
         );
         break;
       case ChatOperation.addUser:

@@ -10,7 +10,7 @@ import 'firebase_options.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-  ChatViewDbConnection(
+  ChatViewDbConnection.initialize(
     ChatViewCloudService.firebase,
     chatUserConfig: const ChatUserConfig(
       idKey: 'user_id',

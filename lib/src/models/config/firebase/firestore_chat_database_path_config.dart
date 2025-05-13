@@ -8,7 +8,7 @@ import '../../../extensions.dart';
 ///
 /// ### Example Usage:
 /// ```dart
-/// ChatViewDbConnection(
+/// ChatViewDbConnection.initialize(
 ///     ChatViewCloudService.firebase,
 ///     cloudServiceConfig: FirebaseCloudConfig(
 ///       databasePathConfig: FirestoreChatDatabasePathConfig(

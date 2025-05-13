@@ -47,17 +47,7 @@ class _CreateChatScreenState extends State<CreateChatScreen> {
                   return CreateChatTile(
                     username: user.name,
                     userProfile: user.profilePhoto,
-                    onTap: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => ChatDetailScreen(
-                          otherUsers: [user],
-                          groupChatName: 'Test Group',
-                          currentUser: currentChatUser,
-                          chatRoomType: ChatRoomType.oneToOne,
-                        ),
-                      ),
-                    ),
+                    onTap: () => _createOneToOneChat(otherUser: user),
                   );
                 }
               },
@@ -81,7 +71,56 @@ class _CreateChatScreenState extends State<CreateChatScreen> {
     }
   }
 
-  Future<dynamic> _createGroupChat() {
+  Future<dynamic> _createOneToOneChat({
+    required ChatUser otherUser,
+    bool createWithChatManager = false,
+  }) async {
+    if (!createWithChatManager) {
+      final chatRoomId = await _chatController.createChat(otherUser.id);
+      if (chatRoomId == null || !mounted) return;
+      return Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => ChatDetailScreen(chatRoomId: chatRoomId),
+        ),
+      );
+    }
+
+    return Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => ChatDetailScreen(
+          otherUsers: [otherUser],
+          groupChatName: 'Test Group',
+          currentUser: currentChatUser,
+          chatRoomType: ChatRoomType.oneToOne,
+        ),
+      ),
+    );
+  }
+
+  Future<dynamic> _createGroupChat({bool createWithChatManager = false}) async {
+    if (createWithChatManager) {
+      final participants = <String, Role>{};
+      for (var i = 0; i < otherChatUsers.length; i++) {
+        final user = otherChatUsers[i];
+        participants[user.id] = Role.admin;
+      }
+      final chatRoomId = await _chatController.createGroupChat(
+        groupName: 'Test Group',
+        groupProfilePic:
+            'https://images.unsplash.com/photo-1739305235159-308ddffb4129?w=900&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxmZWF0dXJlZC1waG90b3MtZmVlZHw2fHx8ZW58MHx8fHx8',
+        participants: participants,
+      );
+      if (chatRoomId == null || !mounted) return;
+      return Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => ChatDetailScreen(chatRoomId: chatRoomId),
+        ),
+      );
+    }
+
     return Navigator.push(
       context,
       MaterialPageRoute(

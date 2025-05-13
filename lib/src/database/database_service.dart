@@ -564,6 +564,7 @@ abstract interface class DatabaseService {
   /// - (required): [deleteChatMedia] A callback function
   ///   to delete chat-related documents from storage.
   ///
+  /// **Note:**
   /// If the group has only one remaining user and [deleteGroupIfSingleUser]
   /// is `true`, the group will be deleted along with its chat-related
   /// documents.

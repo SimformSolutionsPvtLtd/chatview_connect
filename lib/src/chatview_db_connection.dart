@@ -40,7 +40,7 @@ final class ChatViewDbConnection {
   ///
   /// **Example Usage in `main.dart`:**
   /// ```dart
-  /// ChatViewDbConnection(
+  /// ChatViewDbConnection.initialize(
   ///     ChatViewCloudService.firebase,
   ///     chatUserConfig: const ChatUserConfig(
   ///       idKey: 'user_id',
@@ -57,7 +57,7 @@ final class ChatViewDbConnection {
   ///     ),
   /// );
   /// ```
-  factory ChatViewDbConnection(
+  factory ChatViewDbConnection.initialize(
     ChatViewCloudService cloudServiceType, {
     ChatUserConfig? chatUserConfig,
     CloudServiceConfig? cloudServiceConfig,
@@ -156,7 +156,7 @@ final class ChatViewDbConnection {
       ChatViewDbConnection must be initialized. 
       Example: initialize ChatViewDbConnection for firebase backend
       ///```dart
-      /// ChatViewDbConnection(ChatViewCloudService.firebase);
+      /// ChatViewDbConnection.initialize(ChatViewCloudService.firebase);
       /// ```''',
     );
     return ChatManager.fromService(_service!);
@@ -173,11 +173,8 @@ final class ChatViewDbConnection {
   /// **Required Parameters:**
   /// - (required): [scrollController] Controller for managing chat scroll
   /// behavior.
-  /// - (required): [config] Chat configuration settings.
   ///
   /// **Required parameters for create a new chat room:**
-  /// - (optional): [createChatRoomOnMessageSend] Whether to create a one-to-one
-  /// or group chat when sending the first message.
   /// - (optional): [currentUser] The user initiating the chat.
   /// - (optional): [otherUsers] List of users participating in the chat.
   /// - (optional): [chatRoomType] The type of chat (one-to-one or group).
@@ -185,9 +182,13 @@ final class ChatViewDbConnection {
   /// (applicable for group chats).
   /// - (optional): [groupProfile] Profile picture URL of the group chat.
   /// (applicable for group chats).
+  /// - (optional): [config] Chat configuration settings.
+  /// - (optional): [lazyCreateChat] If `true`, the one-to-one or
+  /// group chat is created only when a message is sent (default: `false`).
   ///
   /// **Required parameters for an existing chat room:**
   /// - (optional): [chatRoomId] ID of an existing chat room.
+  /// - (optional): [config] Chat configuration settings.
   ///
   /// **Throws:**
   /// - An [Exception] if neither a valid chat room ID nor user details are
@@ -197,7 +198,7 @@ final class ChatViewDbConnection {
   /// A [Future] resolving to an initialized [ChatManager].
   ///
   /// **Note**:
-  /// If [createChatRoomOnMessageSend] is set to `true`,
+  /// If [lazyCreateChat] is set to `true`,
   /// the following features will not work as the chat room is not created:
   /// - Typing indicator
   /// - Adding users to a group
@@ -206,8 +207,8 @@ final class ChatViewDbConnection {
   /// - Updating the group name
   Future<ChatManager> getChatRoomManager({
     required ScrollController scrollController,
-    required ChatControllerConfig config,
-    bool createChatRoomOnMessageSend = false,
+    bool lazyCreateChat = false,
+    ChatControllerConfig? config,
     String? chatRoomId,
     ChatUser? currentUser,
     List<ChatUser>? otherUsers,
@@ -230,7 +231,7 @@ final class ChatViewDbConnection {
         currentUser: tempCurrentUser,
         chatRoomType: tempChatRoomType,
         scrollController: scrollController,
-        createChatRoomOnMessageSend: createChatRoomOnMessageSend,
+        lazyCreateChat: lazyCreateChat,
       );
     } else if (tempChatRoomId != null) {
       return _getChatManagerByChatRoomId(
@@ -280,7 +281,7 @@ final class ChatViewDbConnection {
   Future<ChatManager> _getChatManagerByChatRoomId({
     required String chatRoomId,
     required ScrollController scrollController,
-    required ChatControllerConfig config,
+    ChatControllerConfig? config,
   }) async {
     final userId = _currentUserId ?? '';
     if (userId.isEmpty) throw Exception("Current User ID can't be empty!");
@@ -291,7 +292,7 @@ final class ChatViewDbConnection {
       retry: ChatViewDBConnectionConstants.defaultRetry,
     );
     if (chatRoomParticipants == null) throw Exception('No Users Found!');
-    config.chatRoomMetadata?.call(chatRoomParticipants);
+    config?.chatRoomMetadata?.call(chatRoomParticipants);
     return ChatManager.fromChatRoomId(
       config: config,
       id: chatRoomId,
@@ -323,14 +324,14 @@ final class ChatViewDbConnection {
   /// - (required): [currentUser] The user initiating or joining the chat.
   /// - (required): [otherUsers] A list of users participating in the chat.
   /// - (required): [scrollController] Manages scroll behavior within the chat.
-  /// - (required): [config] A [ChatControllerConfig] instance that defines
+  /// - (optional): [config] A [ChatControllerConfig] instance that defines
   /// settings for message listening, user activity tracking, and metadata
   /// updates.
   /// - (optional): [groupName] The name of the group chat
   /// (applicable for group chats).
   /// - (optional): [groupProfile] The profile picture URL for the group chat.
   /// (only applicable for group chats).
-  /// - (optional): [createChatRoomOnMessageSend] If `true`, the one-to-one or
+  /// - (optional): [lazyCreateChat] If `true`, the one-to-one or
   /// group chat is created only when a message is sent (default: `false`).
   ///
   /// **Behavior:**
@@ -349,8 +350,8 @@ final class ChatViewDbConnection {
     required ChatUser currentUser,
     required List<ChatUser> otherUsers,
     required ScrollController scrollController,
-    required ChatControllerConfig config,
-    bool createChatRoomOnMessageSend = false,
+    bool lazyCreateChat = false,
+    ChatControllerConfig? config,
     String? groupName,
     String? groupProfile,
   }) async {
@@ -374,7 +375,7 @@ final class ChatViewDbConnection {
 
     String? chatRoomId;
 
-    if (!createChatRoomOnMessageSend) {
+    if (!lazyCreateChat) {
       switch (chatRoomType) {
         case ChatRoomType.oneToOne:
           chatRoomId = await _service?.database.createOneToOneChat(
@@ -410,7 +411,7 @@ final class ChatViewDbConnection {
   /// *Note: Ensures the instance is initialized before accessing it.
   /// Example:
   /// ``` dart
-  /// ChatViewDbConnection(ChatViewCloudService.firebase);
+  /// ChatViewDbConnection.initialize(ChatViewCloudService.firebase);
   /// ```
   static ChatViewDbConnection get instance {
     assert(
@@ -419,7 +420,7 @@ final class ChatViewDbConnection {
       ChatViewDbConnection must be initialized. 
       Example: initialize ChatViewDbConnection for firebase backend
       ///```dart
-      /// ChatViewDbConnection(ChatViewCloudService.firebase);
+      /// ChatViewDbConnection.initialize(ChatViewCloudService.firebase);
       /// ```''',
     );
     return _instance!;

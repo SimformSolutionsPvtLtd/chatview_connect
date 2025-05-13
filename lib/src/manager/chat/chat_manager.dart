@@ -69,7 +69,7 @@ final class ChatManager extends ChatController {
   /// database and storage services.
   /// - (required): [participants] Contains details about the current
   /// user and other participants in the chat.
-  /// - (required): [config] A [ChatControllerConfig] instance that defines
+  /// - (optional): [config] A [ChatControllerConfig] instance that defines
   ///   chat settings such as message listening, user activity tracking, and
   ///   metadata updates.
   ///
@@ -81,7 +81,7 @@ final class ChatManager extends ChatController {
     required CloudServices service,
     required ScrollController scrollController,
     required ChatRoomMetadata participants,
-    required ChatControllerConfig config,
+    ChatControllerConfig? config,
   }) {
     return ChatManager._(
       storage: service.storage,
@@ -114,7 +114,7 @@ final class ChatManager extends ChatController {
   /// behavior.
   /// - (required): [service] An instance of [CloudServices] that provides
   /// database and storage services.
-  /// - (required): [config] A [ChatControllerConfig] instance that defines
+  /// - (optional): [config] A [ChatControllerConfig] instance that defines
   ///   chat settings such as message listening, user activity tracking, and
   ///   metadata updates.
   /// - (optional): [chatRoomId] A unique identifier for the chat room.
@@ -139,7 +139,7 @@ final class ChatManager extends ChatController {
     required ChatRoomType chatRoomType,
     required List<ChatUser> otherUsers,
     required ScrollController scrollController,
-    required ChatControllerConfig config,
+    ChatControllerConfig? config,
     String? chatRoomId,
     String? groupName,
     String? groupProfile,
@@ -480,22 +480,44 @@ final class ChatManager extends ChatController {
     );
   }
 
-  /// {@macro chatview_db_connection.DatabaseService.updateGroupChat}
+  /// Updates the group chat's name and profile picture.
+  ///
+  /// **Parameters:**
+  /// - [displayMetadata] (required): The new display metadata
+  /// containing the updated group name and profile picture.
+  ///
+  /// **Behavior:**
+  /// - If `displayMetadata.chatName` is `null`, the group name
+  /// will remain unchanged.
+  /// - If `displayMetadata.chatProfilePhoto` is `null`,
+  /// the profile picture will remain unchanged.
+  ///
+  /// **Returns:**
+  /// - `true` if the update was successful, `false` otherwise.
+  ///
+  /// **Example Usage:**
+  /// ```dart
+  /// await controller.updateGroupChat(
+  ///   displayMetadata: ChatRoomDisplayMetadata(
+  ///     chatName: 'New Group Name',
+  ///     chatProfilePhoto: 'NEW_GROUP_PROFILE_PICTURE',
+  ///   ),
+  /// );
+  /// ```
   ///
   /// **Note:**
   /// - This method does **not** restrict updates based on whether the
   /// chat room is one-to-one or a group. If called for a one-to-one chat,
   /// it will still attempt to update the group name without validation.
   Future<bool> updateGroupChat({
-    String? groupName,
-    String? groupProfilePic,
+    required ChatRoomDisplayMetadata displayMetadata,
   }) {
     if (!_isInitialized) return Future.value(false);
     return _database.updateGroupChat(
       chatId: chatRoomId,
-      groupName: groupName,
+      groupName: displayMetadata.chatName,
+      groupProfilePic: displayMetadata.chatProfilePhoto,
       retry: ChatViewDBConnectionConstants.defaultRetry,
-      groupProfilePic: groupProfilePic,
     );
   }
 
@@ -523,6 +545,11 @@ final class ChatManager extends ChatController {
   /// **Parameters:**
   /// - (required): [userId] The unique identifier of the user to be removed.
   ///
+  /// **Note:**
+  /// If the group has only one remaining user,
+  /// the group will be deleted along with its chat-related
+  /// documents.
+  ///
   /// Returns a [Future] that resolves to `true`
   /// if the user was successfully removed, otherwise `false`.
   Future<bool> removeUserFromGroup({
@@ -541,6 +568,11 @@ final class ChatManager extends ChatController {
 
   /// Allows the current user to leave the group chat by updating their
   /// membership status to [MembershipStatus.left].
+  ///
+  /// **Note:**
+  /// If the group has only one remaining user,
+  /// the group will be deleted along with its chat-related
+  /// documents.
   ///
   /// Returns a [Future] that resolves to `true`
   /// if the user successfully left the group, otherwise `false`.
@@ -580,7 +612,26 @@ final class ChatManager extends ChatController {
         limit: limit,
       );
 
-  /// {@macro chatview_db_connection.DatabaseService.createOneToOneChat}
+  /// Creates a one-to-one chat with the specified user.
+  ///
+  /// **Parameters:**
+  /// - (required): [userId] The unique identifier of the user to
+  /// create a chat with.
+  ///
+  /// If a chat with the given [otherUserId] already exists,
+  /// the existing chat ID is returned.
+  /// Otherwise, a new chat is created, and its ID is returned upon success.
+  ///
+  /// **Example Usage:**
+  /// ```dart
+  /// final chatRoomId = await _chatController.createChat(OTHER_USER_ID);
+  ///
+  /// ChatManager _chatController = await ChatViewDbConnection.instance.getChatRoomManager(
+  ///  chatRoomId: chatRoomId,
+  /// );
+  /// ```
+  ///
+  /// Returns `null` if the chat creation fails.
   Future<String?> createChat(String userId) => _database.createOneToOneChat(
         userId: _currentUserId,
         otherUserId: userId,
@@ -598,6 +649,22 @@ final class ChatManager extends ChatController {
   /// **Behavior:**
   /// - This method initializes a new group chat with the given participants,
   ///   group name, and optional profile picture.
+  ///
+  /// **Example Usage:**
+  /// ```dart
+  /// final chatRoomId = await _chatController.createGroupChat(
+  ///  groupName: 'Test Group',
+  ///  groupProfilePic: 'YOUR_GROUP_PROFILE_PICTURE_URL',
+  ///  participants: {
+  ///   'user1': Role.admin,
+  ///   'user2': Role.user,
+  ///  },
+  /// );
+  ///
+  /// ChatManager _chatController = await ChatViewDbConnection.instance.getChatRoomManager(
+  ///  chatRoomId: chatRoomId,
+  /// );
+  /// ```
   ///
   /// Returns a ID of the newly created group chat.
   /// If the creation fails, `null` is returned.

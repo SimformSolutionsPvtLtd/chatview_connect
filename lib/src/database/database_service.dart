@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:chatview_models/chatview_models.dart';
+import 'package:chatview_utils/chatview_utils.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 

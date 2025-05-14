@@ -1,6 +1,6 @@
 import 'dart:io';
 
-import 'package:chatview_models/chatview_models.dart';
+import 'package:chatview_utils/chatview_utils.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;

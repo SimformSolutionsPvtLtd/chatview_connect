@@ -1,4 +1,4 @@
-import 'package:chatview_models/chatview_models.dart';
+import 'package:chatview_utils/chatview_utils.dart';
 
 import '../enum.dart';
 import '../extensions.dart';

@@ -1,4 +1,4 @@
-import 'package:chatview_models/chatview_models.dart';
+import 'package:chatview_utils/chatview_utils.dart';
 
 import '../enum.dart';
 import '../extensions.dart';
@@ -102,8 +102,8 @@ class ChatRoom {
 
   /// The number of unread messages in the chat room for the current user.
   ///
-  /// **Note:** In the below example, the `unreadMessagesCount` is set to `false`.
-  /// `0` will be returned.
+  /// **Note:** In the below example,
+  /// the `unreadMessagesCount` is set to `false`. `0` will be returned.
   ///
   /// ```dart
   /// ChatManager chatManager = ChatViewConnect.instance.getChatManager();

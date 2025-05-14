@@ -1,4 +1,4 @@
-import 'package:chatview_models/chatview_models.dart';
+import 'package:chatview_utils/chatview_utils.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 import 'database/database_service.dart';
@@ -20,17 +20,22 @@ enum ChatViewCloudService {
 /// and storage services based on the selected [ChatViewCloudService].
 ///
 /// This type ensures that appropriate implementations of [DatabaseService]
-/// and [StorageService] are used depending on the selected database type.
+/// and [StorageService] are used depending on the selected cloud service.
 ///
-/// **Parameters:**
+/// **Constructors:**
 /// - [CloudServices]: Initializes with a specified [DatabaseService]
 ///   and [StorageService].
-/// - [CloudServices.fromDataType]: Factory constructor that instantiates
+/// - [CloudServices.fromType]: Factory constructor that instantiates
 ///   the appropriate services based on the given [ChatViewCloudService].
 ///
 /// **Getters:**
 /// - [database]: Retrieves the database service instance.
 /// - [storage]: Retrieves the storage service instance.
+///
+/// **Internal Structure:**
+/// - [record]: An internal record that encapsulates both the database and
+/// storage services, allowing unified access and management of these
+/// cloud-based components.
 extension type const CloudServices._(CloudServicesRecord record) {
   /// Creates an instance of [CloudServices] with the given
   /// [DatabaseService] and [StorageService].
@@ -41,6 +46,9 @@ extension type const CloudServices._(CloudServicesRecord record) {
 
   /// Factory constructor that returns the appropriate implementation of
   /// [CloudServices] based on the provided [ChatViewCloudService].
+  ///
+  /// - `type`: determines which cloud-based services to use (e.g., Firebase)
+  ///   the appropriate database and storage services.
   factory CloudServices.fromType(ChatViewCloudService type) {
     return switch (type) {
       ChatViewCloudService.firebase => CloudServices(
@@ -186,7 +194,7 @@ extension UserActiveStatusExtension on UserActiveStatus {
   ///
   /// - If the [value] is `null` or empty,
   /// it defaults to [UserActiveStatus.offline].
-  /// - If the [value] matches [UserActiveStatus.online.name]
+  /// - If the [value] matches `online`
   /// (case-insensitive), it returns [UserActiveStatus.online].
   /// - For all other cases, it defaults to [UserActiveStatus.offline].
   ///
@@ -218,7 +226,7 @@ extension TypeWriterStatusExtension on TypeWriterStatus {
   ///
   /// - If the [value] is `null` or empty,
   /// it defaults to [TypeWriterStatus.typed].
-  /// - If the [value] matches [TypeWriterStatus.typing.name]
+  /// - If the [value] matches `typing`
   /// (case-insensitive), it returns [TypeWriterStatus.typing].
   /// - For all other cases, it defaults to [TypeWriterStatus.typed].
   ///

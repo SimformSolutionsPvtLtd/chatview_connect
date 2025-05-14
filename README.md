@@ -262,5 +262,3 @@ documentation.
 [MIT](LICENSE)
 
 [chatViewPackage]: https://pub.dev/packages/chatview
-
-[chatViewModels]: https://pub.dev/packages/chatview_models

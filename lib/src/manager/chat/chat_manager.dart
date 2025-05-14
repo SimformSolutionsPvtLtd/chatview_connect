@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:collection';
 
-import 'package:chatview_models/chatview_models.dart';
+import 'package:chatview_utils/chatview_utils.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/widgets.dart';
 import 'package:uuid/uuid.dart';
@@ -589,7 +589,10 @@ final class ChatManager extends ChatController {
     );
   }
 
-  /// {@macro chatview_connect.DatabaseService.updateUserActiveStatus}.
+  /// Updates the current user document with the current user status.
+  ///
+  /// **Parameters:**
+  /// - (required): [status] The current status of the user (online/offline).
   Future<bool> updateUserActiveStatus(UserActiveStatus status) =>
       _database.updateUserActiveStatus(
         userStatus: status,
@@ -618,7 +621,7 @@ final class ChatManager extends ChatController {
   /// - (required): [userId] The unique identifier of the user to
   /// create a chat with.
   ///
-  /// If a chat with the given [otherUserId] already exists,
+  /// If a chat with the given [userId] already exists,
   /// the existing chat ID is returned.
   /// Otherwise, a new chat is created, and its ID is returned upon success.
   ///
@@ -626,7 +629,8 @@ final class ChatManager extends ChatController {
   /// ```dart
   /// final chatRoomId = await _chatController.createChat(OTHER_USER_ID);
   ///
-  /// ChatManager _chatController = await ChatViewConnect.instance.getChatRoomManager(
+  /// ChatManager _chatController =
+  /// await ChatViewConnect.instance.getChatRoomManager(
   ///  chatRoomId: chatRoomId,
   /// );
   /// ```
@@ -661,7 +665,8 @@ final class ChatManager extends ChatController {
   ///  },
   /// );
   ///
-  /// ChatManager _chatController = await ChatViewConnect.instance.getChatRoomManager(
+  /// ChatManager _chatController =
+  /// await ChatViewConnect.instance.getChatRoomManager(
   ///  chatRoomId: chatRoomId,
   /// );
   /// ```

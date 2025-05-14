@@ -1,6 +1,6 @@
 import 'dart:collection';
 
-import 'package:chatview_models/chatview_models.dart';
+import 'package:chatview_utils/chatview_utils.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import 'package:rxdart/rxdart.dart';
@@ -1366,8 +1366,7 @@ final class ChatViewFireStoreDatabase implements DatabaseService {
 
       if (memberStatus == MembershipStatus.member) return true;
 
-      DateTime? membershipStatusTime =
-          includeAllChatHistory ? null : DateTime.now();
+      var membershipStatusTime = includeAllChatHistory ? null : DateTime.now();
 
       if (startDate?.isNow ?? false) {
         membershipStatusTime = DateTime.now();

@@ -377,8 +377,12 @@ abstract interface class DatabaseService {
   });
 
   /// {@template chatview_connect.DatabaseService.getChatsStream}
-  /// Returns a stream of chat rooms,
-  /// each containing a list of users (excluding the current user).
+  /// Returns a stream of [ChatRoom]s, each containing a list of users
+  /// **excluding the current user**.
+  ///
+  /// The stream updates in real-time to reflect changes such as:
+  /// - User online/offline status
+  /// - Typing indicators
   ///
   /// **Parameters:**
   /// - (required): [userId] The unique identifier of the currently logged-in
@@ -404,18 +408,6 @@ abstract interface class DatabaseService {
   ///
   /// - (optional): [limit] specifies the maximum number of chat rooms to
   /// retrieve. If not specified, all chat rooms will be retrieved by default.
-  ///
-  ///
-  /// Each event in the stream emits a list of chat rooms, where:
-  /// - Each chat room (e.g., `chat1`, `chat2`) is represented
-  /// as a [ChatRoom] instances.
-  /// - The list of users in each chat room **does not**
-  /// include the current user.
-  ///
-  /// The stream dynamically updates to reflect changes in chat room users,
-  /// such as:
-  /// - Online/offline status updates
-  /// - Typing activity
   ///
   /// {@endtemplate}
   Stream<List<ChatRoom>> getChatsStream({

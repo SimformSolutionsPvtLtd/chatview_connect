@@ -25,7 +25,7 @@ final class FirestoreChatDatabasePathConfig {
   ///
   /// **Parameters:**
   /// - (optional) [userCollectionPath] The Firestore collection path for
-  /// storing user data.
+  /// retrieving user data.
   ///   If omitted, defaults to the top-level `users` collection.
   ///
   /// {@macro chatview_connect.FirestoreChatDatabasePathConfig.userCollectionPath}

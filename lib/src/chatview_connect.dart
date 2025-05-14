@@ -17,12 +17,13 @@ import 'models/config/firebase/firestore_chat_database_path_config.dart';
 ///
 /// provides methods to initialize and access the clouds service.
 final class ChatViewConnect {
-  /// The main entry point for using the chat database connection.
+  /// Initializes the ChatViewConnect package.
   ///
-  /// This class must be instantiated to access chat-related functionality.
-  /// It serves as the core connection layer for handling chat related
-  /// operations across different cloud providers.
+  /// This is the primary entry point and must be called before using any
+  /// chat-related functionality. It sets up the core configuration required
+  /// to interface with the chosen cloud service.
   ///
+  /// **Parameters:**
   /// - (required): [cloudServiceType] specifies the type of cloud database
   /// service to be used. (e.g., Firebase) to be used for chat.
   ///
@@ -30,13 +31,13 @@ final class ChatViewConnect {
   ///   deserialization of user data.
   ///   - By default, user data is stored and retrieved using standard keys
   ///   like `id`, `name`, and `profilePhoto`.
-  ///   - Supports dynamic key mappings for different data sources
+  ///   - Allows mapping custom keys for different data sources
   ///   (e.g., mapping `username` instead of `name`).
   ///
-  /// - (optional): [cloudServiceConfig] Configuration for cloud services
-  ///   such as Firebase.
-  ///   - If using Firebase, this allows specifying Firestore paths and
-  ///     collection names.
+  /// - (optional): [cloudServiceConfig] Configuration details specific
+  /// to the selected cloud service.
+  ///   - For Firebase, allows specifying Firestore paths and
+  ///   collection names.
   ///
   /// **Example Usage in `main.dart`:**
   /// ```dart
@@ -135,7 +136,7 @@ final class ChatViewConnect {
   /// Retrieves a new instance of [ChatManager] using the current database
   /// service.
   ///
-  /// This method initializes a [ChatManager] and provides access to
+  /// This method creates a [ChatManager] and provides access to
   /// chat-related functionalities.
   ///
   /// **Returns:**

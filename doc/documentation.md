@@ -17,6 +17,8 @@ enables seamless integration with cloud services.
 
 # Installation Guide
 
+**Compatibility**: This package is compatible with `chatview` versions **>= 2.4.1**
+
 ## Adding the dependency
 
 1. Add the package dependency to your `pubspec.yaml` file:
@@ -552,114 +554,6 @@ service firebase.storage {
   }
 }
 ```
-
-# API Reference
-
-## ChatViewConnect
-
-### Constructor
-```dart
-ChatViewConnect.initialize(
-  ChatViewCloudService cloudServiceType, {
-  ChatUserConfig? chatUserConfig,
-  CloudServiceConfig? cloudServiceConfig, // (i.e., FirebaseCloudConfig)
-}
-```
-
-### Methods
-
-| Method                                                                                                                                                                                                                                                                          | Description                                                                                                                                                                                                                                                                                                                                                                                                                        | Return Type           |
-|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-----------------------|
-| `setCurrentUserId(String userId)`                                                                                                                                                                                                                                               | Set the current user's ID                                                                                                                                                                                                                                                                                                                                                                                                          | `void`                |
-| `getChatManager()`                                                                                                                                                                                                                                                              | Returns a ChatManager for handling general chat operations not linked to a specific chat room. Useful for methods like `updateUserActiveStatus`, `createChat`, `createGroupChat`, `getUsers`, `deleteChat`, and `getChats`.                                                                                                                                                                                                        | `Future<ChatManager>` |
-| `getChatRoomManager(required ScrollController scrollController, required ChatControllerConfig config, bool lazyCreateChat = false, String? chatRoomId, ChatUser? currentUser, List<ChatUser>? otherUsers, ChatRoomType? chatRoomType, String? groupName, String? groupProfile)` | Returns a ChatManager for managing chat room operations. You can either fetch an existing chat room using `chatRoomId`, or create a new one using parameters like `currentUser`, `otherUsers`, and `chatRoomType`. If `lazyCreateChat` is `true`, the chat room is created only when the first message is sent. In one-to-one chats, it checks for existing rooms and reuses them; in group chats, it creates a new room each time | `Future<ChatManager>` | 
-| `resetCurrentUserId()`                                                                                                                                                                                                                                                          | Reset the current user ID                                                                                                                                                                                                                                                                                                                                                                                                          | `void`                |
-
-## ChatManager Methods
-
-### Chat Room Operations
-
-| Method                                                                                                               | Description                                                     | Return Type        |
-|----------------------------------------------------------------------------------------------------------------------|-----------------------------------------------------------------|--------------------|
-| `onSendTap(String message, ReplyMessage replyMessage, MessageType messageType, { bool useAutoGeneratedId = false })` | Send a message and uploads associated media to storage          | `Future<Message?>` |
-| `onSendTapFromMessage(Message message, {bool useAutoGeneratedId = false})`                                           | Send a message and uploads associated media to storage          | `Future<Message?>` |
-| `onMessageTyping(TypeWriterStatus status)`                                                                           | Update current user typing status                               | `Future<void>`     |
-| `onMessageRead(Message message)`                                                                                     | Updates the status of a message                                 | `Future<void>`     |
-| `onUnsendTap(Message message)`                                                                                       | Deletes a message and removes any associated media from storage | `Future<bool>`     |
-| `userReactionCallback(Message message, String emoji)`                                                                | Add/update message reactions                                    | `Future<void>`     |
-
-### Group Specific - Chat Room Operations
-
-| Method                                                                                                                   | Description                  | Return Type    |
-|--------------------------------------------------------------------------------------------------------------------------|------------------------------|----------------|
-| `addUserInGroup({required String userId, required Role role, required bool includeAllChatHistory, DateTime? startDate})` | Add a user to a group        | `Future<bool>` |
-| `removeUserFromGroup(String userId)`                                                                                     | Remove a user from a group   | `Future<bool>` |
-| `leaveFromGroup()`                                                                                                       | Leave the current group chat | `Future<bool>` |
-| `updateGroupChat({required ChatRoomDisplayMetadata displayMetadata})`                                                    | Update group chat details    | `Future<bool>` |
-
-### Chat Operations
-
-| Method                                                                                                                                        | Description                | Return Type              |
-|-----------------------------------------------------------------------------------------------------------------------------------------------|----------------------------|--------------------------|
-| `getChats({ ChatSortBy sortBy = ChatSortBy.newestFirst, bool includeUnreadMessagesCount = true, bool includeEmptyChats = true, int? limit,})` | Get a stream of chat rooms | `Stream<List<ChatRoom>>` |
-| `createChat(String otherUserId)`                                                                                                              | Create a one-to-one chat   | `Future<String?>`        |
-| `createGroupChat({required String groupName, required List<ChatRoomParticipant> participants, String? groupProfilePic})`                      | Create a group chat        | `Future<String?>`        |
-| `deleteChat(String chatRoomId)`                                                                                                               | Delete a chat room         | `Future<bool>`           |
-
-### User Operations
-
-| Method                                            | Description               | Return Type                     |
-|---------------------------------------------------|---------------------------|---------------------------------|
-| `getUsers()`                                      | Get a map of user details | `Future<Map<String, ChatUser>>` |
-| `updateUserActiveStatus(UserActiveStatus status)` | Update user active status | `Future<bool>`                  |
-
-## Configuration Classes
-
-### ChatControllerConfig
-
-```dart
-class ChatControllerConfig {
-  final bool syncOtherUsersInfo;
-  final void Function(ChatRoomMetadata metadata)? chatRoomMetadata;
-  final void Function(ChatRoomDisplayMetadata displayMetadata)? onChatRoomDisplayMetadataChange;
-  final void Function(Map<String, ChatRoomParticipant> usersActivities)? onUsersActivityChange;
-}
-```
-
-### ChatUserConfig
-
-```dart
-class ChatUserConfig {
-  final String idKey;
-  final String nameKey;
-  final String profilePhotoKey;
-}
-```
-
-### FirebaseCloudConfig
-
-```dart
-class FirebaseCloudConfig {
-  final FirestoreChatDatabasePathConfig? databasePathConfig;
-  final FirestoreChatCollectionNameConfig? collectionNameConfig;
-}
-```
-
-## Enums and Constants
-
-### ChatViewCloudService
-
-- `firebase`
-
-### UserActiveStatus
-
-- `online`
-- `offline`
-
-### Role
-
-- `admin`
-- `user`
 
 # Demo App Setup
 

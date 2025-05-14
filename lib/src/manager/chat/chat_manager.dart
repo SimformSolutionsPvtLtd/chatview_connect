@@ -406,7 +406,7 @@ final class ChatManager extends ChatController {
     );
   }
 
-  /// Updates the current user document with the current typing status.
+  /// Updates the current user typing status. (e.g. typing/typed)
   ///
   /// **Parameters:**
   /// - (required) [status] The current typing status of the user.
@@ -589,7 +589,7 @@ final class ChatManager extends ChatController {
     );
   }
 
-  /// Updates the current user document with the current user status.
+  /// Updates the current user status. (e.g. online/offline)
   ///
   /// **Parameters:**
   /// - (required): [status] The current status of the user (online/offline).
@@ -703,14 +703,13 @@ final class ChatManager extends ChatController {
     }
   }
 
-  /// Deletes the entire chat and removes it from all users involved in
-  /// the chat.
+  /// Deletes the specified chat for all participating users.
+  ///
+  /// This operation also removes all associated media from storage,
+  /// including images and voice messages.
   ///
   /// **Parameters:**
   /// - (required): [chatId] The unique identifier of the chat to be deleted.
-  ///
-  /// Additionally, it will delete all associated media
-  /// (such as images and voice messages) from storage.
   Future<bool> deleteChat(String chatId) {
     return _database.deleteChat(
       chatId: chatId,

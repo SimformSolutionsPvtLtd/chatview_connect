@@ -17,6 +17,15 @@ import '../../../extensions.dart';
 /// If a value is `null`, the default collection name will be used.
 class FirestoreChatCollectionNameConfig {
   /// Creates a configuration for firestore collection names.
+  ///
+  /// This allows you to customize the names of the Firestore collections
+  /// used for chat-related data.
+  ///
+  /// **Parameters:**
+  /// - [users]: Collection name for storing user documents.
+  /// - [chats]: Collection name for storing chat documents.
+  /// - [messages]: Collection name for storing message documents.
+  /// - [userChats]: Collection name for mapping users to chats.
   FirestoreChatCollectionNameConfig({
     this.users = ChatViewFireStorePath.users,
     this.chats = ChatViewFireStorePath.chats,

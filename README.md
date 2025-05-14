@@ -17,9 +17,9 @@ by Simform Solutions!_
 ## Features
 
 - **Easy Setup:** Integrate with [`chatview`][chatViewPackage] in 3 steps:
-  1. Initialize the package by specifying **Cloud Service** (e.g., Firebase).
-  2. Set the current **User ID**.
-  3. Get **`ChatManager`** and use it with [`chatview`][chatViewPackage]
+    1. Initialize the package by specifying **Cloud Service** (e.g., Firebase).
+    2. Set the current **User ID**.
+    3. Get **`ChatManager`** and use it with [`chatview`][chatViewPackage]
 - Supports **one-on-one** and **group chats** with **media uploads** *(audio not supported).*
 
 ***Note:*** *Currently, it supports only Firebase Cloud Services. Support for additional cloud
@@ -37,6 +37,8 @@ storage structure and rules.
 dependencies:
   chatview_connect: <latest-version>
 ```
+
+**Compatibility**: This package is compatible with `chatview` versions **>= 2.4.1**
 
 ## Support
 

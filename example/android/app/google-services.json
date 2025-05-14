@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "148312244410",
+    "project_id": "chat-view-demo",
+    "storage_bucket": "chat-view-demo.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:148312244410:android:0bff33044d8e27f65e8283",
+        "android_client_info": {
+          "package_name": "com.simform.chatview_connect"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyADSpO_SpCiB5Ss02_3-ksQkTal-UV3-5I"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

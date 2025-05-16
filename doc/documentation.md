@@ -1,3 +1,5 @@
+![ChatView Connect - Simform LLC.](https://raw.githubusercontent.com/SimformSolutionsPvtLtd/chatview_connect/master/preview/banner.png)
+
 # Overview
 
 ChatView Connect is a specialized wrapper for the [`chatview`](https://pub.dev/packages/chatview) package that

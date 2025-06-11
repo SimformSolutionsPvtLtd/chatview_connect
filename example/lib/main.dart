@@ -40,6 +40,8 @@ Future<void> main() async {
   //
   // It should be called after confirming a valid user is logged in
   // For example, on Firebase through `FirebaseAuth.instance.authStateChanges()`
-  ChatViewConnect.instance.setCurrentUserId('1');
+  ChatViewConnect.instance.setCurrentUserId(
+    'guM02L7E9oRXlJ4JwZ91Pi98V303',
+  );
   runApp(const ChatViewConnectExampleApp());
 }

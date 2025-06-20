@@ -606,14 +606,16 @@ final class ChatManager extends ChatController {
     bool includeUnreadMessagesCount = true,
     bool includeEmptyChats = true,
     int? limit,
-  }) =>
-      _database.getChatsStream(
-        sortBy: sortBy,
-        userId: _currentUserId,
-        includeEmptyChats: includeEmptyChats,
-        includeUnreadMessagesCount: includeUnreadMessagesCount,
-        limit: limit,
-      );
+  }) {
+    print('==> user Id $_currentUserId');
+    return _database.getChatsStream(
+      sortBy: sortBy,
+      userId: _currentUserId,
+      includeEmptyChats: includeEmptyChats,
+      includeUnreadMessagesCount: includeUnreadMessagesCount,
+      limit: limit,
+    );
+  }
 
   /// Creates a one-to-one chat with the specified user.
   ///

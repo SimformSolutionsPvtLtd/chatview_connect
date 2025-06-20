@@ -1,12 +1,13 @@
+import 'dart:async';
+
 import 'package:chatview/chatview.dart';
-import 'package:chatview_connect/chatview_connect.dart';
+import 'package:chatview_connect/chatview_connect.dart' hide UserActiveStatus;
 // ignore: depend_on_referenced_packages
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 
 import '../chat_detail/chat_detail_screen.dart';
 import '../create_chat/create_chat_screen.dart';
-import 'widgets/chat_list_item.dart';
 
 class ChatListScreen extends StatefulWidget {
   const ChatListScreen({super.key});
@@ -18,13 +19,121 @@ class ChatListScreen extends StatefulWidget {
 class _ChatListScreenState extends State<ChatListScreen> {
   final _chatController = ChatViewConnect.instance.getChatManager();
 
-  String? currentUserId = ChatViewConnect.instance.currentUserId;
+  String? currentUserId = 'EWEsGWI7LXXBWHkCZVMh11XMOKz2';
+
+  final sc = StreamController<List<ChatViewListModel>>();
+
+  @override
+  void dispose() {
+    chatViewListController.dispose();
+    super.dispose();
+  }
+
+  ChatViewListController chatViewListController = ChatViewListController(
+    initialUsersList: [],
+    scrollController: ScrollController(),
+  );
+
+  //
+  // StreamController<List<ChatViewListModel>> chatListStreamController =
+  //     StreamController();
+
+  // late Stream stream = _chatController.getChats();
+  @override
+  void initState() {
+    super.initState();
+    ChatViewConnect.instance.setCurrentUserId('EWEsGWI7LXXBWHkCZVMh11XMOKz2');
+
+    // chatViewListController = ChatViewListController(
+    //   initialUsersList: [],
+    //   scrollController: ScrollController(),
+    // );
+
+    print('===> Initialise stream controller');
+
+    sc.add([
+      ChatViewListModel(
+        id: '1',
+        name: 'Breaking Bad',
+        // lastMessageText:
+        //     'I am not in danger, Skyler. I am the danger. A guy opens his door and gets shot and you think that of me? No. I am the one who knocks!',
+        // lastMessageTime: '',
+        unreadCount: 1,
+        imageUrl:
+            'https://m.media-amazon.com/images/M/MV5BMzU5ZGYzNmQtMTdhYy00OGRiLTg0NmQtYjVjNzliZTg1ZGE4XkEyXkFqcGc@._V1_.jpg',
+        chatType: ChatType.group,
+      ),
+    ]);
+
+    // chatViewListController.addSearchResults([
+    //   ChatViewListModel(
+    //     id: '1',
+    //     name: 'Breaking Bad',
+    //     lastMessageText:
+    //         'I am not in danger, Skyler. I am the danger. A guy opens his door and gets shot and you think that of me? No. I am the one who knocks!',
+    //     lastMessageTime: '',
+    //     unreadCount: 1,
+    //     imageUrl:
+    //         'https://m.media-amazon.com/images/M/MV5BMzU5ZGYzNmQtMTdhYy00OGRiLTg0NmQtYjVjNzliZTg1ZGE4XkEyXkFqcGc@._V1_.jpg',
+    //     chatType: ChatType.group,
+    //   ),
+    // ]);
+
+    /*_chatController.getChats().first.then(
+      (event) {
+        print('==> get chats');
+        sc.add(event
+            .map(
+              (e) => ChatViewListModel(
+                id: e.chatId,
+                name: e.chatName,
+                // userActiveStatus: (e.users?.firstOrNull?.userActiveStatus ??
+                //     UserActiveStatus.offline) as UserActiveStatus,
+                chatType:
+                    e.chatRoomType.isOneToOne ? ChatType.user : ChatType.group,
+                unreadCount: e.unreadMessagesCount,
+                imageUrl: e.chatProfile,
+                lastMessageTime: e.lastMessage?.createdAt.toString(),
+                lastMessageText: e.lastMessage?.message,
+              ),
+            )
+            .toList());
+      },
+    );*/
+  }
 
   @override
   Widget build(BuildContext context) {
+    print('ehrer');
     return Scaffold(
       floatingActionButton: FloatingActionButton(
-        onPressed: _navigateToCreateChatScreen,
+        onPressed: () {
+          // print(
+          //     '==> Currne ${currentUserId} || ${ChatViewConnect.instance.currentUserId}');
+          // _chatController.getChats().first.then(
+          //   (event) {
+          //     print(
+          //         '==> current user id ${currentUserId} || ${ChatViewConnect.instance.currentUserId}');
+          //     chatViewListController.addSearchResults(event.map(
+          //       (e) {
+          //         return ChatViewListModel(
+          //           id: e.chatId,
+          //           name: e.chatName,
+          //           // userActiveStatus: (e.users?.firstOrNull?.userActiveStatus ??
+          //           //     UserActiveStatus.offline) as UserActiveStatus,
+          //           chatType: e.chatRoomType.isOneToOne
+          //               ? ChatType.user
+          //               : ChatType.group,
+          //           unreadCount: e.unreadMessagesCount,
+          //           imageUrl: e.chatProfile,
+          //           lastMessageTime: e.lastMessage?.createdAt.toString(),
+          //           lastMessageText: e.lastMessage?.message,
+          //         );
+          //       },
+          //     ).toList());
+          //   },
+          // );
+        },
         child: const Icon(Icons.edit),
       ),
       appBar: AppBar(
@@ -58,14 +167,73 @@ class _ChatListScreenState extends State<ChatListScreen> {
       body: StreamBuilder(
         stream: _chatController.getChats(),
         builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
+          if (snapshot.connectionState == ConnectionState.waiting ||
+              snapshot.data == null) {
             return const Center(
               child: RepaintBoundary(child: CircularProgressIndicator()),
             );
           } else {
             final chats = snapshot.data ?? [];
             if (chats.isEmpty) return const Center(child: Text('No Chats'));
-            return ListView.separated(
+
+            chatViewListController.updateChatList(chats
+                .map(
+                  (e) => ChatViewListModel(
+                    id: e.chatId,
+                    name: e.chatName,
+                    chatType: e.chatRoomType.isOneToOne
+                        ? ChatType.user
+                        : ChatType.group,
+                    unreadCount: e.unreadMessagesCount,
+                    imageUrl: e.chatProfile,
+                    lastMessage: e.lastMessage,
+                  ),
+                )
+                .toList());
+
+            return ChatViewList(
+              controller: chatViewListController,
+              config: ChatViewListConfig(
+                chatViewListTileConfig: ChatViewListTileConfig(
+                  onTap: (value) => _navigateToChatDetailScreen(value.id),
+                ),
+              ),
+            );
+          }
+        },
+      )
+      /*StreamBuilder(
+        stream: _chatController.getChats(),
+        builder: (context, snapshot) {
+          // if (snapshot.connectionState == ConnectionState.waiting) {
+          //   return const Center(
+          //     child: RepaintBoundary(child: CircularProgressIndicator()),
+          //   );
+          // } else {
+          //   final chats = snapshot.data ?? [];
+          //   if (chats.isEmpty) return const Center(child: Text('No Chats'));
+          //   chatViewListController.addSearchResults(chats
+          //       .map(
+          //         (e) => ChatViewListModel(
+          //           id: e.chatId,
+          //           name: e.chatName,
+          //           // userActiveStatus: (e.users?.firstOrNull?.userActiveStatus ??
+          //           //     UserActiveStatus.offline) as UserActiveStatus,
+          //           chatType: e.chatRoomType.isOneToOne
+          //               ? ChatType.user
+          //               : ChatType.group,
+          //           unreadCount: e.unreadMessagesCount,
+          //           imageUrl: e.chatProfile,
+          //           lastMessageTime: e.lastMessage?.createdAt.toString(),
+          //           lastMessageText: e.lastMessage?.message,
+          //         ),
+          //       )
+          //       .toList());
+            return ChatViewList(
+              controller: chatViewListController,
+              appbar: const ChatViewListAppBar(title: 'Chat view list'),
+            );
+            */ /*return ListView.separated(
               itemCount: chats.length,
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
               separatorBuilder: (__, _) => const SizedBox(height: 12),
@@ -103,20 +271,47 @@ class _ChatListScreenState extends State<ChatListScreen> {
                   ),
                 );
               },
-            );
+            );*/ /*
           }
         },
-      ),
+      )*/
+      ,
     );
   }
 
   void _onSelectUser(String userId) {
+    print('==> befire user Id $currentUserId');
     setState(() {
       currentUserId = userId;
       ChatViewConnect.instance.setCurrentUserId(userId);
     });
+    // _chatController.getChats().listen(
+    //   (event) {
+    //     print(
+    //         '==> current user id ${currentUserId} || ${ChatViewConnect.instance.currentUserId}');
+    //     chatViewListController.addSearchResults(event.map(
+    //       (e) {
+    //         return ChatViewListModel(
+    //           id: e.chatId,
+    //           name: e.chatName,
+    //           // userActiveStatus: (e.users?.firstOrNull?.userActiveStatus ??
+    //           //     UserActiveStatus.offline) as UserActiveStatus,
+    //           chatType:
+    //               e.chatRoomType.isOneToOne ? ChatType.user : ChatType.group,
+    //           unreadCount: e.unreadMessagesCount,
+    //           imageUrl: e.chatProfile,
+    //           lastMessageTime: e.lastMessage?.createdAt.toString(),
+    //           lastMessageText: e.lastMessage?.message,
+    //         );
+    //       },
+    //     ).toList());
+    //   },
+    // );
+    print('==> After user Id $currentUserId');
   }
 
+  // yash = guM02L7E9oRXlJ4JwZ91Pi98V303
+  //
   Future<dynamic> _navigateToCreateChatScreen() {
     return Navigator.push(
       context,

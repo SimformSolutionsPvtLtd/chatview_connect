@@ -26,7 +26,7 @@ abstract interface class DatabaseService {
   /// Used to fetch messages associated with a specific chat session.
   ///
   /// - (required): [sortBy] specifies the sorting order of messages
-  /// by defaults it will be sorted by the dateTime.
+  /// by defaults it will be sorted by the `createAt` dateTime.
   ///
   /// - (required): [sortOrder] specifies the order of sorting for messages.
   /// by defaults it will be ascending sort order.
@@ -86,7 +86,7 @@ abstract interface class DatabaseService {
   /// Used to stream messages for the specified chat session in real time.
   ///
   /// - (required): [sortBy] specifies the sorting order of messages
-  /// by defaults it will be sorted by the dateTime.
+  /// by defaults it will be sorted by the `createAt` dateTime.
   ///
   /// - (required): [sortOrder] specifies the order of sorting for messages.
   /// by defaults it will be ascending sort order.
@@ -724,5 +724,124 @@ abstract interface class DatabaseService {
     required int retry,
     required String chatId,
     DeleteChatMediaCallback? deleteMedia,
+  });
+
+  /// Retrieves a list of messages surrounding a specific message in a chat.
+  /// This method fetches messages before and after the specified message
+  /// to provide context.
+  ///
+  /// **Parameters:**
+  /// - (required): [chatId] A unique identifier for the chat room.
+  /// Specifies the chat room from which surrounding messages will be fetched.
+  /// - (required): [retry] The number of times to retry fetching messages
+  /// in case of a failure.
+  /// - (required): [messageId] The unique identifier of the message
+  /// for which surrounding messages are being retrieved.
+  /// - (required): [batchSize] The number of messages to retrieve
+  /// before and after the specified message.
+  /// - (required): [sortBy] specifies the sorting order of messages
+  /// by defaults it will be sorted by the `createAt` dateTime.
+  /// - (required): [sortOrder] specifies the order of sorting for messages.
+  /// by defaults it will be ascending sort order.
+  ///
+  /// **Returns:**
+  /// A [Future] that resolves to a [List] of [Message] objects,
+  /// representing the surrounding messages.
+  ///
+  /// This method is useful for providing context in chat applications,
+  /// allowing users to see related messages around a specific point in the chat.
+  ///
+  /// **Example usage:**
+  /// ```dart
+  /// List<Message> surroundingMessages = await getSurroundingMessages(
+  ///   chatId: "chat123",
+  ///   messageId: "msg456",
+  ///   batchSize: 5,
+  /// );
+  /// ```
+  Future<List<Message>> getSurroundingMessages({
+    required String chatId,
+    required int retry,
+    required String messageId,
+    required int batchSize,
+    required MessageSortBy sortBy,
+    required MessageSortOrder sortOrder,
+  });
+
+  /// Retrieves a list of previous messages in a chat room.
+  ///
+  /// This method fetches messages that were sent before
+  /// the specified message ID, allowing users to navigate
+  /// through the chat history.
+  ///
+  /// **Parameters:**
+  /// - (required): [chatId] A unique identifier for the chat room.
+  /// Specifies the chat room from which previous messages will be fetched.
+  /// - (required): [retry] The number of times to retry fetching messages
+  /// in case of a failure.
+  /// - (required): [messageId] The unique identifier of the message
+  /// before which previous messages are being retrieved.
+  /// - (required): [batchSize] The number of messages to retrieve
+  /// before the specified message.
+  ///
+  /// **Returns:**
+  /// A [Future] that resolves to a [List] of [Message] objects,
+  /// representing the previous messages.
+  ///
+  /// This method is useful for implementing pagination or
+  /// load-more functionality in chat applications,
+  /// allowing users to view older messages in the chat history.
+  ///
+  /// **Example usage:**
+  /// ```dart
+  /// List<Message> previousMessages = await getPreviousMessages(
+  ///   chatId: "chat123",
+  ///   messageId: "msg456",
+  ///   batchSize: 10,
+  /// );
+  /// ```
+  Future<List<Message>> getPreviousMessages({
+    required String chatId,
+    required int retry,
+    required String messageId,
+    required int batchSize,
+  });
+
+  /// Retrieves a list of next messages in a chat room.
+  /// This method fetches messages that were sent after
+  /// the specified message ID, allowing users to navigate
+  /// through the chat history.
+  ///
+  /// **Parameters:**
+  /// - (required): [chatId] A unique identifier for the chat room.
+  /// Specifies the chat room from which next messages will be fetched.
+  /// - (required): [retry] The number of times to retry fetching messages
+  /// in case of a failure.
+  /// - (required): [messageId] The unique identifier of the message
+  /// after which next messages are being retrieved.
+  /// - (required): [batchSize] The number of messages to retrieve
+  /// after the specified message.
+  ///
+  /// **Returns:**
+  /// A [Future] that resolves to a [List] of [Message] objects,
+  /// representing the next messages.
+  ///
+  /// This method is useful for implementing pagination or
+  /// load-more functionality in chat applications,
+  /// allowing users to view newer messages in the chat history.
+  ///
+  /// **Example usage:**
+  /// ```dart
+  /// List<Message> nextMessages = await getNextMessages(
+  ///   chatId: "chat123",
+  ///   messageId: "msg456",
+  ///   batchSize: 10,
+  /// );
+  /// ```
+  Future<List<Message>> getNextMessages({
+    required String chatId,
+    required int retry,
+    required String messageId,
+    required int batchSize,
   });
 }

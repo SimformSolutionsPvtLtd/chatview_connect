@@ -38,10 +38,11 @@ dependencies:
   firebase_core: ^3.13.0
   cloud_firestore: ^5.6.7
   uuid: ^4.5.1
+  # TODO(YASH): Update to latest version to include Pagination enums & replaceMessageList
   chatview:
     git:
       url: https://github.com/SimformSolutionsPvtLtd/chatview/
-      ref: feat/use_data_models_from_chatview_utils
+      ref: feat/chat_list_ui_base
 
   chatview_connect:
     path: ..

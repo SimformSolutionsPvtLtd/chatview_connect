@@ -25,7 +25,7 @@ dependencies:
   chatview_utils:
     git:
       url: https://github.com/SimformSolutionsPvtLtd/chatview_utils
-      ref: feature/add_chatview_list_models
+      ref: feature/add_chatview_list_models_test
 
   cloud_firestore: ^5.6.7
   firebase_storage: ^12.4.5

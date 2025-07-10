@@ -148,7 +148,17 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
                 size: 30,
               ),
             ),
+            loadMoreData: (direction, message) => chatController.onLoadMoreData(
+              direction,
+              message,
+              batchSize: 8,
+            ),
             repliedMessageConfig: RepliedMessageConfiguration(
+              loadOldReplyMessage: (messageId) =>
+                  chatController.loadOldReplyMessage(
+                messageId,
+                batchSize: 8,
+              ),
               backgroundColor: Colors.grey.shade300,
               padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 14),
             ),

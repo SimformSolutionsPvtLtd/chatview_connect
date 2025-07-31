@@ -420,6 +420,40 @@ final class ChatManager extends ChatController {
     );
   }
 
+  /// Pins or unpins a chat in the user's chat list.
+  /// This method updates the pin status of a chat room
+  /// for the current user.
+  ///
+  /// **Parameters:**
+  /// - (required): [status] The pin status to set for the chat room.
+  /// - (required): [chatRoomId] The unique identifier of the chat room
+  /// to pin or unpin.
+  Future<void> pinChat(PinStatus status, String chatRoomId) {
+    return _database.updateChatRoomUserMetadata(
+      userId: _currentUserId,
+      chatId: chatRoomId,
+      pinStatus: status,
+      retry: ChatViewConnectConstants.defaultRetry,
+    );
+  }
+
+  /// Mutes or unmutes a chat room for the current user.
+  /// This method updates the mute status of a chat room
+  /// for the current user.
+  ///
+  /// **Parameters:**
+  /// - (required): [status] The mute status to set for the chat room.
+  /// - (required): [chatRoomId] The unique identifier of the chat room
+  /// to mute or unmute.
+  Future<void> muteChat(MuteStatus status, String chatRoomId) {
+    return _database.updateChatRoomUserMetadata(
+      userId: _currentUserId,
+      chatId: chatRoomId,
+      muteStatus: status,
+      retry: ChatViewConnectConstants.defaultRetry,
+    );
+  }
+
   /// Updates the status of a message to "read" or any other provided status.
   ///
   /// **Parameters:**

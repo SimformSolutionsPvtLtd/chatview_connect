@@ -28,8 +28,11 @@ class ChatRoomParticipant {
     required this.chatUser,
     required this.membershipStatus,
     required this.membershipStatusTimestamp,
+    required this.pinStatusTimestamp,
     this.userActiveStatus = UserActiveStatus.offline,
     this.typingStatus = TypeWriterStatus.typed,
+    this.pinStatus = PinStatus.unpinned,
+    this.muteStatus = MuteStatus.unmuted,
   });
 
   /// Creates a [ChatRoomParticipant] instance from a JSON map.
@@ -46,6 +49,13 @@ class ChatRoomParticipant {
         ? createAtJson.toDate().toLocal().toIso8601String()
         : createAtJson;
     json[_membershipStatusTimestamp] = createAt;
+
+    final pinStatusTimestampJson = json[_pinStatusTimestamp];
+    final pinStatusTimestamp = pinStatusTimestampJson is Timestamp
+        ? pinStatusTimestampJson.toDate().toLocal().toIso8601String()
+        : pinStatusTimestampJson;
+
+    json[_pinStatusTimestamp] = pinStatusTimestamp;
 
     return ChatRoomParticipant(
       chatUser: chatUserData is Map<String, dynamic>
@@ -68,11 +78,22 @@ class ChatRoomParticipant {
       membershipStatusTimestamp: DateTime.tryParse(
         json[_membershipStatusTimestamp].toString(),
       ),
+      pinStatus: PinStatusExtension.parse(
+        json['pin_status'].toString(),
+      ),
+      pinStatusTimestamp: DateTime.tryParse(
+        json[_pinStatusTimestamp].toString(),
+      ),
+      muteStatus: MuteStatusExtension.parse(
+        json['mute_status'].toString(),
+      ),
     );
   }
 
   static const String _membershipStatusTimestamp =
       'membership_status_timestamp';
+
+  static const String _pinStatusTimestamp = 'pin_status_timestamp';
 
   /// Detailed information about the user in the chat room.
   ///
@@ -108,6 +129,15 @@ class ChatRoomParticipant {
   /// If `null`, the exact time of the status change is unknown.
   final DateTime? membershipStatusTimestamp;
 
+  /// The status of the pin for the chat room participant.
+  final PinStatus pinStatus;
+
+  /// The timestamp of the last pin status change.
+  final DateTime? pinStatusTimestamp;
+
+  /// The mute status of the chat room participant.
+  final MuteStatus muteStatus;
+
   /// Converts the [ChatRoomParticipant] instance to a JSON map.
   ///
   /// **Note**: The [chatUser], [userActiveStatus] field is not included in
@@ -133,11 +163,19 @@ class ChatRoomParticipant {
       'typing_status': typingStatus.name,
       'membership_status': membershipStatus?.name,
       _membershipStatusTimestamp: membershipStatusTimestamp?.toIso8601String(),
+      'pin_status': pinStatus.name,
+      _pinStatusTimestamp: pinStatusTimestamp?.toIso8601String(),
+      'mute_status': muteStatus.name,
     };
     if (membershipStatusTimestamp case final membershipStatusTimestamp?) {
       data[_membershipStatusTimestamp] = membershipStatusTimestamp.isNow
           ? FieldValue.serverTimestamp()
           : Timestamp.fromDate(membershipStatusTimestamp);
+    }
+    if (pinStatusTimestamp case final pinStatusTimestamp?) {
+      data[_pinStatusTimestamp] = pinStatusTimestamp.isNow
+          ? FieldValue.serverTimestamp()
+          : Timestamp.fromDate(pinStatusTimestamp);
     }
     return data;
   }
@@ -153,7 +191,10 @@ class ChatRoomParticipant {
             typingStatus == other.typingStatus &&
             role == other.role &&
             membershipStatus == other.membershipStatus &&
-            membershipStatusTimestamp == other.membershipStatusTimestamp;
+            membershipStatusTimestamp == other.membershipStatusTimestamp &&
+            pinStatus == other.pinStatus &&
+            pinStatusTimestamp == other.pinStatusTimestamp &&
+            muteStatus == other.muteStatus;
   }
 
   @override
@@ -166,6 +207,9 @@ class ChatRoomParticipant {
       userActiveStatus,
       membershipStatus,
       membershipStatusTimestamp,
+      pinStatus,
+      pinStatusTimestamp,
+      muteStatus,
     );
   }
 
@@ -195,6 +239,9 @@ class ChatRoomParticipant {
     TypeWriterStatus? typingStatus,
     MembershipStatus? membershipStatus,
     DateTime? membershipStatusTimestamp,
+    PinStatus? pinStatus,
+    DateTime? pinStatusTimestamp,
+    MuteStatus? muteStatus,
     bool forceNullValue = false,
   }) {
     return ChatRoomParticipant(
@@ -209,6 +256,11 @@ class ChatRoomParticipant {
       membershipStatusTimestamp: forceNullValue
           ? membershipStatusTimestamp
           : membershipStatusTimestamp ?? this.membershipStatusTimestamp,
+      pinStatus: pinStatus ?? this.pinStatus,
+      pinStatusTimestamp: forceNullValue
+          ? pinStatusTimestamp
+          : pinStatusTimestamp ?? this.pinStatusTimestamp,
+      muteStatus: muteStatus ?? this.muteStatus,
     );
   }
 
@@ -220,6 +272,9 @@ class ChatRoomParticipant {
       'typingStatus: $typingStatus, '
       'role: $role, '
       'membershipStatus: $membershipStatus, '
-      'membershipStatusTimestamp: $membershipStatusTimestamp'
+      'membershipStatusTimestamp: $membershipStatusTimestamp, '
+      'pinStatus: $pinStatus, '
+      'pinStatusTimestamp: $pinStatusTimestamp, '
+      'muteStatus: $muteStatus'
       ')';
 }

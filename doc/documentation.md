@@ -172,6 +172,8 @@ Widget build(BuildContext context) {
 | createChat             | Creates a one-to-one chat room by specifying the other user's ID and it returns the `chatRoomID`.                                                                  | `Future<String?>`               |
 | createGroupChat        | Creates a group chat by providing a group name, an optional profile picture, and a list of participants with their assigned roles and it returns the `chatRoomID`. | `Future<String?>`               |
 | deleteChat             | Deletes a chat room by its ID, removing it from the database, all users' chat lists, and deleting associated media from storage.                                   | `Future<bool>`                  |
+| muteChat               | Mutes or unmutes a chat room by passing the desired state (e.g., muted for mute, unmuted for unmute).                                                              | `Future<void>`                  |
+| pinChat                | Pins or unpins a chat room by passing the desired state (e.g., pinned for pin, unpinned for unpin).                                                                | `Future<void>`                  |
 | updateUserActiveStatus | Updates a user’s activity status by passing the desired state (e.g., online or offline).                                                                           | `Future<bool>`                  |
 | resetCurrentUserId     | Resets the current user ID                                                                                                                                         | `void`                          |
 
@@ -309,6 +311,9 @@ The `chats` collection contains chat room details.
        ├── membership_status_timestamp: Timestamp (Timestamp of when the membership status changed)
        ├── role: string (Role of the user in the chat ie: admin/user)
        ├── typing_status: string (Indicates whether the user is typing ie: typed/typing)
+       ├── pin_status: string (Indicates whether the chat is pinned or not ie: pinned/unpinned)
+       ├── pin_status_timestamp: Timestamp (Timestamp of when the chat is pinned)
+       ├── mute_status: string (Indicates whether the chat is muted or not ie: muted/unmuted)
 ```
 
 #### User Chats Collection:

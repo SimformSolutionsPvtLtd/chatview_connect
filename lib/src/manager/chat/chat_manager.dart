@@ -11,7 +11,6 @@ import '../../chatview_connect_constants.dart';
 import '../../database/database_service.dart';
 import '../../enum.dart';
 import '../../extensions.dart';
-import '../../models/chat_room.dart';
 import '../../models/chat_room_display_metadata.dart';
 import '../../models/chat_room_metadata.dart';
 import '../../models/chat_room_participant.dart';
@@ -39,8 +38,8 @@ final class ChatManager extends ChatController {
   ///
   /// **Note:**
   /// Default values are provided because `updateUserActiveStatus`, `createChat`
-  /// , `createGroupChat`, `getUsers`, `deleteChat`, and `chatRoomChangesStream`
-  /// do not depend on the chat room itself.
+  /// , `createGroupChat`, `getUsers`, and  `deleteChat` do not depend on
+  /// the chat room itself.
   ///
   /// For chat room-related operations, use
   /// `ChatViewConnect.instance.getChatRoomManager(...)`.
@@ -420,40 +419,6 @@ final class ChatManager extends ChatController {
     );
   }
 
-  /// Pins or unpins a chat in the user's chat list.
-  /// This method updates the pin status of a chat room
-  /// for the current user.
-  ///
-  /// **Parameters:**
-  /// - (required): [status] The pin status to set for the chat room.
-  /// - (required): [chatRoomId] The unique identifier of the chat room
-  /// to pin or unpin.
-  Future<void> pinChat(PinStatus status, String chatRoomId) {
-    return _database.updateChatRoomUserMetadata(
-      userId: _currentUserId,
-      chatId: chatRoomId,
-      pinStatus: status,
-      retry: ChatViewConnectConstants.defaultRetry,
-    );
-  }
-
-  /// Mutes or unmutes a chat room for the current user.
-  /// This method updates the mute status of a chat room
-  /// for the current user.
-  ///
-  /// **Parameters:**
-  /// - (required): [status] The mute status to set for the chat room.
-  /// - (required): [chatRoomId] The unique identifier of the chat room
-  /// to mute or unmute.
-  Future<void> muteChat(MuteStatus status, String chatRoomId) {
-    return _database.updateChatRoomUserMetadata(
-      userId: _currentUserId,
-      chatId: chatRoomId,
-      muteStatus: status,
-      retry: ChatViewConnectConstants.defaultRetry,
-    );
-  }
-
   /// Updates the status of a message to "read" or any other provided status.
   ///
   /// **Parameters:**
@@ -701,38 +666,6 @@ final class ChatManager extends ChatController {
         userId: _currentUserId,
         retry: ChatViewConnectConstants.defaultRetry,
       );
-
-  /// {@macro chatview_connect.DatabaseService.getChatsStream}
-  Stream<List<ChatRoom>> getChats({
-    ChatSortBy sortBy = ChatSortBy.newestFirst,
-    bool includeUnreadMessagesCount = true,
-    bool includeEmptyChats = true,
-    int? limit,
-  }) =>
-      _database.getChatsStream(
-        sortBy: sortBy,
-        userId: _currentUserId,
-        includeEmptyChats: includeEmptyChats,
-        includeUnreadMessagesCount: includeUnreadMessagesCount,
-        limit: limit,
-      );
-
-  /// {@macro chatview_connect.DatabaseService.chatRoomChangesStream}
-  Stream<ChatRoom?> chatRoomChangesStream({
-    ChatSortBy sortBy = ChatSortBy.newestFirst,
-    bool includeUnreadMessagesCount = true,
-    bool includeEmptyChats = true,
-    ValueSetter<String>? onRemovedChat,
-    int? limit,
-  }) {
-    return _database.chatRoomChangesStream(
-      limit: limit,
-      userId: _currentUserId,
-      onRemovedChat: onRemovedChat,
-      includeEmptyChats: includeEmptyChats,
-      includeUnreadMessagesCount: includeUnreadMessagesCount,
-    );
-  }
 
   /// Creates a one-to-one chat with the specified user.
   ///

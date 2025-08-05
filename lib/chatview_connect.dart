@@ -19,5 +19,6 @@ export 'src/enum.dart'
         RoleExtension,
         TypeWriterStatusExtension;
 export 'src/manager/chat/chat_manager.dart';
+export 'src/manager/chat_list/chat_list_manager.dart';
 export 'src/models/config/config.dart';
 export 'src/models/models.dart';

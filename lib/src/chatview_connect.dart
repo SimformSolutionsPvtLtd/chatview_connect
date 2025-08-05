@@ -5,6 +5,7 @@ import 'chatview_connect_constants.dart';
 import 'enum.dart';
 import 'extensions.dart';
 import 'manager/chat/chat_manager.dart';
+import 'manager/chat_list/chat_list_manager.dart';
 import 'models/config/chat_controller_config.dart';
 import 'models/config/chat_user_config.dart';
 import 'models/config/cloud_service_config.dart';
@@ -133,24 +134,31 @@ final class ChatViewConnect {
   /// Returns current user's ID
   String? get currentUserId => _currentUserId;
 
-  /// Retrieves a new instance of [ChatManager] using the current database
-  /// service.
+  /// Retrieves a new instance of [ChatListManager] using the current
+  /// database service.
   ///
-  /// This method creates a [ChatManager] and provides access to
-  /// chat-related functionalities.
+  /// This method creates a [ChatListManager] and provides access to
+  /// chat list-related functionalities.
+  ///
+  /// **Parameters:**
+  /// - (required): [scrollController] A [ScrollController] for managing
+  ///   scroll behavior within the chat list.
+  /// - (optional): [sortEnable] If `true`, enables sorting of chat list items.
+  /// - (optional): [chatSorter] A custom sorter for ordering chat items.
+  /// - (optional): [includeEmptyChats] If `true`, includes empty chats in the
+  ///   list.
+  /// - (optional): [includeUnreadMessagesCount] If `true`, includes the count of
+  ///   unread messages in the chat list items.
   ///
   /// **Returns:**
-  /// A new instance of [ChatManager].
-  ///
-  /// **Note:**
-  /// - This instance is meant for using methods like `updateUserActiveStatus`,
-  ///   `createChat`, `createGroupChat`, `getUsers`, `deleteChat`, and
-  ///   `getChats`, which do not depend on the chat room itself.
-  /// - While you can access chat room-related methods, you won’t be able to
-  ///   perform any operations. To fully utilize chat room functionalities,
-  ///   use the chat manager from
-  ///   `ChatViewConnect.instance.getChatRoomManager()` instead.
-  ChatManager getChatManager() {
+  /// A new instance of [ChatListManager].
+  ChatListManager getChatListManager({
+    required ScrollController scrollController,
+    bool sortEnable = true,
+    ChatSorter? chatSorter,
+    bool includeEmptyChats = true,
+    bool includeUnreadMessagesCount = true,
+  }) {
     assert(
       _service != null,
       '''
@@ -160,7 +168,14 @@ final class ChatViewConnect {
       /// ChatViewConnect.initialize(ChatViewCloudService.firebase);
       /// ```''',
     );
-    return ChatManager.fromService(_service!);
+    return ChatListManager.fromService(
+      service: _service!,
+      scrollController: scrollController,
+      chatSorter: chatSorter,
+      sortEnable: sortEnable,
+      includeEmptyChats: includeEmptyChats,
+      includeUnreadMessagesCount: includeUnreadMessagesCount,
+    );
   }
 
   /// Retrieves or initializes a [ChatManager] based on the provided

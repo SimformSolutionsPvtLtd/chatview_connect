@@ -14,11 +14,13 @@ enables seamless integration with cloud services.
 - **Easy Setup:** Integrate with [`chatview`](https://pub.dev/packages/chatview) in 3 steps:
     1. Initialize the package by specifying **Cloud Service** (e.g., Firebase).
     2. Set the current **User ID**.
-    3. Get **`ChatManager`** and use it with [`chatview`](https://pub.dev/packages/chatview)
+    3. Get **`ChatListManager`** and use it with [`ChatViewList`](https://pub.dev/packages/chatview)
+    4. Get **`ChatManager`** and use it with [`ChatView`](https://pub.dev/packages/chatview)
 - Supports **one-on-one** and **group chats** with **media uploads** *(audio not supported).*
 
 # Installation Guide
 
+[//]: #TODO(YASH): (Update the version number below with supported chatview list version from pub.dev)
 **Compatibility**: This package is compatible with `chatview` versions **>= 2.4.1**
 
 ## Adding the dependency
@@ -63,7 +65,59 @@ ChatViewConnect.initialize(ChatViewCloudService.firebase);
 ChatViewConnect.instance.setCurrentUserId('current_user_id'); 
 ```
 
-## Step 3: Using with [ChatView](https://pub.dev/packages/chatview)
+## Step 3: Using with [ChatViewList](https://pub.dev/packages/chatview)
+
+The `ChatViewListController` from [`ChatViewList`](https://pub.dev/packages/chatview) has been replaced by `ChatListManager`.
+
+**Before:**
+
+```dart
+ChatViewListController _chatListController = ChatViewListController(
+  initialChatList: [...],
+  scrollController: ScrollController(),
+);
+```
+
+**After:**
+
+```dart
+ChatListManager _chatListController = ChatViewConnect.instance.getChatListManager(
+  scrollController: ScrollController(),
+);
+```
+
+`ChatListManager` internally manages chat rooms list, including details such as chat ID, last message, unread message count
+and various chats operations, when the corresponding methods are specified in the `ChatViewList` widget.
+
+```dart
+ChatViewList(
+  controller: _chatListController,
+  // ...
+  menuConfig: ChatMenuConfig(
+    pinStatusCallback: (result) {
+      // Pin or unpin the particular chat based on the result status
+      _chatListController.pinChat(result.status, result.chat.id);
+      Navigator.pop(context);
+    },
+    muteStatusCallback: (result) {
+      // Mute or unmute the particular chat based on the result status 
+      _chatListController.muteChat(result.status, result.chat.id);
+      Navigator.pop(context);
+    },
+    actions: (chat) => [
+      CupertinoContextMenuAction(
+        trailingIcon: Icons.delete_forever,
+        // Deleting the particular chat
+        onPressed: () => _chatListController.deleteChat(chat.id),
+        child: const Text('Delete Chat'),
+      ),
+    ],
+  ),
+  // ...
+)
+```
+
+## Step 4: Using with [ChatView](https://pub.dev/packages/chatview)
 
 The `ChatController` from [`chatview`](https://pub.dev/packages/chatview) has been replaced by `ChatManager`. It can
 be used for both **existing** and **new chat rooms**, depending on the parameters
@@ -143,32 +197,11 @@ ChatView(
 | leaveFromGroup       | Allows the current user to exit the group chat. ***Note:*** If the current user is the last remaining member, all chat data will be deleted.                                                                                | `Future<bool>`     |
 | dispose              | When leaving the chat room, make sure to dispose of the connection to stop listening to messages, user activity, and chat room metadata streams.                                                                            | `void`             |
 
-### Chats Methods:
-
-To use chat methods that are not specific to a particular chat room, obtain the `ChatManager` using
-the method below. **Note:** This instance does not support chat room-specific methods.
-
-```dart
-ChatManager _chatController = ChatViewConnect.instance.getChatManager();
-
-@override
-Widget build(BuildContext context) {
-  return Scaffold(
-    body: child: StreamBuilder<List<ChatRoom>>(
-      stream: _chatController.getChats(),
-      builder: (context, snapshot) {
-        // ...
-      },
-    ),
-  );
-}
-
-```
+### Additional Chats Methods:
 
 | Method                 | Description                                                                                                                                                        | Return Type                     | 
 |------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------|---------------------------------|
 | getUsers               | Retrieves a map of user IDs and their corresponding `ChatUser` details.                                                                                            | `Future<Map<String, ChatUser>>` |
-| getChats               | Returns a real-time stream of chat rooms list, including details such as chat room ID, participants, last message, and unread message count.                       | `Stream<List<ChatRoom>>`        |
 | createChat             | Creates a one-to-one chat room by specifying the other user's ID and it returns the `chatRoomID`.                                                                  | `Future<String?>`               |
 | createGroupChat        | Creates a group chat by providing a group name, an optional profile picture, and a list of participants with their assigned roles and it returns the `chatRoomID`. | `Future<String?>`               |
 | deleteChat             | Deletes a chat room by its ID, removing it from the database, all users' chat lists, and deleting associated media from storage.                                   | `Future<bool>`                  |

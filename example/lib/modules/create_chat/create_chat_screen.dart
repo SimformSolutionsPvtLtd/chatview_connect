@@ -6,14 +6,15 @@ import '../chat_detail/chat_detail_screen.dart';
 import 'widgets/create_chat_tile.dart';
 
 class CreateChatScreen extends StatefulWidget {
-  const CreateChatScreen({super.key});
+  const CreateChatScreen({required this.chatListController, super.key});
+
+  final ChatListManager chatListController;
 
   @override
   State<CreateChatScreen> createState() => _CreateChatScreenState();
 }
 
 class _CreateChatScreenState extends State<CreateChatScreen> {
-  final _chatController = ChatViewConnect.instance.getChatManager();
   final currentUser = ChatViewConnect.instance.currentUserId;
   ChatUser? currentChatUser;
   List<ChatUser> otherChatUsers = [];
@@ -23,7 +24,7 @@ class _CreateChatScreenState extends State<CreateChatScreen> {
     return Scaffold(
       appBar: AppBar(title: const Text('New Chat')),
       body: FutureBuilder(
-        future: _chatController.getUsers(),
+        future: widget.chatListController.getUsers(),
         builder: (_, snapshot) {
           final users = snapshot.data?.values.toList() ?? [];
           _separateUsers(users);
@@ -76,7 +77,8 @@ class _CreateChatScreenState extends State<CreateChatScreen> {
     bool createWithChatManager = false,
   }) async {
     if (!createWithChatManager) {
-      final chatRoomId = await _chatController.createChat(otherUser.id);
+      final chatRoomId =
+          await widget.chatListController.createChat(otherUser.id);
       if (chatRoomId == null || !mounted) return;
       return Navigator.push(
         context,
@@ -106,7 +108,7 @@ class _CreateChatScreenState extends State<CreateChatScreen> {
         final user = otherChatUsers[i];
         participants[user.id] = Role.admin;
       }
-      final chatRoomId = await _chatController.createGroupChat(
+      final chatRoomId = await widget.chatListController.createGroupChat(
         groupName: 'Test Group',
         groupProfilePic:
             'https://images.unsplash.com/photo-1739305235159-308ddffb4129?w=900&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxmZWF0dXJlZC1waG90b3MtZmVlZHw2fHx8ZW58MHx8fHx8',

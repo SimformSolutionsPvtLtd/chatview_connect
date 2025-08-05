@@ -142,6 +142,33 @@ class ChatRoomParticipant {
     return data;
   }
 
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        other is ChatRoomParticipant &&
+            runtimeType == other.runtimeType &&
+            userId == other.userId &&
+            chatUser == other.chatUser &&
+            userActiveStatus == other.userActiveStatus &&
+            typingStatus == other.typingStatus &&
+            role == other.role &&
+            membershipStatus == other.membershipStatus &&
+            membershipStatusTimestamp == other.membershipStatusTimestamp;
+  }
+
+  @override
+  int get hashCode {
+    return Object.hash(
+      role,
+      userId,
+      chatUser,
+      typingStatus,
+      userActiveStatus,
+      membershipStatus,
+      membershipStatusTimestamp,
+    );
+  }
+
   /// Creates a copy of the current [ChatRoomParticipant] instance with
   /// updated fields.
   ///
@@ -186,5 +213,13 @@ class ChatRoomParticipant {
   }
 
   @override
-  String toString() => 'ChatRoomParticipant(${toJson()})';
+  String toString() => 'ChatRoomParticipant('
+      'userId: $userId, '
+      'chatUser: $chatUser, '
+      'userActiveStatus: $userActiveStatus, '
+      'typingStatus: $typingStatus, '
+      'role: $role, '
+      'membershipStatus: $membershipStatus, '
+      'membershipStatusTimestamp: $membershipStatusTimestamp'
+      ')';
 }

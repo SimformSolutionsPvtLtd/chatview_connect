@@ -343,6 +343,7 @@ final class ChatViewFireStoreDatabase implements DatabaseService {
     required String userId,
     required String chatId,
     bool includeCurrentUser = true,
+    bool listenChangesForCurrentUser = false,
     int? limit,
   }) {
     final collectionPath = _chatRoomCollectionPath(chatId);
@@ -358,7 +359,15 @@ final class ChatViewFireStoreDatabase implements DatabaseService {
         ChatViewFireStoreCollections.chatParticipantsCollection(collectionPath)
             .toQuery(limit: limit);
 
-    return userCollection.snapshots().switchMap(
+    return userCollection.snapshots().where((userSnapshot) {
+      // Check if there are any document changes for other users
+      final docChanges = userSnapshot.docChanges;
+      if (docChanges.isEmpty) return true;
+
+      final hasOtherUserChanges = listenChangesForCurrentUser ||
+          docChanges.any((change) => change.doc.id != userId);
+      return hasOtherUserChanges;
+    }).switchMap(
       (userSnapshot) {
         final docs = userSnapshot.docs;
         if (docs.isEmpty) {
@@ -735,33 +744,72 @@ final class ChatViewFireStoreDatabase implements DatabaseService {
           userId: userId,
           sortBy: sortBy,
           userChatsSnapshot: docs,
+          chatRoomId: (snapshot) => snapshot.id,
         ).switchMap(
-          (chats) => _getChatsStream(
-            chats: chats,
-            userId: userId,
-            includeEmptyChats: includeEmptyChats,
-            includeUnreadMessagesCount: includeUnreadMessagesCount,
-          ),
+          (chatLastMessages) => chatLastMessages.isEmpty
+              ? Stream.value([])
+              : CombineLatestStream(
+                  _getChatsStream(
+                    userId: userId,
+                    chatLastMessages: chatLastMessages,
+                    includeEmptyChats: includeEmptyChats,
+                    includeUnreadMessagesCount: includeUnreadMessagesCount,
+                  ),
+                  (chats) => chats.toNonEmpty,
+                ),
         );
       },
     );
   }
 
-  Stream<Map<String, Message?>> _getChatsWithLastMessageStream({
-    required List<QueryDocumentSnapshot<UserChatMetadata?>> userChatsSnapshot,
+  List<Stream<ChatRoom>> _getChatsStream({
+    required String userId,
+    required bool includeEmptyChats,
+    required bool includeUnreadMessagesCount,
+    required Map<String, Message?> chatLastMessages,
+  }) {
+    final chatIds = chatLastMessages.keys.toList();
+    final chatIdsLength = chatIds.length;
+    return [
+      for (var i = 0; i < chatIdsLength; i++)
+        if (chatIds[i] case final chatId)
+          _retrieveChatRoomWithParticipants(
+            userId: userId,
+            chatId: chatId,
+            lastMessage: chatLastMessages[chatId],
+            includeEmptyChats: includeEmptyChats,
+            includeUnreadMessagesCount: includeUnreadMessagesCount,
+          ),
+    ];
+  }
+
+  Stream<Map<String, Message?>> _getChatsWithLastMessageStream<T>({
     required String userId,
     required ChatSortBy sortBy,
+    required List<T> userChatsSnapshot,
+    required ChatRoomIdCallback<T> chatRoomId,
+    WhereCallback<T>? shouldSkipSnapshot,
     int? limit,
   }) {
     var chats = <String, Message?>{};
+    final messageStreams = <Stream<Message?>>[];
+    final length = userChatsSnapshot.length;
+
+    for (var i = 0; i < length; i++) {
+      final snapshot = userChatsSnapshot[i];
+      final chatId = chatRoomId(snapshot);
+
+      if (shouldSkipSnapshot?.call(snapshot) ?? false) continue;
+
+      messageStreams.add(
+        _getLastMessageStream(chatRoomId: chatId, userId: userId).map(
+          (message) => chats[chatId] = message,
+        ),
+      );
+    }
+
     return CombineLatestStream(
-      [
-        for (var i = 0; i < userChatsSnapshot.length; i++)
-          if (userChatsSnapshot[i].id case final chatId)
-            _getLastMessageStream(chatRoomId: chatId, userId: userId).map(
-              (message) => chats[chatId] = message,
-            ),
-      ],
+      messageStreams,
       (_) {
         if (sortBy.isNewestFirst) {
           chats = Map.fromEntries(
@@ -777,44 +825,93 @@ final class ChatViewFireStoreDatabase implements DatabaseService {
     );
   }
 
-  Stream<List<ChatRoom>> _getChatsStream({
-    required Map<String, Message?> chats,
+  @override
+  Stream<ChatRoom> chatRoomChangesStream({
     required String userId,
     required bool includeEmptyChats,
     required bool includeUnreadMessagesCount,
+    required ValueSetter<String>? onRemovedChat,
+    int? limit,
   }) {
-    final chatIds = chats.keys.toList();
-    final docsLength = chatIds.length;
-    final chatStreams = <Stream<ChatRoom?>>[
-      for (var i = 0; i < docsLength; i++)
-        _chatRoomStream(userId: userId, chatRoomId: chatIds[i]).switchMap(
+    final chatRoomCollection =
+        ChatViewFireStoreCollections.userConversationsCollection(
+      userId: userId,
+    );
+
+    return chatRoomCollection
+        .snapshots()
+        .where((snapshot) => snapshot.docChanges.isNotEmpty)
+        .switchMap(
+      (userChatsSnapshot) {
+        final docs = userChatsSnapshot.docChanges;
+        final docsLength = docs.length;
+
+        final streams = <Stream<ChatRoom>>[];
+
+        for (var i = 0; i < docsLength; i++) {
+          final snapshot = docs[i];
+          final chatId = snapshot.doc.id;
+          if (snapshot.type == DocumentChangeType.removed) {
+            onRemovedChat?.call(chatId);
+            continue;
+          }
+
+          streams.add(
+            _getLastMessageStream(chatRoomId: chatId, userId: userId).switchMap(
+              (message) => _retrieveChatRoomWithParticipants(
+                userId: userId,
+                chatId: chatId,
+                lastMessage: message,
+                includeEmptyChats: includeEmptyChats,
+                includeUnreadMessagesCount: includeUnreadMessagesCount,
+              ),
+            ),
+          );
+        }
+
+        return Rx.merge(streams);
+      },
+    );
+  }
+
+  Stream<ChatRoom> _retrieveChatRoomWithParticipants({
+    required String userId,
+    required String chatId,
+    required Message? lastMessage,
+    required bool includeEmptyChats,
+    required bool includeUnreadMessagesCount,
+  }) {
+    return _chatRoomStream(userId: userId, chatRoomId: chatId)
+        .distinct((previous, next) => previous == next)
+        .where(
           (chatRoom) {
-            if (chatRoom == null) return Stream.value(null);
-            if (!includeEmptyChats &&
-                chatRoom.chatRoomType.isOneToOne &&
-                chatRoom.lastMessage == null) {
-              return Stream.value(null);
-            }
+            final isInvalidChatRoom = chatRoom == null ||
+                (!includeEmptyChats &&
+                    chatRoom.chatRoomType.isOneToOne &&
+                    chatRoom.lastMessage == null);
+            return !isInvalidChatRoom;
+          },
+        )
+        .cast<ChatRoom>()
+        .switchMap(
+          (chatRoom) {
             return getChatRoomParticipantsStream(
               userId: userId,
-              // Added group check as to get timestamp of current user
-              // for when they joined the group for count unread messages.
-              includeCurrentUser: chatRoom.chatRoomType.isGroup,
               chatId: chatRoom.chatId,
+              includeCurrentUser: true,
+              listenChangesForCurrentUser: true,
             ).switchMap(
               (participants) => _getChatRoomFromParticipantsStream(
                 userId: userId,
                 participants: participants,
                 chatRoom: chatRoom.copyWith(
-                  lastMessage: chats[chatRoom.chatId],
+                  lastMessage: lastMessage,
                 ),
                 fetchUnreadMessageCount: includeUnreadMessagesCount,
               ),
             );
           },
-        ),
-    ];
-    return CombineLatestStream(chatStreams, (chats) => chats.toNonEmpty);
+        );
   }
 
   Stream<ChatRoom?> _chatRoomStream({
@@ -825,6 +922,7 @@ final class ChatViewFireStoreDatabase implements DatabaseService {
     return ChatViewFireStoreCollections.chatCollection()
         .doc(chatRoomId)
         .snapshots()
+        .distinct((previous, next) => previous == next)
         .switchMap(
       (snapshot) {
         final chatRoom = snapshot.data();
@@ -848,7 +946,13 @@ final class ChatViewFireStoreDatabase implements DatabaseService {
       limit: 1,
     );
 
-    return updateAtMessageCollection.snapshots().switchMap(
+    return updateAtMessageCollection
+        .snapshots()
+        .distinct(
+          (prev, next) =>
+              prev.docs.firstOrNull?.data() == next.docs.firstOrNull?.data(),
+        )
+        .switchMap(
       (snapshot) {
         final message = snapshot.docs.firstOrNull?.data();
         if (message == null) return Stream.value(null);
@@ -878,16 +982,12 @@ final class ChatViewFireStoreDatabase implements DatabaseService {
   }) {
     ChatRoomParticipant? currentUser;
     final List<ChatRoomParticipant> otherUsers;
-    if (chatRoom.chatRoomType.isGroup) {
-      final result = _getChatRoomParticipant(
-        participants: participants,
-        userId: userId,
-      );
-      currentUser = result.currentUser;
-      otherUsers = result.otherUsers;
-    } else {
-      otherUsers = participants;
-    }
+    final result = _getChatRoomParticipant(
+      participants: participants,
+      userId: userId,
+    );
+    currentUser = result.currentUser;
+    otherUsers = result.otherUsers;
 
     final membershipTimestamp = currentUser?.membershipStatusTimestamp;
 
@@ -1615,7 +1715,10 @@ final class ChatViewFireStoreDatabase implements DatabaseService {
   Stream<UserInfoWithStatusRecord> _getUserInfoWithStatusStream(String userId) {
     return Rx.combineLatest2(
       getUserStreamById(userId),
-      ChatViewFireStoreCollections.userChatCollection().doc(userId).snapshots(),
+      ChatViewFireStoreCollections.userChatCollection()
+          .doc(userId)
+          .snapshots()
+          .distinct((previous, next) => previous.data() == next.data()),
       (userInfo, userStatusSnapshot) => (
         user: userInfo,
         userActiveStatus: userStatusSnapshot.data()?.userActiveStatus,

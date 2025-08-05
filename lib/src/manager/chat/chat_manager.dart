@@ -39,8 +39,8 @@ final class ChatManager extends ChatController {
   ///
   /// **Note:**
   /// Default values are provided because `updateUserActiveStatus`, `createChat`
-  /// , `createGroupChat`, `getUsers`, `deleteChat`, and `getChats` do not
-  /// depend on the chat room itself.
+  /// , `createGroupChat`, `getUsers`, `deleteChat`, and `chatRoomChangesStream`
+  /// do not depend on the chat room itself.
   ///
   /// For chat room-related operations, use
   /// `ChatViewConnect.instance.getChatRoomManager(...)`.
@@ -614,6 +614,23 @@ final class ChatManager extends ChatController {
         includeUnreadMessagesCount: includeUnreadMessagesCount,
         limit: limit,
       );
+
+  /// {@macro chatview_connect.DatabaseService.chatRoomChangesStream}
+  Stream<ChatRoom?> chatRoomChangesStream({
+    ChatSortBy sortBy = ChatSortBy.newestFirst,
+    bool includeUnreadMessagesCount = true,
+    bool includeEmptyChats = true,
+    ValueSetter<String>? onRemovedChat,
+    int? limit,
+  }) {
+    return _database.chatRoomChangesStream(
+      limit: limit,
+      userId: _currentUserId,
+      onRemovedChat: onRemovedChat,
+      includeEmptyChats: includeEmptyChats,
+      includeUnreadMessagesCount: includeUnreadMessagesCount,
+    );
+  }
 
   /// Creates a one-to-one chat with the specified user.
   ///

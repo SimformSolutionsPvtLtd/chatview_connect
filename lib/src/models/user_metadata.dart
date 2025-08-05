@@ -1,4 +1,4 @@
-import '../enum.dart';
+import 'package:chatview_utils/chatview_utils.dart';
 
 /// Represents a user's status data model.
 ///

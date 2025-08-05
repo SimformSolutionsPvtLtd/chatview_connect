@@ -1,6 +1,5 @@
 import 'package:chatview_utils/chatview_utils.dart';
 
-import '../enum.dart';
 import '../extensions.dart';
 import 'chat_room_participant.dart';
 
@@ -242,5 +241,45 @@ class ChatRoom {
   }
 
   @override
-  String toString() => '''ChatRoom(${toJson()})''';
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        other is ChatRoom &&
+            runtimeType == other.runtimeType &&
+            chatId == other.chatId &&
+            chatRoomType == other.chatRoomType &&
+            groupName == other.groupName &&
+            groupPhotoUrl == other.groupPhotoUrl &&
+            lastMessage == other.lastMessage &&
+            users == other.users &&
+            unreadMessagesCount == other.unreadMessagesCount &&
+            chatRoomCreateBy == other.chatRoomCreateBy;
+  }
+
+  @override
+  int get hashCode {
+    return Object.hash(
+      chatId,
+      chatRoomType,
+      groupName,
+      groupPhotoUrl,
+      lastMessage,
+      users,
+      unreadMessagesCount,
+      chatRoomCreateBy,
+    );
+  }
+
+  @override
+  String toString() {
+    return '''ChatRoom(
+      chatId: $chatId,
+      chatRoomType: $chatRoomType,
+      unreadMessagesCount: $unreadMessagesCount,
+      groupPhotoUrl: $groupPhotoUrl,
+      chatRoomCreateBy: $chatRoomCreateBy,
+      lastMessage: $lastMessage,
+      groupName: $groupName,
+      users: ${users?.map((e) => e.toString()).toList()},
+    )''';
+  }
 }

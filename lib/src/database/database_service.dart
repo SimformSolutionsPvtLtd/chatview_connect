@@ -418,6 +418,51 @@ abstract interface class DatabaseService {
     int? limit,
   });
 
+  /// {@template chatview_connect.DatabaseService.chatRoomChangesStream}
+  /// Returns a stream of [ChatRoom] changes, specifically listening for
+  /// chat room additions, modifications, and removals.
+  ///
+  /// This stream emits a [ChatRoom] when changes occur, such as:
+  /// - New chat rooms being created
+  /// - Existing chat rooms being updated
+  /// - Chat rooms being removed (triggers [onRemovedChat] callback)
+  /// - And if chatroom's internal data changes, such as unread message count,
+  ///  typing status, or user status, username and etc.
+  ///
+  /// **Parameters:**
+  /// - (required): [userId] The unique identifier of the currently logged-in
+  /// user.
+  /// - (required): [includeEmptyChats] determines whether to include
+  /// chat rooms that have no messages.
+  ///   - If `true`, one-to-one chats that have been created but contain
+  /// no messages will be included in the stream.
+  ///   - If `false`, such empty chats will be excluded.
+  /// - (required): [includeUnreadMessagesCount] determines whether the stream
+  /// will listen for unread message count updates.
+  ///   - If `true`, it will continuously listen and update the count.
+  ///   - If `false`, it will not listen, and `unreadMessagesCount`
+  ///   will always be `0`.
+  /// - (required): [onRemovedChat] A callback function that is triggered
+  /// when a chat room is removed. Receives the chat room ID as a parameter.
+  /// - (optional): [limit] specifies the maximum number of chat rooms to
+  /// monitor for changes. If not specified, all chat rooms will be monitored
+  /// by default.
+  ///
+  /// **Returns:** A [Stream] that emits [ChatRoom] objects when changes occur,
+  /// or `null` when no changes are detected.
+  ///
+  /// **Note:**
+  /// When you first listen to this stream, it returns all existing data from
+  /// the backend. Afterwards, it only emits changes to the chat room.
+  /// {@endtemplate}
+  Stream<ChatRoom?> chatRoomChangesStream({
+    required String userId,
+    required bool includeEmptyChats,
+    required bool includeUnreadMessagesCount,
+    required ValueSetter<String>? onRemovedChat,
+    int? limit,
+  });
+
   /// {@template chatview_connect.DatabaseService.createOneToOneChat}
   /// Creates a one-to-one chat with the specified user.
   ///

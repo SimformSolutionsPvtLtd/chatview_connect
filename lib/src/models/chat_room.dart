@@ -113,20 +113,6 @@ class ChatRoom {
 
   /// The number of unread messages in the chat room for the current user.
   ///
-  /// **Note:** In the below example,
-  /// the `unreadMessagesCount` is set to `false`. `0` will be returned.
-  ///
-  /// ```dart
-  /// ChatManager chatManager = ChatViewConnect.instance.getChatManager();
-  ///
-  /// StreamBuilder(
-  ///  stream: chatManager.getChats(includeUnreadMessagesCount: false),
-  ///  builder: (context, snapshot) {
-  ///   ...
-  ///  }
-  /// ),
-  /// ```
-  ///
   /// A value of `0` indicates that there are no unread messages.
   final int unreadMessagesCount;
 

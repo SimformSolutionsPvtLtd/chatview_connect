@@ -1,5 +1,4 @@
-import 'package:chatview/chatview.dart' hide UserActiveStatus;
-import 'package:chatview_connect/chatview_connect.dart';
+import 'package:chatview/chatview.dart';
 import 'package:flutter/material.dart';
 
 class UserActivityTile extends StatelessWidget {

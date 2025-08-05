@@ -73,3 +73,17 @@ typedef GroupInfoRecord = ({String groupName, Map<String, Role> participants});
 /// Useful for transforming Firestore query results into
 /// your desired data structure.
 typedef MessageQueryMapper<T> = T Function(QuerySnapshot<Message?> docSnapshot);
+
+/// A callback function that extracts a chat room ID from a given snapshot.
+///
+/// **Parameters:**
+/// - (required): `snapshot` The snapshot object of type [T] from which to extract
+/// the chat room ID.
+typedef ChatRoomIdCallback<T> = String Function(T snapshot);
+
+/// A callback function for filtering operations.
+/// Returns `true` if the object meets the specified condition, otherwise `false`.
+///
+/// **Parameters:**
+/// - (required): `item` The object of type [T] to be evaluated against the filter criteria.
+typedef WhereCallback<T> = bool Function(T item);

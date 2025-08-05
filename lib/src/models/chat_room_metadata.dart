@@ -1,6 +1,5 @@
 import 'package:chatview_utils/chatview_utils.dart';
 
-import '../enum.dart';
 import '../extensions.dart';
 import 'chat_room_display_metadata.dart';
 

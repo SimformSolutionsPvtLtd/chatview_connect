@@ -21,7 +21,12 @@ environment:
   sdk: '>=3.4.0 <4.0.0'
 
 dependencies:
-  chatview_utils: ^0.0.1
+  # TODO(YASH): Use pub.dev version once chatview_utils latest version is released
+  chatview_utils:
+    git:
+      url: https://github.com/SimformSolutionsPvtLtd/chatview_utils
+      ref: feature/add_chatview_list_models
+
   cloud_firestore: ^5.6.7
   firebase_storage: ^12.4.5
 

@@ -14,12 +14,10 @@ library;
 export 'src/chatview_connect.dart';
 export 'src/enum.dart'
     hide
-        ChatRoomTypeExtension,
         DocumentChangeTypeExtension,
         MembershipStatusExtension,
         RoleExtension,
-        TypeWriterStatusExtension,
-        UserActiveStatusExtension;
+        TypeWriterStatusExtension;
 export 'src/manager/chat/chat_manager.dart';
 export 'src/models/config/config.dart';
 export 'src/models/models.dart';

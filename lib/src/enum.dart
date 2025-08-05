@@ -172,51 +172,6 @@ extension DocumentChangeTypeExtension on DocumentChangeType {
   }
 }
 
-/// An enumeration of user status.
-enum UserActiveStatus {
-  /// user is active
-  online,
-
-  /// user is inactive
-  offline;
-
-  /// is user inactive
-  bool get isOnline => this == online;
-
-  /// is user active
-  bool get isOffline => this == offline;
-}
-
-/// Extension methods for [UserActiveStatus], providing utilities
-/// for parsing and handling user status values.
-extension UserActiveStatusExtension on UserActiveStatus {
-  /// Parses a string value and returns the corresponding [UserActiveStatus].
-  ///
-  /// - If the [value] is `null` or empty,
-  /// it defaults to [UserActiveStatus.offline].
-  /// - If the [value] matches `online`
-  /// (case-insensitive), it returns [UserActiveStatus.online].
-  /// - For all other cases, it defaults to [UserActiveStatus.offline].
-  ///
-  /// Example:
-  /// ```dart
-  /// final status = UserStatus.parse('online');
-  /// print(status); // Output: UserStatus.online
-  /// ```
-  ///
-  /// [value]: The input string to parse.
-  /// Returns the corresponding [UserActiveStatus].
-  static UserActiveStatus parse(String? value) {
-    final safeValue = value?.trim().toLowerCase() ?? '';
-    if (safeValue.isEmpty) return UserActiveStatus.offline;
-    if (safeValue == UserActiveStatus.online.name) {
-      return UserActiveStatus.online;
-    } else {
-      return UserActiveStatus.offline;
-    }
-  }
-}
-
 /// Provides utility methods for [TypeWriterStatus].
 extension TypeWriterStatusExtension on TypeWriterStatus {
   /// Parses a string value and returns the corresponding [TypeWriterStatus].
@@ -244,39 +199,6 @@ extension TypeWriterStatusExtension on TypeWriterStatus {
       return TypeWriterStatus.typing;
     } else {
       return TypeWriterStatus.typed;
-    }
-  }
-}
-
-/// An enumeration representing different types of chat rooms.
-enum ChatRoomType {
-  /// A one-on-one private chat between two users.
-  oneToOne,
-
-  /// A group chat involving multiple users.
-  group;
-
-  /// Returns `true` if the chat room type is [oneToOne].
-  bool get isOneToOne => this == oneToOne;
-
-  /// Returns `true` if the chat room type is [group].
-  bool get isGroup => this == group;
-}
-
-/// Provides utility methods for [ChatRoomTypeExtension].
-extension ChatRoomTypeExtension on ChatRoomType {
-  /// Parses a string value and returns the corresponding [ChatRoomType].
-  ///
-  /// Returns the corresponding [ChatRoomType] if the value matches,
-  /// or `null` if it doesn't.
-  static ChatRoomType? tryParse(String? value) {
-    final safeValue = value?.trim().toLowerCase() ?? '';
-    if (safeValue == ChatRoomType.oneToOne.name.toLowerCase()) {
-      return ChatRoomType.oneToOne;
-    } else if (safeValue == ChatRoomType.group.name.toLowerCase()) {
-      return ChatRoomType.group;
-    } else {
-      return null;
     }
   }
 }

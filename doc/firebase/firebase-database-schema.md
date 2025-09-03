@@ -57,6 +57,9 @@ The `chats` collection contains chat room details.
    ├── 📄 {userId} (Document)
        ├── membership_status: string (Status of the user in the chat ie: member/left/removed)
        ├── membership_status_timestamp: Timestamp (Timestamp of when the membership status changed)
+       ├── mute_status: string (muted/unmuted)
+       ├── pin_status: string (pinned/unpinned)
+       ├── pin_status_timestamp: Timestamp (Timestamp of when the pin status changed)
        ├── role: string (Role of the user in the chat ie: admin/user)
        ├── typing_status: string (Indicates whether the user is typing ie: typed/typing)
 ```

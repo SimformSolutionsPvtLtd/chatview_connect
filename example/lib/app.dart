@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'modules/chat_list/chat_list_screen.dart';
+import 'values/app_colors.dart';
 
 class ChatViewConnectExampleApp extends StatelessWidget {
   const ChatViewConnectExampleApp({super.key});
@@ -11,21 +12,8 @@ class ChatViewConnectExampleApp extends StatelessWidget {
       title: 'Chat View Connect Demo',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        useMaterial3: true,
-        colorScheme: ColorScheme.fromSeed(
-          primary: const Color(0xffEE5366),
-          seedColor: const Color(0xffEE5366),
-        ),
-        appBarTheme: const AppBarTheme(
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          scrolledUnderElevation: 0,
-          titleTextStyle: TextStyle(
-            fontSize: 24,
-            color: Colors.black,
-            fontWeight: FontWeight.w700,
-          ),
-        ),
+        primaryColor: AppColors.uiTwoGreen,
+        colorScheme: ColorScheme.fromSwatch(accentColor: AppColors.uiTwoGreen),
       ),
       home: const ChatListScreen(),
     );

@@ -10,6 +10,7 @@ import '../../database/database_service.dart';
 import '../../enum.dart';
 import '../../models/chat_room.dart';
 import '../../storage/storage_service.dart';
+import '../../typedefs.dart';
 
 /// A class responsible for managing the connection to
 /// the database and storage services in a chat view list context.
@@ -237,14 +238,12 @@ final class ChatListManager extends ChatViewListController {
   /// for the current user.
   ///
   /// **Parameters:**
-  /// - (required): [status] The pin status to set for the chat room.
-  /// - (required): [chatRoomId] The unique identifier of the chat room
-  /// to pin or unpin.
-  Future<void> pinChat(PinStatus status, String chatRoomId) {
+  /// - (required): [result] The record containing the chat and its pin status.
+  Future<void> pinChat(ChatStatusRecord<PinStatus> result) {
     return _database.updateChatRoomUserMetadata(
       userId: _currentUserId,
-      chatId: chatRoomId,
-      pinStatus: status,
+      chatId: result.chat.id,
+      pinStatus: result.status,
       retry: ChatViewConnectConstants.defaultRetry,
     );
   }
@@ -254,14 +253,12 @@ final class ChatListManager extends ChatViewListController {
   /// for the current user.
   ///
   /// **Parameters:**
-  /// - (required): [status] The mute status to set for the chat room.
-  /// - (required): [chatRoomId] The unique identifier of the chat room
-  /// to mute or unmute.
-  Future<void> muteChat(MuteStatus status, String chatRoomId) {
+  /// - (required): [result] The record containing the chat and its mute status.
+  Future<void> muteChat(ChatStatusRecord<MuteStatus> result) {
     return _database.updateChatRoomUserMetadata(
       userId: _currentUserId,
-      chatId: chatRoomId,
-      muteStatus: status,
+      chatId: result.chat.id,
+      muteStatus: result.status,
       retry: ChatViewConnectConstants.defaultRetry,
     );
   }

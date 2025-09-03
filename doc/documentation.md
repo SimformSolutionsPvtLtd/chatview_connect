@@ -7,21 +7,28 @@ enables seamless integration with cloud services.
 
 ## Preview
 
-![Preview](https://raw.githubusercontent.com/SimformSolutionsPvtLtd/flutter_chatview/main/preview/chatview.gif)
+| ChatViewList                                                                                                                                  | ChatView                                                                                                                              |
+|-----------------------------------------------------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------|
+| ![ChatViewList_Preview](https://raw.githubusercontent.com/SimformSolutionsPvtLtd/chatview/feat/add_example_one-test/preview/chatviewlist.gif) | ![ChatView Preview](https://raw.githubusercontent.com/SimformSolutionsPvtLtd/chatview/feat/add_example_one-test/preview/chatview.gif) |
 
 ## Features
 
 - **Easy Setup:** Integrate with [`chatview`](https://pub.dev/packages/chatview) in 3 steps:
     1. Initialize the package by specifying **Cloud Service** (e.g., Firebase).
     2. Set the current **User ID**.
-    3. Get **`ChatListManager`** and use it with [`ChatViewList`](https://pub.dev/packages/chatview)
-    4. Get **`ChatManager`** and use it with [`ChatView`](https://pub.dev/packages/chatview)
+    3. Widget-wise controllers to use it with the [`chatview`][chatViewPackage] package:
+       1. For `ChatViewList` obtain the **`ChatListManager`**
+       2. For `ChatView` obtain the **`ChatManager`**
 - Supports **one-on-one** and **group chats** with **media uploads** *(audio not supported).*
 
 # Installation Guide
 
-[//]: #TODO(YASH): (Update the version number below with supported chatview list version from pub.dev)
-**Compatibility**: This package is compatible with `chatview` versions **>= 2.4.1**
+## Compatibility with [`chatview_connect`][chatViewConnect]
+
+| `chatview` version | [`chatview_connect`][chatViewConnect] version |
+|--------------------|-----------------------------------------------|
+| `>=2.4.1 <3.0.0`   | `0.0.1`                                       |
+| `>= 3.0.0`         | `0.0.2`                                       |
 
 ## Adding the dependency
 
@@ -94,24 +101,9 @@ ChatViewList(
   controller: _chatListController,
   // ...
   menuConfig: ChatMenuConfig(
-    pinStatusCallback: (result) {
-      // Pin or unpin the particular chat based on the result status
-      _chatListController.pinChat(result.status, result.chat.id);
-      Navigator.pop(context);
-    },
-    muteStatusCallback: (result) {
-      // Mute or unmute the particular chat based on the result status 
-      _chatListController.muteChat(result.status, result.chat.id);
-      Navigator.pop(context);
-    },
-    actions: (chat) => [
-      CupertinoContextMenuAction(
-        trailingIcon: Icons.delete_forever,
-        // Deleting the particular chat
-        onPressed: () => _chatListController.deleteChat(chat.id),
-        child: const Text('Delete Chat'),
-      ),
-    ],
+    deleteCallback: (chat) => _chatListController.deleteChat(chat.id),
+    pinStatusCallback: _chatListController.pinChat,
+    muteStatusCallback: _chatListController.muteChat,
   ),
   // ...
 )
@@ -172,9 +164,24 @@ ChatView(
       ),
     ),
   ),
+  // Loads more messages in the chat room for pagination, either before or after
+  // the specified message.
+  loadMoreData: (direction, message) => _chatController.onLoadMoreData(
+    direction,
+    message,
+    batchSize: 8,
+  ),
   // Unsending messages
   replyPopupConfig: ReplyPopupConfiguration(
     onUnsendTap: _chatController.onUnsendTap,
+  ),
+  // Loads a reply message and its surrounding context
+  // in the chat room for a given message ID.
+  repliedMessageConfig: RepliedMessageConfiguration(
+    loadOldReplyMessage: (messageId) => _chatController.loadOldReplyMessage(
+      messageId,
+      batchSize: 8,
+    ),
   ),
   // Updating reactions
   reactionPopupConfig: ReactionPopupConfiguration(

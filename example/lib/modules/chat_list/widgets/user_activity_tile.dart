@@ -32,8 +32,9 @@ class UserActivityTile extends StatelessWidget {
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: const TextStyle(
-              fontSize: 10,
-              fontWeight: FontWeight.w400,
+              fontSize: 13,
+              color: Colors.black87,
+              fontStyle: FontStyle.italic,
             ),
           ),
           secondChild: Text(
@@ -41,8 +42,8 @@ class UserActivityTile extends StatelessWidget {
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: const TextStyle(
-              fontSize: 10,
-              fontWeight: FontWeight.w400,
+              fontSize: 13,
+              color: Colors.black87,
             ),
           ),
           crossFadeState: userTypeStatus.isTyping

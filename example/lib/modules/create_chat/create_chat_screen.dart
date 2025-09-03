@@ -72,67 +72,50 @@ class _CreateChatScreenState extends State<CreateChatScreen> {
     }
   }
 
-  Future<dynamic> _createOneToOneChat({
-    required ChatUser otherUser,
-    bool createWithChatManager = false,
-  }) async {
-    if (!createWithChatManager) {
-      final chatRoomId =
-          await widget.chatListController.createChat(otherUser.id);
-      if (chatRoomId == null || !mounted) return;
-      return Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (_) => ChatDetailScreen(chatRoomId: chatRoomId),
-        ),
-      );
-    }
-
+  Future<dynamic> _createOneToOneChat({required ChatUser otherUser}) async {
+    final chatRoomId = await widget.chatListController.createChat(otherUser.id);
+    if (chatRoomId == null || !mounted) return;
     return Navigator.push(
       context,
       MaterialPageRoute(
         builder: (_) => ChatDetailScreen(
-          otherUsers: [otherUser],
-          groupChatName: 'Test Group',
-          currentUser: currentChatUser,
-          chatRoomType: ChatRoomType.oneToOne,
+          chat: ChatViewListItem(
+            id: chatRoomId,
+            name: otherUser.name,
+            chatRoomType: ChatRoomType.oneToOne,
+          ),
         ),
       ),
     );
   }
 
-  Future<dynamic> _createGroupChat({bool createWithChatManager = false}) async {
-    if (createWithChatManager) {
-      final participants = <String, Role>{};
-      for (var i = 0; i < otherChatUsers.length; i++) {
-        final user = otherChatUsers[i];
-        participants[user.id] = Role.admin;
-      }
-      final chatRoomId = await widget.chatListController.createGroupChat(
-        groupName: 'Test Group',
-        groupProfilePic:
-            'https://images.unsplash.com/photo-1739305235159-308ddffb4129?w=900&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxmZWF0dXJlZC1waG90b3MtZmVlZHw2fHx8ZW58MHx8fHx8',
-        participants: participants,
-      );
-      if (chatRoomId == null || !mounted) return;
-      return Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (_) => ChatDetailScreen(chatRoomId: chatRoomId),
-        ),
-      );
+  Future<dynamic> _createGroupChat({
+    String groupName = 'Test Group',
+    String groupProfilePic =
+        'https://images.unsplash.com/photo-1739305235159-308ddffb4129?w=900&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxmZWF0dXJlZC1waG90b3MtZmVlZHw2fHx8ZW58MHx8fHx8',
+    bool createWithChatManager = false,
+  }) async {
+    final participants = <String, Role>{};
+    for (var i = 0; i < otherChatUsers.length; i++) {
+      final user = otherChatUsers[i];
+      participants[user.id] = Role.admin;
     }
-
+    final chatRoomId = await widget.chatListController.createGroupChat(
+      groupName: groupName,
+      groupProfilePic: groupProfilePic,
+      participants: participants,
+    );
+    if (chatRoomId == null || !mounted) return;
     return Navigator.push(
       context,
       MaterialPageRoute(
         builder: (_) => ChatDetailScreen(
-          groupChatName: 'Test Group',
-          groupChatProfile:
-              'https://images.unsplash.com/photo-1739305235159-308ddffb4129?w=900&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxmZWF0dXJlZC1waG90b3MtZmVlZHw2fHx8ZW58MHx8fHx8',
-          currentUser: currentChatUser,
-          otherUsers: otherChatUsers,
-          chatRoomType: ChatRoomType.group,
+          chat: ChatViewListItem(
+            id: chatRoomId,
+            name: groupName,
+            imageUrl: groupProfilePic,
+            chatRoomType: ChatRoomType.group,
+          ),
         ),
       ),
     );

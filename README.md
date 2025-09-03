@@ -14,14 +14,18 @@ by Simform Solutions!_
 
 ## Preview
 
-<img alt="The example app running in iOS" src="https://raw.githubusercontent.com/SimformSolutionsPvtLtd/flutter_chatview/main/preview/chatview.gif" width="300"/>
+| ChatViewList                                                                                                             | ChatView                                                                                                         |
+|--------------------------------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------|
+| ![ChatViewList_Preview](https://raw.githubusercontent.com/SimformSolutionsPvtLtd/chatview/main/preview/chatviewlist.gif) | ![ChatView Preview](https://raw.githubusercontent.com/SimformSolutionsPvtLtd/chatview/main/preview/chatview.gif) |
 
 ## Features
 
 - **Easy Setup:** Integrate with the [`chatview`][chatViewPackage] package in 3 steps:
     1. Initialize the package by specifying the **Cloud Service** (e.g., Firebase).
     2. Set the current **User ID**.
-    3. Obtain the **`ChatManager`** and use it with the [`chatview`][chatViewPackage] package.
+    3. Widget-wise controllers to use it with the [`chatview`][chatViewPackage] package:
+       1. For `ChatViewList` obtain the **`ChatListManager`**
+       2. For `ChatView` obtain the **`ChatManager`**
 - Supports **one-on-one** and **group chats** with **media uploads** *(audio not supported).*
 
 ***Note:*** *Currently, it supports only Firebase Cloud Services. Support for additional cloud
@@ -40,7 +44,12 @@ dependencies:
   chatview_connect: <latest-version>
 ```
 
-**Compatibility**: This package is compatible with `chatview` versions **>= 2.4.1**
+## Compatibility with [`chatview_connect`][chatViewConnect]
+
+| `chatview` version | [`chatview_connect`][chatViewConnect] version |
+|--------------------|-----------------------------------------------|
+| `>=2.4.1 <3.0.0`   | `0.0.1`                                       |
+| `>= 3.0.0`         | `0.0.2`                                       |
 
 ## Support
 

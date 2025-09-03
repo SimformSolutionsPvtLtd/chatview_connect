@@ -4,8 +4,17 @@ import 'dart:math';
 import 'package:chatview/chatview.dart';
 import 'package:chatview_connect/chatview_connect.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_svg/svg.dart';
+import 'package:intl/intl.dart';
 
+import '../../values/app_colors.dart';
+import '../../values/borders.dart';
+import '../../values/icons.dart';
+import '../../values/images.dart';
 import '../../values/messages_data.dart';
+import '../chat_list/widgets/chatview_custom_chat_bar.dart';
+import '../chat_list/widgets/reply_message_tile.dart';
 import 'widgets/chat_detail_screen_app_bar.dart';
 import 'widgets/chat_room_user_acitivity_tile.dart';
 
@@ -22,22 +31,9 @@ enum ChatOperation {
 }
 
 class ChatDetailScreen extends StatefulWidget {
-  const ChatDetailScreen({
-    this.chatRoomId,
-    this.currentUser,
-    this.otherUsers,
-    this.groupChatName,
-    this.groupChatProfile,
-    this.chatRoomType,
-    super.key,
-  });
+  const ChatDetailScreen({required this.chat, super.key});
 
-  final String? chatRoomId;
-  final ChatUser? currentUser;
-  final List<ChatUser>? otherUsers;
-  final String? groupChatName;
-  final String? groupChatProfile;
-  final ChatRoomType? chatRoomType;
+  final ChatViewListItem chat;
 
   @override
   State<ChatDetailScreen> createState() => _ChatDetailScreenState();
@@ -65,14 +61,21 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
   void initState() {
     super.initState();
     unawaited(_initChatRoom());
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      SystemChrome.setSystemUIOverlayStyle(
+        const SystemUiOverlayStyle(
+          statusBarBrightness: Brightness.dark,
+          statusBarColor: AppColors.chatviewBackground,
+        ),
+      );
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final primaryColor = theme.primaryColor;
-    final cardColor = theme.cardColor;
     return Scaffold(
+      backgroundColor: AppColors.background,
       body: Builder(
         builder: (context) {
           final chatController = _chatController;
@@ -81,17 +84,13 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
               child: RepaintBoundary(child: CircularProgressIndicator()),
             );
           }
-          final randomUser = chatController.otherUsers.elementAt(
-            Random().nextInt(chatController.otherUsers.length),
-          );
           return ChatView(
             chatController: chatController,
             chatViewState: ChatViewState.hasMessages,
             featureActiveConfig: const FeatureActiveConfig(
-              enableScrollToBottomButton: true,
-            ),
-            chatBackgroundConfig: ChatBackgroundConfiguration(
-              backgroundColor: cardColor,
+              enableOtherUserName: false,
+              enableOtherUserProfileAvatar: false,
+              lastSeenAgoBuilderVisibility: false,
             ),
             appBar: ValueListenableBuilder(
               valueListenable: _displayMetadataNotifier,
@@ -99,8 +98,22 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
                 final metadata = displayMetadata ?? _chatRoomMetadata?.metadata;
                 final roomType =
                     _chatRoomMetadata?.chatRoomType ?? ChatRoomType.oneToOne;
+                final randomUser = chatController.otherUsers.isNotEmpty
+                    ? chatController.otherUsers[
+                        Random().nextInt(chatController.otherUsers.length)]
+                    : chatController.currentUser;
                 return ChatDetailScreenAppBar(
                   actions: [
+                    IconButton(
+                      // Handle video call
+                      onPressed: () {},
+                      icon: SvgPicture.asset(AppIcons.video),
+                    ),
+                    IconButton(
+                      // Handle voice call
+                      onPressed: () {},
+                      icon: SvgPicture.asset(AppIcons.phone),
+                    ),
                     _getOperationsPopMenu(
                       randomUser: randomUser,
                       roomType: roomType,
@@ -108,12 +121,15 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
                         operation: operation,
                         controller: chatController,
                         randomUser: randomUser,
+                        currentUser:
+                            _chatController?.currentUser.id ?? randomUser.id,
                       ),
                     ),
                     const SizedBox(width: 12),
                   ],
-                  chatName: metadata?.chatName ?? 'Unknown',
-                  chatProfileUrl: metadata?.chatProfilePhoto,
+                  chatName: metadata?.chatName ?? widget.chat.name,
+                  chatProfileUrl:
+                      metadata?.chatProfilePhoto ?? widget.chat.imageUrl,
                   usersProfileURLs:
                       _chatRoomMetadata?.usersProfilePictures ?? [],
                   descriptionWidget: ChatRoomUserActivityTile(
@@ -125,16 +141,35 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
                 );
               },
             ),
-            loadingWidget: const RepaintBoundary(
-              child: CircularProgressIndicator(),
-            ),
             typeIndicatorConfig: TypeIndicatorConfiguration(
-              indicatorSize: 6,
-              indicatorSpacing: 2,
-              flashingCircleDarkColor: cardColor,
-              flashingCircleBrightColor: primaryColor,
+              customIndicator: Container(
+                margin: const EdgeInsets.only(left: 6),
+                decoration: const BoxDecoration(
+                  color: Colors.white,
+                  border: AppBorders.chatBubbleBorder,
+                  borderRadius: BorderRadius.all(Radius.circular(12)),
+                ),
+                padding: const EdgeInsets.symmetric(
+                  vertical: 12.75,
+                  horizontal: 8.75,
+                ),
+                child: const Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    CircleAvatar(
+                        radius: 2.75, backgroundColor: AppColors.grey),
+                    SizedBox(width: 3),
+                    CircleAvatar(
+                        radius: 2.75, backgroundColor: AppColors.grey),
+                    SizedBox(width: 3),
+                    CircleAvatar(
+                        radius: 2.75, backgroundColor: AppColors.grey),
+                  ],
+                ),
+              ),
             ),
             profileCircleConfig: const ProfileCircleConfiguration(
+              padding: EdgeInsets.only(right: 4),
               profileImageUrl: Constants.profileImage,
             ),
             scrollToBottomButtonConfig: ScrollToBottomButtonConfig(
@@ -154,62 +189,173 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
               batchSize: 8,
             ),
             repliedMessageConfig: RepliedMessageConfiguration(
+              margin: const EdgeInsets.symmetric(horizontal: 12),
+              backgroundColor: Colors.grey.shade100,
+              verticalBarColor: const Color(0xFF128C7E),
               loadOldReplyMessage: (messageId) =>
                   chatController.loadOldReplyMessage(
                 messageId,
                 batchSize: 8,
               ),
-              backgroundColor: Colors.grey.shade300,
-              padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 14),
+              repliedMessageWidgetBuilder: (replyMessage) => ReplyMessageTile(
+                replyMessage: replyMessage,
+                chatController: chatController,
+              ),
             ),
-            onSendTap: chatController.onSendTap,
-            sendMessageConfig: SendMessageConfiguration(
-              replyTitleColor: primaryColor,
-              replyDialogColor: cardColor,
-              defaultSendButtonColor: primaryColor,
-              textFieldConfig: TextFieldConfiguration(
-                textStyle: const TextStyle(color: Colors.black),
-                onMessageTyping: chatController.onMessageTyping,
-              ),
-              voiceRecordingConfiguration: const VoiceRecordingConfiguration(
-                backgroundColor: Colors.white,
-                recorderIconColor: Colors.black,
-                waveStyle: WaveStyle(waveColor: Colors.black),
-              ),
+            loadingWidget: const RepaintBoundary(
+              child: CircularProgressIndicator(),
+            ),
+            chatBackgroundConfig: ChatBackgroundConfiguration(
+              backgroundColor: AppColors.background,
+              backgroundImage: AppImages.chatBackground,
+              groupSeparatorBuilder: (separator) {
+                final date = DateTime.tryParse(separator);
+                if (date == null) {
+                  return const SizedBox.shrink();
+                }
+                String separatorDate;
+                final now = DateTime.now();
+                if (date.day == now.day &&
+                    date.month == now.month &&
+                    date.year == now.year) {
+                  separatorDate = 'Today';
+                } else if (date.day == now.day - 1 &&
+                    date.month == now.month &&
+                    date.year == now.year) {
+                  separatorDate = 'Yesterday';
+                } else {
+                  separatorDate = DateFormat('d MMMM y').format(date);
+                }
+                return Align(
+                  child: Container(
+                    margin: const EdgeInsets.symmetric(vertical: 12),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 3,
+                    ),
+                    decoration: const BoxDecoration(
+                      color: Colors.white,
+                      border: AppBorders.chatBubbleBorder,
+                      borderRadius: BorderRadius.all(Radius.circular(8)),
+                    ),
+                    child: Text(
+                      separatorDate,
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: Color(0xff0A0A0A),
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                );
+              },
             ),
             chatBubbleConfig: ChatBubbleConfiguration(
               // Add any action on double tap
               onDoubleTap: (message) {},
-              outgoingChatBubbleConfig: ChatBubble(
-                color: primaryColor,
-                borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(16),
-                  topRight: Radius.circular(16),
-                  bottomLeft: Radius.circular(16),
+              outgoingChatBubbleConfig: const ChatBubble(
+                linkPreviewConfig: LinkPreviewConfiguration(
+                  linkStyle: TextStyle(color: Colors.black87, fontSize: 16),
                 ),
-                receiptsWidgetConfig: const ReceiptsWidgetConfig(
-                  showReceiptsIn: ShowReceiptsIn.all,
+                border: AppBorders.chatBubbleBorder,
+                color: Color(0xFFD0FECF),
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(12),
+                  topRight: Radius.circular(12),
+                  bottomLeft: Radius.circular(12),
+                  bottomRight: Radius.circular(4),
                 ),
-                textStyle: const TextStyle(fontSize: 15, color: Colors.white),
+                textStyle: TextStyle(color: Colors.black87, fontSize: 16),
+                padding: EdgeInsets.all(5.5),
+                receiptsWidgetConfig: ReceiptsWidgetConfig(
+                  showReceiptsIn: ShowReceiptsIn.lastMessage,
+                ),
               ),
               inComingChatBubbleConfig: ChatBubble(
-                textStyle: const TextStyle(fontSize: 15),
+                linkPreviewConfig: const LinkPreviewConfiguration(
+                  linkStyle: TextStyle(color: Colors.black87, fontSize: 16),
+                ),
+                border: AppBorders.chatBubbleBorder,
                 color: Colors.white,
                 borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(16),
-                  topRight: Radius.circular(16),
-                  bottomRight: Radius.circular(16),
+                  topLeft: Radius.circular(12),
+                  topRight: Radius.circular(12),
+                  bottomLeft: Radius.circular(4),
+                  bottomRight: Radius.circular(12),
                 ),
+                textStyle: const TextStyle(color: Colors.black87, fontSize: 16),
+                padding: const EdgeInsets.all(5.5),
                 onMessageRead: (message) => chatController.onMessageRead(
                   message.copyWith(status: MessageStatus.read),
                 ),
               ),
             ),
+            messageConfig: MessageConfiguration(
+              voiceMessageConfig: VoiceMessageConfiguration(
+                margin: EdgeInsets.zero,
+                padding: EdgeInsets.zero,
+                playIcon: (_) => const Icon(
+                  Icons.play_arrow_rounded,
+                  size: 38,
+                  color: Color(0xff767779),
+                ),
+                pauseIcon: (_) => const Icon(
+                  Icons.pause_rounded,
+                  size: 38,
+                  color: Color(0xff767779),
+                ),
+                inComingPlayerWaveStyle: const PlayerWaveStyle(
+                  liveWaveColor: Color(0xff000000),
+                  fixedWaveColor: Color(0x33000000),
+                  backgroundColor: Colors.transparent,
+                  scaleFactor: 60,
+                  waveThickness: 3,
+                  spacing: 4,
+                ),
+                outgoingPlayerWaveStyle: const PlayerWaveStyle(
+                  liveWaveColor: Color(0xff000000),
+                  fixedWaveColor: Color(0x33000000),
+                  backgroundColor: Colors.transparent,
+                  scaleFactor: 60,
+                  waveThickness: 3,
+                  spacing: 4,
+                ),
+              ),
+              messageReactionConfig: MessageReactionConfiguration(
+                backgroundColor: Colors.white,
+                borderColor: Colors.grey.shade300,
+                reactionsBottomSheetConfig:
+                    const ReactionsBottomSheetConfiguration(
+                  backgroundColor: Colors.white,
+                ),
+              ),
+            ),
+            sendMessageBuilder: (replyMessage) => ChatViewCustomChatBar(
+              chatController: chatController,
+              replyMessage: replyMessage ?? const ReplyMessage(),
+              onAttachPressed: () => ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Attach button pressed')),
+              ),
+              onSendTap: chatController.onSendTap,
+            ),
             replyPopupConfig: ReplyPopupConfiguration(
               onUnsendTap: chatController.onUnsendTap,
             ),
             reactionPopupConfig: ReactionPopupConfiguration(
+              backgroundColor: Colors.white,
+              shadow: const BoxShadow(
+                blurRadius: 8,
+                color: Colors.black26,
+                offset: Offset(0, 4),
+              ),
               userReactionCallback: chatController.userReactionCallback,
+            ),
+            replySuggestionsConfig: ReplySuggestionsConfig(
+              onTap: (item) => chatController.onSendTap(
+                item.text,
+                const ReplyMessage(),
+                MessageType.text,
+              ),
             ),
           );
         },
@@ -228,13 +374,8 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
   Future<void> _initChatRoom() async {
     _chatController = await ChatViewConnect.instance.getChatRoomManager(
       config: _config,
-      chatRoomId: widget.chatRoomId,
-      otherUsers: widget.otherUsers,
-      currentUser: widget.currentUser,
-      groupName: widget.groupChatName,
-      chatRoomType: widget.chatRoomType,
+      chatRoomId: widget.chat.id,
       scrollController: _scrollController,
-      groupProfile: widget.groupChatProfile,
     );
     unawaited(
       _chatController?.updateUserActiveStatus(UserActiveStatus.online),
@@ -290,11 +431,12 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
     required ChatOperation operation,
     required ChatManager controller,
     required ChatUser randomUser,
+    required String currentUser,
   }) async {
     switch (operation) {
       case ChatOperation.addDemoMessage:
         final messages = MessagesData.getMessages(
-          controller.otherUsers.map((e) => e.id).toList(),
+          [...controller.otherUsers.map((e) => e.id).toList(), currentUser],
         );
         final messagesLength = messages.length;
         await Future.wait([

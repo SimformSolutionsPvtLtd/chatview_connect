@@ -43,11 +43,14 @@ class ChatRoom {
     required this.chatId,
     required this.chatRoomType,
     this.unreadMessagesCount = 0,
+    this.pinStatus = PinStatus.unpinned,
+    this.muteStatus = MuteStatus.unmuted,
     this.groupPhotoUrl,
     this.chatRoomCreateBy,
     this.lastMessage,
     this.groupName,
     this.users,
+    this.pinnedAt,
   });
 
   /// Converts a JSON object to a [ChatRoom] instance.
@@ -98,6 +101,15 @@ class ChatRoom {
   /// This is `null` for one-to-one chat rooms or if the creator information
   /// is unavailable.
   final String? chatRoomCreateBy;
+
+  /// The status of the pin in the chat room for the current user.
+  final PinStatus pinStatus;
+
+  /// The date and time when the chat room was pinned.
+  final DateTime? pinnedAt;
+
+  /// The mute status of the chat room for the current user.
+  final MuteStatus muteStatus;
 
   /// The number of unread messages in the chat room for the current user.
   ///
@@ -222,6 +234,9 @@ class ChatRoom {
     List<ChatRoomParticipant>? users,
     int? unreadMessagesCount,
     String? chatRoomCreateBy,
+    PinStatus? pinStatus,
+    DateTime? pinnedAt,
+    MuteStatus? muteStatus,
     bool forceNullValue = false,
   }) {
     return ChatRoom(
@@ -237,6 +252,9 @@ class ChatRoom {
       chatRoomCreateBy: forceNullValue
           ? chatRoomCreateBy
           : chatRoomCreateBy ?? this.chatRoomCreateBy,
+      pinStatus: pinStatus ?? this.pinStatus,
+      pinnedAt: forceNullValue ? pinnedAt : pinnedAt ?? this.pinnedAt,
+      muteStatus: muteStatus ?? this.muteStatus,
     );
   }
 
@@ -252,7 +270,10 @@ class ChatRoom {
             lastMessage == other.lastMessage &&
             users == other.users &&
             unreadMessagesCount == other.unreadMessagesCount &&
-            chatRoomCreateBy == other.chatRoomCreateBy;
+            chatRoomCreateBy == other.chatRoomCreateBy &&
+            pinStatus == other.pinStatus &&
+            pinnedAt == other.pinnedAt &&
+            muteStatus == other.muteStatus;
   }
 
   @override
@@ -266,6 +287,9 @@ class ChatRoom {
       users,
       unreadMessagesCount,
       chatRoomCreateBy,
+      pinStatus,
+      pinnedAt,
+      muteStatus,
     );
   }
 
@@ -280,6 +304,9 @@ class ChatRoom {
       lastMessage: $lastMessage,
       groupName: $groupName,
       users: ${users?.map((e) => e.toString()).toList()},
+      pinStatus: $pinStatus,
+      pinnedAt: $pinnedAt,
+      muteStatus: $muteStatus,
     )''';
   }
 }

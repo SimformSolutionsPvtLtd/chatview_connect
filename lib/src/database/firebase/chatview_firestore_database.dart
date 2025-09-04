@@ -38,6 +38,9 @@ final class ChatViewFireStoreDatabase implements DatabaseService {
   static const String _membershipStatus = 'membership_status';
   static const String _membershipStatusTimestamp =
       'membership_status_timestamp';
+  static const String _pinStatusTimestamp = 'pin_status_timestamp';
+  static const String _pinStatus = 'pin_status';
+  static const String _muteStatus = 'mute_status';
 
   FirestoreChatDatabasePathConfig? get _chatDatabasePathConfig =>
       ChatViewConnect.instance.getFirestoreChatDatabasePathConfig;
@@ -498,6 +501,8 @@ final class ChatViewFireStoreDatabase implements DatabaseService {
     required String userId,
     TypeWriterStatus? typingStatus,
     MembershipStatus? membershipStatus,
+    PinStatus? pinStatus,
+    MuteStatus? muteStatus,
     Map<String, dynamic>? chatRoomUserData,
     ValueGetter<ChatRoomParticipant>? ifDataNotFound,
   }) async {
@@ -509,6 +514,12 @@ final class ChatViewFireStoreDatabase implements DatabaseService {
               _membershipStatus: status.name,
               _membershipStatusTimestamp: FieldValue.serverTimestamp(),
             },
+            if (pinStatus case final status?) ...{
+              _pinStatus: status.name,
+              _pinStatusTimestamp:
+                  pinStatus.isPinned ? FieldValue.serverTimestamp() : null,
+            },
+            if (muteStatus case final status?) _muteStatus: status.name,
           };
 
       if (data.isEmpty) return;
@@ -1007,6 +1018,9 @@ final class ChatViewFireStoreDatabase implements DatabaseService {
     return unreadMessagesCountStream.map(
       (unreadMessagesCount) => chatRoom.copyWith(
         forceNullValue: true,
+        pinnedAt: currentUser?.pinStatusTimestamp,
+        muteStatus: currentUser?.muteStatus,
+        pinStatus: currentUser?.pinStatus,
         users: otherUsers,
         chatId: chatRoom.chatId,
         groupName: chatRoom.groupName,
@@ -1210,6 +1224,7 @@ final class ChatViewFireStoreDatabase implements DatabaseService {
         role: Role.admin,
         membershipStatusTimestamp: null,
         membershipStatus: membershipStatus,
+        pinStatusTimestamp: null,
       ),
     );
 
@@ -1235,6 +1250,7 @@ final class ChatViewFireStoreDatabase implements DatabaseService {
                 membershipStatusTimestamp: null,
                 membershipStatus: membershipStatus,
                 role: participants[userId] ?? Role.admin,
+                pinStatusTimestamp: null,
               ),
             ),
       ],
@@ -1490,6 +1506,7 @@ final class ChatViewFireStoreDatabase implements DatabaseService {
           userId: userId,
           membershipStatus: MembershipStatus.member,
           membershipStatusTimestamp: membershipStatusTime,
+          pinStatusTimestamp: null,
         ),
       );
 

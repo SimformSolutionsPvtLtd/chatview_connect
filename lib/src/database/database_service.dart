@@ -344,6 +344,8 @@ abstract interface class DatabaseService {
   /// (e.g., `typing`, `typed`).
   /// - (optional): [membershipStatus] The user's membership status in the
   /// chat room (e.g., `member`, `removed`, `left`).
+  /// - (optional): [pinStatus] The pin status of the user in the chat room.
+  /// - (optional): [muteStatus] The mute status of the user in the chat room.
   /// - (optional): [chatRoomUserData] A map containing user data updates.
   ///   If provided, this data is used to update the document instead of the
   ///   other individual parameters.
@@ -356,6 +358,8 @@ abstract interface class DatabaseService {
     required String userId,
     TypeWriterStatus? typingStatus,
     MembershipStatus? membershipStatus,
+    PinStatus? pinStatus,
+    MuteStatus? muteStatus,
     Map<String, dynamic>? chatRoomUserData,
     ValueGetter<ChatRoomParticipant>? ifDataNotFound,
   });

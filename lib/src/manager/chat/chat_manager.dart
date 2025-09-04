@@ -435,6 +435,74 @@ final class ChatManager extends ChatController {
     );
   }
 
+  /// Loads the old reply message in the chat room.
+  ///
+  /// This method retrieves the surrounding messages
+  /// for a given message ID, allowing users to
+  /// view the context of a reply message.
+  ///
+  /// **Parameters:**
+  /// - (required): [messageId] The ID of the message for which
+  /// to load the surrounding messages.
+  /// - (optional): [batchSize] The number of messages to retrieve
+  /// before and after the specified message ID. by default, it is set to 10.
+  Future<void> loadOldReplyMessage(
+    String messageId, {
+    int batchSize = 10,
+    MessageSortBy sortBy = MessageSortBy.createAt,
+    MessageSortOrder sortOrder = MessageSortOrder.asc,
+  }) async {
+    if (!_isInitialized) return Future.value();
+    return _database
+        .getSurroundingMessages(
+          sortBy: sortBy,
+          sortOrder: sortOrder,
+          chatId: chatRoomId,
+          messageId: messageId,
+          batchSize: batchSize,
+          retry: ChatViewConnectConstants.defaultRetry,
+        )
+        .then((messages) => replaceMessageList(messages));
+  }
+
+  /// Loads more data in the chat room based on the specified direction
+  /// and message.
+  ///
+  /// This method is used for pagination, allowing users to
+  /// load more messages in the chat room either before or after
+  /// a specified message.
+  ///
+  /// **Parameters:**
+  /// - (required): [direction] The direction in which to load more data,
+  /// either `previous` or `next`.
+  /// - (required): [message] The message from which to load more data.
+  ///
+  /// **Optional:**
+  /// - [batchSize] The number of messages to retrieve before or after
+  /// the specified message ID. by default, it is set to 10.
+  Future<void> onLoadMoreData(
+    ChatPaginationDirection direction,
+    Message message, {
+    int batchSize = 10,
+  }) async {
+    if (!_isInitialized) return Future.value();
+    final messages = await switch (direction) {
+      ChatPaginationDirection.next => _database.getNextMessages(
+          chatId: chatRoomId,
+          messageId: message.id,
+          batchSize: batchSize,
+          retry: ChatViewConnectConstants.defaultRetry,
+        ),
+      ChatPaginationDirection.previous => _database.getPreviousMessages(
+          chatId: chatRoomId,
+          messageId: message.id,
+          batchSize: batchSize,
+          retry: ChatViewConnectConstants.defaultRetry,
+        ),
+    };
+    loadMoreData(messages);
+  }
+
   /// Deletes a message and removes any associated media from storage.
   ///
   /// **Parameters:**

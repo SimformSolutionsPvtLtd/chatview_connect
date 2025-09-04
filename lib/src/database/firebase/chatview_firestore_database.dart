@@ -1725,4 +1725,177 @@ final class ChatViewFireStoreDatabase implements DatabaseService {
       ),
     );
   }
+
+  @override
+  Future<List<Message>> getSurroundingMessages({
+    required String chatId,
+    required int retry,
+    required String messageId,
+    required int batchSize,
+    required MessageSortBy sortBy,
+    required MessageSortOrder sortOrder,
+  }) async {
+    // -1 to exclude the current message
+    final surroundingMessagesCount = batchSize - 1;
+    final firstSideMessageCount = surroundingMessagesCount ~/ 2;
+    final secondSideMessageCount =
+        surroundingMessagesCount - firstSideMessageCount;
+
+    try {
+      final messageCollectionRef = _messageCollectionRef(chatId).toMessageQuery(
+        sortBy: sortBy,
+        sortOrder: sortOrder,
+      );
+
+      final currentMessageResult =
+          await _messageCollectionRef(chatId).doc(messageId).get();
+
+      final currentMessage = currentMessageResult.data();
+      if (currentMessage == null) return List<Message>.empty();
+
+      final previousMessagesSnapshot = await messageCollectionRef
+          .endBeforeDocument(currentMessageResult)
+          .limitToLast(firstSideMessageCount)
+          .get();
+
+      final fetchedPreviousCount = previousMessagesSnapshot.docs.length;
+
+      final remainingNextCount = fetchedPreviousCount != firstSideMessageCount
+          ? surroundingMessagesCount - fetchedPreviousCount
+          : secondSideMessageCount;
+
+      final nextMessagesSnapshot = await messageCollectionRef
+          .startAfterDocument(currentMessageResult)
+          .limit(remainingNextCount)
+          .get();
+
+      final fetchedNextCount = nextMessagesSnapshot.docs.length;
+
+      List<QueryDocumentSnapshot<Message?>>? additionalPreviousMessagesDocs;
+
+      final firstPreviousDoc = previousMessagesSnapshot.docs.firstOrNull;
+
+      // If next messages are fewer than expected and we still have earlier messages available
+      if (fetchedNextCount != remainingNextCount && firstPreviousDoc != null) {
+        // +1 to account for the current message
+        final totalFetchedCount = fetchedPreviousCount + fetchedNextCount + 1;
+        final remainingMessagesToFetch = batchSize - totalFetchedCount;
+
+        final additionalPreviousSnapshot = await messageCollectionRef
+            .endBeforeDocument(firstPreviousDoc)
+            .limitToLast(remainingMessagesToFetch)
+            .get();
+
+        additionalPreviousMessagesDocs = additionalPreviousSnapshot.docs;
+      }
+
+      final allMessageDocs = [
+        ...?additionalPreviousMessagesDocs,
+        ...previousMessagesSnapshot.docs,
+        currentMessageResult,
+        ...nextMessagesSnapshot.docs,
+      ];
+
+      final allMessagesLength = allMessageDocs.length;
+
+      return [
+        for (var i = 0; i < allMessagesLength; i++)
+          if (allMessageDocs[i].data() case final message?) message,
+      ];
+    } on FirebaseException catch (_) {
+      if (retry == 0) return List<Message>.empty();
+      return getSurroundingMessages(
+        retry: --retry,
+        chatId: chatId,
+        sortBy: sortBy,
+        messageId: messageId,
+        sortOrder: sortOrder,
+        batchSize: batchSize,
+      );
+    }
+  }
+
+  @override
+  Future<List<Message>> getPreviousMessages({
+    required String chatId,
+    required int retry,
+    required String messageId,
+    required int batchSize,
+  }) async {
+    try {
+      final messageCollectionRef = _messageCollectionRef(chatId).toMessageQuery(
+        sortBy: MessageSortBy.createAt,
+        sortOrder: MessageSortOrder.asc,
+      );
+
+      final currentMessageResult =
+          await _messageCollectionRef(chatId).doc(messageId).get();
+
+      final currentMessage = currentMessageResult.data();
+      if (currentMessage == null) List<Message>.empty();
+
+      final previousMessagesSnapshot = await messageCollectionRef
+          .endBeforeDocument(currentMessageResult)
+          .limitToLast(batchSize)
+          .get();
+
+      final docs = previousMessagesSnapshot.docs;
+      final docsLength = docs.length;
+
+      return [
+        for (var i = 0; i < docsLength; i++)
+          if (docs[i].data() case final message?) message,
+      ];
+    } on FirebaseException catch (_) {
+      if (retry == 0) return List<Message>.empty();
+      return getPreviousMessages(
+        retry: --retry,
+        chatId: chatId,
+        messageId: messageId,
+        batchSize: batchSize,
+      );
+    }
+  }
+
+  @override
+  Future<List<Message>> getNextMessages({
+    required String chatId,
+    required int retry,
+    required String messageId,
+    required int batchSize,
+  }) async {
+    try {
+      final messageCollectionRef = _messageCollectionRef(chatId).toMessageQuery(
+        sortBy: MessageSortBy.createAt,
+        sortOrder: MessageSortOrder.asc,
+      );
+
+      final currentMessageResult =
+          await _messageCollectionRef(chatId).doc(messageId).get();
+
+      final currentMessage = currentMessageResult.data();
+      if (currentMessage == null) List<Message>.empty();
+
+      final nextMessagesSnapshot = await messageCollectionRef
+          .startAfterDocument(currentMessageResult)
+          .limit(batchSize)
+          .get();
+
+      final docs = nextMessagesSnapshot.docs;
+      final docsLength = docs.length;
+
+      return [
+        for (var i = 0; i < docsLength; i++)
+          if (docs[i].data() case final message?) message,
+      ];
+    } on FirebaseException catch (_) {
+      if (retry == 0) return List<Message>.empty();
+      return getNextMessages(
+        retry: --retry,
+        chatId: chatId,
+        messageId: messageId,
+        batchSize: batchSize,
+      );
+    }
+  }
 }

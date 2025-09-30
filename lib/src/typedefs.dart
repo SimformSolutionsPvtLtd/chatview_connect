@@ -87,3 +87,10 @@ typedef ChatRoomIdCallback<T> = String Function(T snapshot);
 /// **Parameters:**
 /// - (required): `item` The object of type [T] to be evaluated against the filter criteria.
 typedef WhereCallback<T> = bool Function(T item);
+
+/// A record type representing a chat item along with its associated status.
+///
+/// **Parameters:**
+/// - (required): `chat` [ChatViewListItem] instance representing the chat details
+/// - (required): `status` A generic type [T] representing the status associated with the chat.
+typedef ChatStatusRecord<T> = ({ChatViewListItem chat, T status});

@@ -1,6 +1,6 @@
 name: chatview_connect
 description: "Specialized wrapper for chatview package providing seamless integration with Database & Storage for your flutter chat app."
-version: 0.0.1
+version: 0.0.2
 issue_tracker: https://github.com/SimformSolutionsPvtLtd/chatview_connect/issues
 homepage: https://github.com/SimformSolutionsPvtLtd/chatview_connect
 topics:
@@ -25,7 +25,6 @@ dependencies:
   chatview_utils:
     git:
       url: https://github.com/SimformSolutionsPvtLtd/chatview_utils
-      ref: feature/add_chatview_list_models_test
 
   cloud_firestore: ^5.6.7
   firebase_storage: ^12.4.5

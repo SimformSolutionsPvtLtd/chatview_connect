@@ -1,6 +1,7 @@
 import 'package:chatview/chatview.dart';
 import 'package:flutter/material.dart';
 
+import '../../../values/app_colors.dart';
 import '../../../widgets/chat_user_avatar.dart';
 import '../../../widgets/user_stacked_profile.dart';
 
@@ -30,6 +31,7 @@ class ChatDetailScreenAppBar extends StatelessWidget {
       titleSpacing: 0,
       centerTitle: true,
       actions: actions,
+      backgroundColor: AppColors.background,
       title: Row(
         children: [
           Center(
@@ -54,7 +56,11 @@ class ChatDetailScreenAppBar extends StatelessWidget {
                   Text(
                     chatName,
                     maxLines: 1,
-                    style: const TextStyle(fontSize: 16),
+                    style: const TextStyle(
+                      fontSize: 18,
+                      color: Colors.black,
+                      fontWeight: FontWeight.w600,
+                    ),
                     overflow: TextOverflow.ellipsis,
                   ),
                   if (descriptionWidget case final descriptionWidget?) ...[

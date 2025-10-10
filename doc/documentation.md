@@ -2,33 +2,33 @@
 
 # Overview
 
-ChatView Connect is a specialized wrapper for the [`chatview`](https://pub.dev/packages/chatview) package that
+ChatView Connect is a specialized wrapper for the [chatview](https://pub.dev/packages/chatview) package that
 enables seamless integration with cloud services.
 
 ## Preview
 
-| ChatViewList                                                                                                                                  | ChatView                                                                                                                              |
-|-----------------------------------------------------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------|
-| ![ChatViewList_Preview](https://raw.githubusercontent.com/SimformSolutionsPvtLtd/chatview/feat/add_example_one-test/preview/chatviewlist.gif) | ![ChatView Preview](https://raw.githubusercontent.com/SimformSolutionsPvtLtd/chatview/feat/add_example_one-test/preview/chatview.gif) |
+| ChatViewList                                                                                                               | ChatView                                                                                                           |
+|----------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------|
+| ![ChatViewList_Preview](https://raw.githubusercontent.com/SimformSolutionsPvtLtd/chatview/master/preview/chatviewlist.gif) | ![ChatView Preview](https://raw.githubusercontent.com/SimformSolutionsPvtLtd/chatview/master/preview/chatview.gif) |
 
 ## Features
 
-- **Easy Setup:** Integrate with [`chatview`](https://pub.dev/packages/chatview) in 3 steps:
+- **Easy Setup:** Integrate with [chatview](https://pub.dev/packages/chatview) in 3 steps:
     1. Initialize the package by specifying **Cloud Service** (e.g., Firebase).
     2. Set the current **User ID**.
-    3. Widget-wise controllers to use it with the [`chatview`][chatViewPackage] package:
+    3. Widget-wise controllers to use it with the [chatview](https://pub.dev/packages/chatview) package:
        1. For `ChatViewList` obtain the **`ChatListManager`**
        2. For `ChatView` obtain the **`ChatManager`**
 - Supports **one-on-one** and **group chats** with **media uploads** *(audio not supported).*
 
 # Installation Guide
 
-## Compatibility with [`chatview_connect`][chatViewConnect]
+## Compatibility with [chatview](https://pub.dev/packages/chatview)
 
-| `chatview` version | [`chatview_connect`][chatViewConnect] version |
-|--------------------|-----------------------------------------------|
-| `>=2.4.1 <3.0.0`   | `0.0.1`                                       |
-| `>= 3.0.0`         | `0.0.2`                                       |
+| [chatview](https://pub.dev/packages/chatview) version | chatview_connect version |
+|-------------------------------------------------------|--------------------------|
+| `>=2.4.1 <3.0.0`                                      | `0.0.1`                  |
+| `>= 3.0.0`                                            | `0.0.2`                  |
 
 ## Adding the dependency
 
@@ -60,7 +60,7 @@ import 'package:chatview_connect/chatview_connect.dart';
 ## Step 1: Initialize
 
 Initialize package just after the firebase initialization, specify your
-desired cloud service for use with [`chatview`](https://pub.dev/packages/chatview).
+desired cloud service for use with [chatview](https://pub.dev/packages/chatview).
 
 ```dart
 ChatViewConnect.initialize(ChatViewCloudService.firebase);
@@ -74,7 +74,7 @@ ChatViewConnect.instance.setCurrentUserId('current_user_id');
 
 ## Step 3: Using with [ChatViewList](https://pub.dev/packages/chatview)
 
-The `ChatViewListController` from [`ChatViewList`](https://pub.dev/packages/chatview) has been replaced by `ChatListManager`.
+The `ChatViewListController` from [ChatViewList](https://pub.dev/packages/chatview) has been replaced by `ChatListManager`.
 
 **Before:**
 
@@ -111,7 +111,7 @@ ChatViewList(
 
 ## Step 4: Using with [ChatView](https://pub.dev/packages/chatview)
 
-The `ChatController` from [`chatview`](https://pub.dev/packages/chatview) has been replaced by `ChatManager`. It can
+The `ChatController` from [chatview](https://pub.dev/packages/chatview) has been replaced by `ChatManager`. It can
 be used for both **existing** and **new chat rooms**, depending on the parameters
 provided. [see full example here.](https://github.com/SimformSolutionsPvtLtd/chatview_connect/blob/master/example/lib/main.dart)
 
@@ -140,7 +140,7 @@ ChatManager _chatController = await ChatViewConnect.instance.getChatManager(
 ```
 
 `ChatManager` internally manages various chat operations, when the corresponding methods are
-specified in the [`chatview`](https://pub.dev/packages/chatview) widget.
+specified in the [chatview](https://pub.dev/packages/chatview) widget.
 
 ```dart
 ChatView(

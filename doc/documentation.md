@@ -7,9 +7,9 @@ enables seamless integration with cloud services.
 
 ## Preview
 
-| ChatViewList                                                                                                               | ChatView                                                                                                           |
-|----------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------|
-| ![ChatViewList_Preview](https://raw.githubusercontent.com/SimformSolutionsPvtLtd/chatview/master/preview/chatviewlist.gif) | ![ChatView Preview](https://raw.githubusercontent.com/SimformSolutionsPvtLtd/chatview/master/preview/chatview.gif) |
+| ChatList                                                                                                           | ChatView                                                                                                           |
+|--------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------|
+| ![ChatList_Preview](https://raw.githubusercontent.com/SimformSolutionsPvtLtd/chatview/master/preview/chatlist.gif) | ![ChatView Preview](https://raw.githubusercontent.com/SimformSolutionsPvtLtd/chatview/master/preview/chatview.gif) |
 
 ## Features
 
@@ -17,7 +17,7 @@ enables seamless integration with cloud services.
     1. Initialize the package by specifying **Cloud Service** (e.g., Firebase).
     2. Set the current **User ID**.
     3. Widget-wise controllers to use it with the [chatview](https://pub.dev/packages/chatview) package:
-       1. For `ChatViewList` obtain the **`ChatListManager`**
+       1. For `ChatList` obtain the **`ChatListManager`**
        2. For `ChatView` obtain the **`ChatManager`**
 - Supports **one-on-one** and **group chats** with **media uploads** *(audio not supported).*
 
@@ -72,14 +72,14 @@ ChatViewConnect.initialize(ChatViewCloudService.firebase);
 ChatViewConnect.instance.setCurrentUserId('current_user_id'); 
 ```
 
-## Step 3: Using with [ChatViewList](https://pub.dev/packages/chatview)
+## Step 3: Using with [ChatList](https://pub.dev/packages/chatview)
 
-The `ChatViewListController` from [ChatViewList](https://pub.dev/packages/chatview) has been replaced by `ChatListManager`.
+The `ChatListController` from [ChatList](https://pub.dev/packages/chatview) has been replaced by `ChatListManager`.
 
 **Before:**
 
 ```dart
-ChatViewListController _chatListController = ChatViewListController(
+ChatListController _chatListController = ChatListController(
   initialChatList: [...],
   scrollController: ScrollController(),
 );
@@ -94,10 +94,10 @@ ChatListManager _chatListController = ChatViewConnect.instance.getChatListManage
 ```
 
 `ChatListManager` internally manages chat rooms list, including details such as chat ID, last message, unread message count
-and various chats operations, when the corresponding methods are specified in the `ChatViewList` widget.
+and various chats operations, when the corresponding methods are specified in the `ChatList` widget.
 
 ```dart
-ChatViewList(
+ChatList(
   controller: _chatListController,
   // ...
   menuConfig: ChatMenuConfig(

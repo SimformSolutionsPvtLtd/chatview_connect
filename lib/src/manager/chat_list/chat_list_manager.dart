@@ -13,8 +13,8 @@ import '../../storage/storage_service.dart';
 import '../../typedefs.dart';
 
 /// A class responsible for managing the connection to
-/// the database and storage services in a chat view list context.
-final class ChatListManager extends ChatViewListController {
+/// the database and storage services in a chat list context.
+final class ChatListManager extends ChatListController {
   /// Creates an instance of [ChatListManager] from a given [CloudServices] service.
   ///
   /// This factory method initializes a new chat list manager with
@@ -123,7 +123,7 @@ final class ChatListManager extends ChatViewListController {
           );
         }
 
-        final newChatRoom = ChatViewListItem(
+        final newChatRoom = ChatListItem(
           id: chatRoom.chatId,
           name: chatRoom.chatName,
           chatRoomType: chatRoom.chatRoomType,

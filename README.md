@@ -14,9 +14,9 @@ by Simform Solutions!_
 
 ## Preview
 
-| ChatViewList                                                                                                             | ChatView                                                                                                         |
-|--------------------------------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------|
-| ![ChatViewList_Preview](https://raw.githubusercontent.com/SimformSolutionsPvtLtd/chatview/main/preview/chatviewlist.gif) | ![ChatView Preview](https://raw.githubusercontent.com/SimformSolutionsPvtLtd/chatview/main/preview/chatview.gif) |
+| ChatList                                                                                                         | ChatView                                                                                                         |
+|------------------------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------|
+| ![ChatList_Preview](https://raw.githubusercontent.com/SimformSolutionsPvtLtd/chatview/main/preview/chatlist.gif) | ![ChatView Preview](https://raw.githubusercontent.com/SimformSolutionsPvtLtd/chatview/main/preview/chatview.gif) |
 
 ## Features
 
@@ -24,7 +24,7 @@ by Simform Solutions!_
     1. Initialize the package by specifying the **Cloud Service** (e.g., Firebase).
     2. Set the current **User ID**.
     3. Widget-wise controllers to use it with the [`chatview`][chatViewPackage] package:
-       1. For `ChatViewList` obtain the **`ChatListManager`**
+       1. For `ChatList` obtain the **`ChatListManager`**
        2. For `ChatView` obtain the **`ChatManager`**
 - Supports **one-on-one** and **group chats** with **media uploads** *(audio not supported).*
 
@@ -44,12 +44,12 @@ dependencies:
   chatview_connect: <latest-version>
 ```
 
-## Compatibility with [`chatview_connect`][chatViewConnect]
+## Compatibility with [`chatview`][chatViewPackage]
 
-| `chatview` version | [`chatview_connect`][chatViewConnect] version |
-|--------------------|-----------------------------------------------|
-| `>=2.4.1 <3.0.0`   | `0.0.1`                                       |
-| `>= 3.0.0`         | `0.0.2`                                       |
+| [`chatview`][chatViewPackage] version | `chatview_connect` version |
+|---------------------------------------|----------------------------|
+| `>=2.4.1 <3.0.0`                      | `0.0.1`                    |
+| `>= 3.0.0`                            | `0.0.2`                    |
 
 ## Support
 

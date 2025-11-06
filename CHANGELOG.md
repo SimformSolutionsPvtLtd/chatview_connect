@@ -1,7 +1,7 @@
 ## 0.0.2
 
 * **Feat**: [53](https://github.com/SimformSolutionsPvtLtd/chatview_connect/pull/53) Introduced
-  `ChatListManager` to support `ChatViewList` functionality with methods like `createChat()`,
+  `ChatListManager` to support `ChatList` functionality with methods like `createChat()`,
   `createGroupChat()`, `pinChat()`, `muteChat()`, and `deleteChat()`.
 * **Feat**: [49](https://github.com/SimformSolutionsPvtLtd/chatview_connect/pull/49) Added
   `chatRoomChangesStream()` in ChatManager for real-time chat room updates.

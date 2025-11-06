@@ -79,7 +79,7 @@ class _CreateChatScreenState extends State<CreateChatScreen> {
       context,
       MaterialPageRoute(
         builder: (_) => ChatDetailScreen(
-          chat: ChatViewListItem(
+          chat: ChatListItem(
             id: chatRoomId,
             name: otherUser.name,
             chatRoomType: ChatRoomType.oneToOne,
@@ -110,7 +110,7 @@ class _CreateChatScreenState extends State<CreateChatScreen> {
       context,
       MaterialPageRoute(
         builder: (_) => ChatDetailScreen(
-          chat: ChatViewListItem(
+          chat: ChatListItem(
             id: chatRoomId,
             name: groupName,
             imageUrl: groupProfilePic,

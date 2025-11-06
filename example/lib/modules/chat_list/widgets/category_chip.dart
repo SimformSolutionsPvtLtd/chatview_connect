@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../../models/chatview_list_theme.dart';
+import '../../../models/chat_list_theme.dart';
 import '../../../values/enums.dart';
 
 class CategoryChip extends StatelessWidget {
@@ -17,7 +17,7 @@ class CategoryChip extends StatelessWidget {
   final VoidCallback? onSelected;
   final FilterType value;
   final FilterType groupValue;
-  final ChatViewListTheme theme;
+  final ChatListTheme theme;
 
   @override
   Widget build(BuildContext context) {

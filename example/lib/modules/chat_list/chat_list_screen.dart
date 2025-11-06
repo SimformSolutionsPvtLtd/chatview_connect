@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
-import '../../models/chatview_list_theme.dart';
+import '../../models/chat_list_theme.dart';
 import '../../values/app_colors.dart';
 import '../../values/enums.dart';
 import '../../values/icons.dart';
@@ -21,7 +21,7 @@ class ChatListScreen extends StatefulWidget {
 }
 
 class _ChatListScreenState extends State<ChatListScreen> {
-  ChatViewListTheme _theme = ChatViewListTheme.uiTwoLight;
+  ChatListTheme _theme = ChatListTheme.uiTwoLight;
   bool _isDarkTheme = false;
 
   final _chatListController = ChatViewConnect.instance.getChatListManager(
@@ -67,7 +67,7 @@ class _ChatListScreenState extends State<ChatListScreen> {
         ),
       ),
       bottomNavigationBar: _buildBottomNavigationBar(),
-      body: ChatViewList(
+      body: ChatList(
         backgroundColor: _theme.backgroundColor,
         controller: _chatListController,
         header: _buildHeader(),
@@ -277,7 +277,7 @@ class _ChatListScreenState extends State<ChatListScreen> {
               return null;
             }
 
-            List<ChatViewListItem> chats =
+            List<ChatListItem> chats =
                 _chatListController.chatListMap.values.toList();
 
             if (!filter.isAll) {
@@ -309,10 +309,10 @@ class _ChatListScreenState extends State<ChatListScreen> {
   void _onThemeIconTap() {
     setState(() {
       if (_isDarkTheme) {
-        _theme = ChatViewListTheme.uiTwoLight;
+        _theme = ChatListTheme.uiTwoLight;
         _isDarkTheme = false;
       } else {
-        _theme = ChatViewListTheme.uiTwoDark;
+        _theme = ChatListTheme.uiTwoDark;
         _isDarkTheme = true;
       }
     });

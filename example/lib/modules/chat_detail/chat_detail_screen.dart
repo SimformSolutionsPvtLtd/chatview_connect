@@ -33,7 +33,7 @@ enum ChatOperation {
 class ChatDetailScreen extends StatefulWidget {
   const ChatDetailScreen({required this.chat, super.key});
 
-  final ChatViewListItem chat;
+  final ChatListItem chat;
 
   @override
   State<ChatDetailScreen> createState() => _ChatDetailScreenState();

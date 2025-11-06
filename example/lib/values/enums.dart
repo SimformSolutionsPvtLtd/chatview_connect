@@ -15,7 +15,7 @@ enum FilterType {
 
   bool get isGroup => this == group;
 
-  List<ChatViewListItem> filterChats(List<ChatViewListItem> chats) {
+  List<ChatListItem> filterChats(List<ChatListItem> chats) {
     return switch (this) {
       FilterType.unread =>
         chats.where((e) => (e.unreadCount ?? 0) > 0).toList(),

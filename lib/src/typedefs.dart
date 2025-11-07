@@ -91,6 +91,6 @@ typedef WhereCallback<T> = bool Function(T item);
 /// A record type representing a chat item along with its associated status.
 ///
 /// **Parameters:**
-/// - (required): `chat` [ChatViewListItem] instance representing the chat details
+/// - (required): `chat` [ChatListItem] instance representing the chat details
 /// - (required): `status` A generic type [T] representing the status associated with the chat.
-typedef ChatStatusRecord<T> = ({ChatViewListItem chat, T status});
+typedef ChatStatusRecord<T> = ({ChatListItem chat, T status});

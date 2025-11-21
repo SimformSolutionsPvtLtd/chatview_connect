@@ -525,6 +525,12 @@ service cloud.firestore {
       	function isInChatRoom() {
         	return isSignedIn() && exists(getChatRoomUserPath(userId, chatRoomID));
       	}
+        
+        function isValidUpdate() {
+          let data = request.resource.data;
+          let hasPinOrMuteStatus = "pin_status" in data || "mute_status" in data;
+          return hasPinOrMuteStatus ? request.auth.uid == userId  : true;
+        }
 
         function allowUserCreation() {
           let isUserExistsInChatRoom = exists(getChatRoomUserPath(userId, chatRoomID));
@@ -534,7 +540,7 @@ service cloud.firestore {
 
         allow delete: if (isUserInChatRoom() && checkIsUserMember(request.auth.uid)) || isInChatRoom();
       	allow create: if isUserExists() && isChatRoomExist() && allowUserCreation();
-        allow update: if isUserInChatRoom() && checkIsUserMember(request.auth.uid);
+        allow update: if isUserInChatRoom() && checkIsUserMember(request.auth.uid) && isValidUpdate();
         allow read: if isUserInChatRoom();
       }
     }

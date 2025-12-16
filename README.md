@@ -49,7 +49,7 @@ dependencies:
 | [`chatview`][chatViewPackage] version | `chatview_connect` version |
 |---------------------------------------|----------------------------|
 | `>=2.4.1 <3.0.0`                      | `0.0.1`                    |
-| `>= 3.0.0`                            | `0.0.2`                    |
+| `>= 3.0.0`                            | `3.0.0`                    |
 
 ## Support
 

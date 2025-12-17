@@ -1,4 +1,4 @@
-## 0.0.2
+## 3.0.0
 
 * **Feat**: [53](https://github.com/SimformSolutionsPvtLtd/chatview_connect/pull/53) Introduced
   `ChatListManager` to support `ChatList` functionality with methods like `createChat()`,

@@ -28,7 +28,7 @@ enables seamless integration with cloud services.
 | [chatview](https://pub.dev/packages/chatview) version | chatview_connect version |
 |-------------------------------------------------------|--------------------------|
 | `>=2.4.1 <3.0.0`                                      | `0.0.1`                  |
-| `>= 3.0.0`                                            | `0.0.2`                  |
+| `>= 3.0.0`                                            | `3.0.0`                  |
 
 ## Adding the dependency
 

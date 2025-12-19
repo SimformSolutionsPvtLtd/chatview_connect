@@ -21,7 +21,7 @@ environment:
   sdk: '>=3.4.0 <4.0.0'
 
 dependencies:
-  chatview_utils: ^3.0.0
+  chatview_utils: 3.0.0
 
   cloud_firestore: ^6.1.1
   firebase_storage: ^13.0.5

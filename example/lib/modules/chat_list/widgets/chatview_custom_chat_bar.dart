@@ -383,8 +383,7 @@ class _ChatViewCustomChatBarState extends State<ChatViewCustomChatBar> {
 
     if (!isRecording.value) {
       await controller?.record(
-        recorderSettings:
-            voiceRecordingConfig.recorderSettings ?? const RecorderSettings(),
+        recorderSettings: voiceRecordingConfig.recorderSettings,
       );
       isRecording.value = true;
     } else {

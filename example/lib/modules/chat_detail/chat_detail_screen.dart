@@ -156,14 +156,11 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
                 child: const Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    CircleAvatar(
-                        radius: 2.75, backgroundColor: AppColors.grey),
+                    CircleAvatar(radius: 2.75, backgroundColor: AppColors.grey),
                     SizedBox(width: 3),
-                    CircleAvatar(
-                        radius: 2.75, backgroundColor: AppColors.grey),
+                    CircleAvatar(radius: 2.75, backgroundColor: AppColors.grey),
                     SizedBox(width: 3),
-                    CircleAvatar(
-                        radius: 2.75, backgroundColor: AppColors.grey),
+                    CircleAvatar(radius: 2.75, backgroundColor: AppColors.grey),
                   ],
                 ),
               ),

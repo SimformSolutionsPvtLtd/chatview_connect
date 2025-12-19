@@ -7,9 +7,9 @@ enables seamless integration with cloud services.
 
 ## Preview
 
-| ChatList                                                                                                           | ChatView                                                                                                           |
-|--------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------|
-| ![ChatList_Preview](https://raw.githubusercontent.com/SimformSolutionsPvtLtd/chatview/master/preview/chatlist.gif) | ![ChatView Preview](https://raw.githubusercontent.com/SimformSolutionsPvtLtd/chatview/master/preview/chatview.gif) |
+| ChatList                                                                                                         | ChatView                                                                                                         |
+|------------------------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------|
+| ![ChatList_Preview](https://raw.githubusercontent.com/SimformSolutionsPvtLtd/chatview/main/preview/chatlist.gif) | ![ChatView Preview](https://raw.githubusercontent.com/SimformSolutionsPvtLtd/chatview/main/preview/chatview.gif) |
 
 ## Features
 

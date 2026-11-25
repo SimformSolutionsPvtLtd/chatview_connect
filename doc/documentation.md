@@ -48,6 +48,25 @@ the 'Installing' tab.
 import 'package:chatview_connect/chatview_connect.dart';
 ```
 
+## AI Agent Skills
+
+This package ships an [agent skill](https://dart.dev/tools/pub/package-skills) for coding agents
+(Claude Code, Cursor, Copilot, Codex, …):
+
+| Skill                       | Use it to                                                                                 |
+|-----------------------------|-------------------------------------------------------------------------------------------|
+| `chatview-connect-firebase` | Connect `ChatView` and `ChatList` to Firebase with `ChatManager` and `ChatListManager`    |
+
+Install it from your app's root (needs Dart 3.10 or later):
+
+```bash
+dart run skills@ get
+```
+
+Only packages that are direct dependencies of your app are scanned. Run the command again after
+upgrading `chatview_connect` to update the skill. The `chatview` skills for the chat screen and the
+chat list are installed the same way.
+
 # Backend Setup
 
 ## Firebase:

@@ -1,3 +1,9 @@
+## [Unreleased]
+
+* **Feat**: [65](https://github.com/SimformSolutionsPvtLtd/chatview_connect/pull/65) Added AI
+  coding-agent skill `chatview-connect-firebase` in `skills/`. Install it in your app with
+  [`dart run skills@ get`](https://dart.dev/tools/pub/package-skills).
+
 ## 3.0.0
 
 * **Feat**: [53](https://github.com/SimformSolutionsPvtLtd/chatview_connect/pull/53) Introduced
